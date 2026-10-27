@@ -2578,7 +2578,9 @@ body { color: var(--heading); }
 .faq-q-btn:hover { color: var(--teal-text); }
 .faq-plus { font-size: 26px; color: var(--teal-text); }
 .faq-a { font-size: 16px; color: var(--body); }
-.faq-photo { max-width: 320px; margin-top: 52px; }
+.faq-photo { max-width: 340px; margin: 52px 0 0; padding: 16px; }
+.faq-photo::before { left: 0; top: 0; right: 0; bottom: 0; }
+.faq-photo::after { left: -6px; top: 46%; }
 .faq-photo img { aspect-ratio: 4/5; }
 
 /* Final call to action: full teal, as on pixelprimed.com */
@@ -3480,7 +3482,10 @@ reveals.forEach(el => io.observe(el));
   var HUBSPOT_PORTAL = "242476902", HUBSPOT_FORM = "fb939971-6d17-4d58-a10d-104ca9997c98";
 
   var unlocked = false;
-  try { unlocked = localStorage.getItem('meridian_pricing_unlocked') === '1'; } catch (e) {}
+  try {
+    if (/[?&]showform\b/.test(location.search)) localStorage.removeItem('meridian_pricing_unlocked');
+    unlocked = localStorage.getItem('meridian_pricing_unlocked') === '1';
+  } catch (e) {}
   if (unlocked) { revealPricing(); return; }
 
   var form = document.getElementById('meridian-pricing-form');
