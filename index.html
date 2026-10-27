@@ -3503,8 +3503,7 @@ reveals.forEach(el => io.observe(el));
           custom_source: 'Meridian pricing',
           profile: { data: { type: 'profile', attributes: {
             email: email,
-            properties: { meridian_source: 'Pricing gate', meridian_page: location.href },
-            subscriptions: { email: { marketing: { consent: 'SUBSCRIBED' } } }
+            properties: { meridian_source: 'Pricing gate', meridian_page: location.href }
           } } }
         },
         relationships: { list: { data: { type: 'list', id: KLAVIYO_LIST_ID } } }
