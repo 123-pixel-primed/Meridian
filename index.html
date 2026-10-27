@@ -2445,7 +2445,9 @@ body { color: var(--heading); }
 /* Numbers: lining figures in serif, plain zeros in labels */
 .hero-calc-box-num, .mi-widget-num, .pricing-price, .stat-num { font-variant-numeric: lining-nums; font-feature-settings: "lnum" 1; }
 .mi-col-num, .opp2-num, .hero-calc-radio-val { font-family: var(--sans) !important; font-weight: 500; }
-.mi-widget-num { font-family: var(--serif); }
+.mi-widget-num { font-family: var(--serif); line-height: 0.95; margin: 0 0 6px; }
+.mi-widget-label { margin-bottom: 6px; line-height: 1.5; }
+.mi-widget-num-label { line-height: 1.5; }
 
 
 /* Pricing gate: native form */
@@ -2501,23 +2503,22 @@ body { color: var(--heading); }
 .jm-legend { display: flex; gap: 28px; flex-wrap: wrap; font-size: 14px; color: var(--body); }
 .jm-legend span { display: inline-flex; align-items: center; gap: 10px; }
 .jm-legend .jm-ico { width: 30px; height: 30px; }
-.jm-scroll { background: #fff; border-top: 2px solid var(--teal); padding: 30px 28px 34px; overflow-x: auto; }
-.jm-grid { display: grid; grid-template-columns: 118px repeat(9, minmax(98px, 1fr)); grid-template-rows: auto repeat(4, minmax(132px, auto)); column-gap: 10px; min-width: 1020px; position: relative; }
-.jm-corner { grid-column: 1; grid-row: 1; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--label); align-self: end; padding-bottom: 14px; line-height: 1.5; }
-.jm-day { grid-row: 1; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--teal-text); align-self: end; padding-bottom: 14px; }
-.jm-lane-label { grid-column: 1; align-self: center; font-family: var(--serif); font-size: 16px; color: var(--heading); line-height: 1.25; padding-right: 10px; }
-.jm-lane-line { grid-column: 2 / -1; align-self: center; height: 0; border-top: 1px dashed rgba(43,43,43,0.22); }
-.jm-grid > .jm-lane-label:nth-of-type(n) { border-top: 0; }
-.jm-step { align-self: center; position: relative; z-index: 1; background: var(--cream); border: 1px solid var(--border); padding: 12px 11px 13px; margin: 8px 0; transition: transform .2s, border-color .2s; }
+.jm-scroll { background: #fff; border-top: 2px solid var(--teal); padding: 30px 30px 34px; }
+.jm-grid { display: grid; grid-template-columns: 84px repeat(5, minmax(0, 1fr)); grid-auto-rows: auto; column-gap: 14px; row-gap: 0; position: relative; }
+.jm-corner { grid-column: 1; grid-row: 1; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--label); align-self: end; padding-bottom: 18px; line-height: 1.5; }
+.jm-lane-label { grid-row: 1; align-self: end; text-align: center; font-family: var(--serif); font-size: 18px; color: var(--heading); line-height: 1.25; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.jm-lane-line { grid-row: 2 / span 11; justify-self: center; width: 0; border-left: 1px dashed rgba(43,43,43,0.20); }
+.jm-day { grid-column: 1; align-self: center; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--teal-text); padding-top: 10px; border-top: 1px solid transparent; }
+.jm-step { position: relative; z-index: 1; display: flex; gap: 12px; align-items: flex-start; background: var(--cream); border: 1px solid var(--border); padding: 13px 14px; margin: 9px 0; transition: transform .2s, border-color .2s; }
 .jm-step:hover { transform: translateY(-2px); border-color: var(--teal); }
 .jm-mer { background: #fff; border-color: rgba(95,143,136,0.55); }
-.jm-step-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.jm-n { font-family: var(--sans); font-weight: 500; font-size: 11px; color: var(--teal-text); letter-spacing: .08em; }
+.jm-txt { min-width: 0; }
+.jm-n { font-family: var(--sans); font-weight: 500; font-size: 11px; color: var(--teal-text); letter-spacing: .08em; margin-right: 8px; vertical-align: 2px; }
 .jm-ico { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--teal); background: #fff; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .jm-ico-solid { background: var(--teal); border-color: var(--teal); }
 .jm-lane-tag { display: none; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--teal-text); margin: 0 0 4px; }
-.jm-t { font-family: var(--serif); font-size: 14.5px; line-height: 1.3; color: var(--heading); margin: 0 0 5px; }
-.jm-d { font-size: 11.5px; font-weight: 300; line-height: 1.5; color: var(--label); margin: 0; }
+.jm-t { font-family: var(--serif); font-size: 15.5px; line-height: 1.3; color: var(--heading); margin: 0 0 4px; }
+.jm-d { font-size: 12.5px; font-weight: 300; line-height: 1.5; color: var(--label); margin: 0; }
 .jm-record { margin-top: 16px; background: #fff; padding: 26px 28px; display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: center; }
 .jm-record-head { display: flex; align-items: center; gap: 14px; }
 .jm-record-head .jm-ico { width: 46px; height: 46px; }
@@ -2537,6 +2538,7 @@ body { color: var(--heading); }
   .jm-corner { padding: 0 0 14px 24px; }
   .jm-day, .jm-lane-label, .jm-lane-line { display: none; }
   .jm-step { margin: 0 0 14px 24px; }
+  .jm-n { display: none; }
   .jm-step::before { content: ""; position: absolute; left: -30px; top: 22px; width: 11px; height: 11px; border-radius: 50%; background: var(--teal); }
   .jm-step:not(.jm-mer)::before { background: #fff; border: 1px solid var(--teal); }
   .jm-lane-tag { display: block; }
@@ -3061,87 +3063,70 @@ hcUpdate();
     <div class="jm-head">
       <div class="reveal">
         <p class="section-eyebrow">Guest journey mapping</p>
-        <h2 class="section-title">One guest. Three platforms. One connected journey.</h2>
+        <h2 class="section-title">One guest. Every platform. One connected journey.</h2>
       </div>
       <div class="reveal">
-        <p class="section-body">Your guests move between your website, your online shop and your booking platform long before and after a visit. Meridian connects all three, so every message responds to what each guest actually did.</p>
-        <div class="jm-legend"><span><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="8" cy="5.3" r="2.7"/><path d="M2.8 14c.6-2.8 2.7-4.4 5.2-4.4s4.6 1.6 5.2 4.4"/></svg></span> What the guest does</span><span><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="3" width="13" height="10" rx="1"/><path d="M1.8 3.5L8 8.5l6.2-5"/></svg></span> What Meridian sends</span></div>
+        <p class="section-body">From the moment a guest first discovers you, through your website, online shop and booking platform, Meridian connects every step, so each message responds to what she actually did.</p>
+        <div class="jm-legend"><span><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="8" cy="5.3" r="2.7"/><path d="M2.8 14c.6-2.8 2.7-4.4 5.2-4.4s4.6 1.6 5.2 4.4"/></svg></span> What the guest does</span><span><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="3" width="13" height="10" rx="1"/><path d="M1.8 3.5L8 8.5l6.2-5"/></svg></span> What Meridian does</span></div>
       </div>
     </div>
 
     <div class="jm-scroll">
       <div class="jm-grid">
         <div class="jm-corner">An example day spa guest</div>
-        <div class="jm-lane-label" style="grid-row:2">Website</div>
-        <div class="jm-lane-line" style="grid-row:2"></div>
-        <div class="jm-lane-label" style="grid-row:3">Online shop</div>
-        <div class="jm-lane-line" style="grid-row:3"></div>
-        <div class="jm-lane-label" style="grid-row:4">Booking platform</div>
-        <div class="jm-lane-line" style="grid-row:4"></div>
-        <div class="jm-lane-label" style="grid-row:5">Guest messages</div>
-        <div class="jm-lane-line" style="grid-row:5"></div>
-        <div class="jm-day" style="grid-column:2">Day 1</div>
-        <div class="jm-step reveal" style="grid-column:2;grid-row:2">
-          <div class="jm-step-top"><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 5.5h13"/><circle cx="3.6" cy="4" r=".5"/><circle cx="5.2" cy="4" r=".5"/></svg></span><span class="jm-n">01</span></div>
-          <p class="jm-lane-tag">Website · Day 1</p>
-          <p class="jm-t">Views the signature massage page</p>
-          <p class="jm-d">Arrives from a local search</p>
+        <div class="jm-lane-label" style="grid-column:2">Discovery</div>
+        <div class="jm-lane-line" style="grid-column:2"></div>
+        <div class="jm-lane-label" style="grid-column:3">Website</div>
+        <div class="jm-lane-line" style="grid-column:3"></div>
+        <div class="jm-lane-label" style="grid-column:4">Online shop</div>
+        <div class="jm-lane-line" style="grid-column:4"></div>
+        <div class="jm-lane-label" style="grid-column:5">Booking platform</div>
+        <div class="jm-lane-line" style="grid-column:5"></div>
+        <div class="jm-lane-label" style="grid-column:6">Guest messages</div>
+        <div class="jm-lane-line" style="grid-column:6"></div>
+        <div class="jm-day" style="grid-row:2">Day 1</div>
+        <div class="jm-step jm-mer reveal" style="grid-row:2;grid-column:2">
+          <span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.8" y="1.8" width="12.4" height="12.4" rx="3.4"/><circle cx="8" cy="8" r="2.9"/><circle cx="11.7" cy="4.3" r=".55"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Discovery · Day 1</p><p class="jm-t"><span class="jm-n">01</span>Instagram introduction</p><p class="jm-d">Meridian outreach, in your brand voice</p></div>
         </div>
-        <div class="jm-day" style="grid-column:3"></div>
-        <div class="jm-step reveal" style="grid-column:3;grid-row:3">
-          <div class="jm-step-top"><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M1.5 2h2l1.6 7.5h7l1.4-5.5H4.3"/><circle cx="6" cy="12.8" r="1"/><circle cx="11.3" cy="12.8" r="1"/></svg></span><span class="jm-n">02</span></div>
-          <p class="jm-lane-tag">Online shop · Day 1</p>
-          <p class="jm-t">Adds a body oil to her cart</p>
-          <p class="jm-d">Leaves without checking out</p>
+        <div class="jm-day" style="grid-row:3">Day 3</div>
+        <div class="jm-step reveal" style="grid-row:3;grid-column:2">
+          <span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M8 1.5l1.4 3.9 3.9 1.4-3.9 1.4L8 12.1l-1.4-3.9L2.7 6.8l3.9-1.4z"/><path d="M12.6 10.6l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Discovery · Day 3</p><p class="jm-t"><span class="jm-n">02</span>Asks an AI assistant for a day spa nearby</p><p class="jm-d">Your spa is recommended</p></div>
         </div>
-        <div class="jm-day" style="grid-column:4"></div>
-        <div class="jm-step jm-mer reveal" style="grid-column:4;grid-row:5">
-          <div class="jm-step-top"><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="3" width="13" height="10" rx="1"/><path d="M1.8 3.5L8 8.5l6.2-5"/></svg></span><span class="jm-n">03</span></div>
-          <p class="jm-lane-tag">Guest messages · Day 1</p>
-          <p class="jm-t">Cart reminder email</p>
-          <p class="jm-d">Features the oil, with a link to book</p>
+        <div class="jm-day" style="grid-row:4"></div>
+        <div class="jm-step reveal" style="grid-row:4;grid-column:3">
+          <span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 5.5h13"/><circle cx="3.6" cy="4" r=".5"/><circle cx="5.2" cy="4" r=".5"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Website · Day 3</p><p class="jm-t"><span class="jm-n">03</span>Views the signature massage page</p><p class="jm-d">Arrives from the AI answer</p></div>
         </div>
-        <div class="jm-day" style="grid-column:5">Day 2</div>
-        <div class="jm-step reveal" style="grid-column:5;grid-row:4">
-          <div class="jm-step-top"><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="2.5" width="13" height="11.5" rx="1"/><path d="M1.5 6h13M5 1v3M11 1v3"/><path d="M5.5 10l1.8 1.7L10.8 8"/></svg></span><span class="jm-n">04</span></div>
-          <p class="jm-lane-tag">Booking platform · Day 2</p>
-          <p class="jm-t">Books a 60-minute massage</p>
-          <p class="jm-d">Booking confirmed</p>
+        <div class="jm-day" style="grid-row:5"></div>
+        <div class="jm-step reveal" style="grid-row:5;grid-column:4">
+          <span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M1.5 2h2l1.6 7.5h7l1.4-5.5H4.3"/><circle cx="6" cy="12.8" r="1"/><circle cx="11.3" cy="12.8" r="1"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Online shop · Day 3</p><p class="jm-t"><span class="jm-n">04</span>Adds a body oil to her cart</p><p class="jm-d">Leaves without checking out</p></div>
         </div>
-        <div class="jm-day" style="grid-column:6">Day 9</div>
-        <div class="jm-step reveal" style="grid-column:6;grid-row:4">
-          <div class="jm-step-top"><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M8 13.5c-3 0-5.5-2.2-5.5-5 2.5 0 4.6 1.4 5.5 3.5.9-2.1 3-3.5 5.5-3.5 0 2.8-2.5 5-5.5 5z"/><path d="M8 11c-1.2-1.6-1.2-4.6 0-7 1.2 2.4 1.2 5.4 0 7z"/></svg></span><span class="jm-n">05</span></div>
-          <p class="jm-lane-tag">Booking platform · Day 9</p>
-          <p class="jm-t">Visit completed</p>
-          <p class="jm-d">Recorded in her guest history</p>
+        <div class="jm-day" style="grid-row:6"></div>
+        <div class="jm-step jm-mer reveal" style="grid-row:6;grid-column:6">
+          <span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="3" width="13" height="10" rx="1"/><path d="M1.8 3.5L8 8.5l6.2-5"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Guest messages · Day 3</p><p class="jm-t"><span class="jm-n">05</span>Cart reminder email</p><p class="jm-d">Features the oil, with a link to book</p></div>
         </div>
-        <div class="jm-day" style="grid-column:7"></div>
-        <div class="jm-step jm-mer reveal" style="grid-column:7;grid-row:5">
-          <div class="jm-step-top"><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="3" width="13" height="10" rx="1"/><path d="M1.8 3.5L8 8.5l6.2-5"/></svg></span><span class="jm-n">06</span></div>
-          <p class="jm-lane-tag">Guest messages · Day 9</p>
-          <p class="jm-t">Aftercare email</p>
-          <p class="jm-d">Recommends the oil she viewed</p>
+        <div class="jm-day" style="grid-row:7">Day 4</div>
+        <div class="jm-step reveal" style="grid-row:7;grid-column:5">
+          <span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="2.5" width="13" height="11.5" rx="1"/><path d="M1.5 6h13M5 1v3M11 1v3"/><path d="M5.5 10l1.8 1.7L10.8 8"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Booking platform · Day 4</p><p class="jm-t"><span class="jm-n">06</span>Books a 60-minute massage</p><p class="jm-d">Booking confirmed</p></div>
         </div>
-        <div class="jm-day" style="grid-column:8">Day 10</div>
-        <div class="jm-step reveal" style="grid-column:8;grid-row:3">
-          <div class="jm-step-top"><span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 5h10l-.8 9H3.8z"/><path d="M5.5 5V4a2.5 2.5 0 015 0v1"/></svg></span><span class="jm-n">07</span></div>
-          <p class="jm-lane-tag">Online shop · Day 10</p>
-          <p class="jm-t">Buys the body oil</p>
-          <p class="jm-d">First online order</p>
+        <div class="jm-day" style="grid-row:8">Day 11</div>
+        <div class="jm-step reveal" style="grid-row:8;grid-column:5">
+          <span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M8 13.5c-3 0-5.5-2.2-5.5-5 2.5 0 4.6 1.4 5.5 3.5.9-2.1 3-3.5 5.5-3.5 0 2.8-2.5 5-5.5 5z"/><path d="M8 11c-1.2-1.6-1.2-4.6 0-7 1.2 2.4 1.2 5.4 0 7z"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Booking platform · Day 11</p><p class="jm-t"><span class="jm-n">07</span>Visit completed</p><p class="jm-d">Added to her guest history</p></div>
         </div>
-        <div class="jm-day" style="grid-column:9">Day 12</div>
-        <div class="jm-step jm-mer reveal" style="grid-column:9;grid-row:5">
-          <div class="jm-step-top"><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M8 1.8l1.8 3.7 4 .6-2.9 2.8.7 4L8 11l-3.6 1.9.7-4L2.2 6.1l4-.6z"/></svg></span><span class="jm-n">08</span></div>
-          <p class="jm-lane-tag">Guest messages · Day 12</p>
-          <p class="jm-t">Review invitation</p>
-          <p class="jm-d">Sent while the visit is fresh</p>
+        <div class="jm-day" style="grid-row:9"></div>
+        <div class="jm-step jm-mer reveal" style="grid-row:9;grid-column:6">
+          <span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><rect x="1.5" y="3" width="13" height="10" rx="1"/><path d="M1.8 3.5L8 8.5l6.2-5"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Guest messages · Day 11</p><p class="jm-t"><span class="jm-n">08</span>Aftercare email</p><p class="jm-d">Recommends the oil she viewed</p></div>
         </div>
-        <div class="jm-day" style="grid-column:10">Week 6</div>
-        <div class="jm-step jm-mer reveal" style="grid-column:10;grid-row:5">
-          <div class="jm-step-top"><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M2 3.5h12v7.5H6.5L3.5 13.5V11H2z"/><path d="M5 6.5h6M5 8.5h4"/></svg></span><span class="jm-n">09</span></div>
-          <p class="jm-lane-tag">Guest messages · Week 6</p>
-          <p class="jm-t">Rebooking invitation by SMS</p>
-          <p class="jm-d">Timed to her usual return window</p>
+        <div class="jm-day" style="grid-row:10">Day 12</div>
+        <div class="jm-step reveal" style="grid-row:10;grid-column:4">
+          <span class="jm-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#5F8F88" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 5h10l-.8 9H3.8z"/><path d="M5.5 5V4a2.5 2.5 0 015 0v1"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Online shop · Day 12</p><p class="jm-t"><span class="jm-n">09</span>Buys the body oil</p><p class="jm-d">First online order</p></div>
+        </div>
+        <div class="jm-day" style="grid-row:11">Day 14</div>
+        <div class="jm-step jm-mer reveal" style="grid-row:11;grid-column:6">
+          <span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M8 1.8l1.8 3.7 4 .6-2.9 2.8.7 4L8 11l-3.6 1.9.7-4L2.2 6.1l4-.6z"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Guest messages · Day 14</p><p class="jm-t"><span class="jm-n">10</span>Review invitation</p><p class="jm-d">Sent while the visit is fresh</p></div>
+        </div>
+        <div class="jm-day" style="grid-row:12">Week 7</div>
+        <div class="jm-step jm-mer reveal" style="grid-row:12;grid-column:6">
+          <span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M2 3.5h12v7.5H6.5L3.5 13.5V11H2z"/><path d="M5 6.5h6M5 8.5h4"/></svg></span><div class="jm-txt"><p class="jm-lane-tag">Guest messages · Week 7</p><p class="jm-t"><span class="jm-n">11</span>Rebooking invitation by SMS</p><p class="jm-d">Timed to her usual return window</p></div>
         </div>
       </div>
     </div>
@@ -3149,10 +3134,10 @@ hcUpdate();
     <div class="jm-record reveal">
       <div class="jm-record-head"><span class="jm-ico jm-ico-solid"><svg viewBox="0 0 16 16" fill="none" stroke="#FFFFFF" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="8" cy="5.3" r="2.7"/><path d="M2.8 14c.6-2.8 2.7-4.4 5.2-4.4s4.6 1.6 5.2 4.4"/></svg></span><div><p class="jm-lane-tag">The result</p><p class="jm-record-title">One guest record, kept up to date automatically</p></div></div>
       <ul class="jm-record-list">
+        <li><span>Found you through</span>Instagram, then AI search</li>
         <li><span>Interests</span>Signature massage, body oil</li>
-        <li><span>Visits</span>1 completed, next due in week 6</li>
+        <li><span>Visits</span>1 completed, next due in week 7</li>
         <li><span>Online orders</span>1</li>
-        <li><span>Review</span>Invited on day 12</li>
       </ul>
     </div>
     <p class="jm-note">An illustrative example. Every journey is mapped around your own platforms and guests during onboarding.</p>
