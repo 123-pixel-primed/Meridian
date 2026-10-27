@@ -3,7 +3,7 @@
 Marketing homepage for Meridian, live at https://meridian.pixelprimed.com
 
 - `index.html` is the whole page. Fonts load from Google Fonts and the photos are built into the file, so no other files are needed.
-- Pricing sign-ups go to Klaviyo (public key `TheXup`). Set `KLAVIYO_LIST_ID` near the bottom of `index.html`. Until it is set, sign-ups go to the HubSpot newsletter form.
+- Pricing sign-ups go to the Klaviyo "Meridian Pricing" list (public key `TheXup`, list `Uc43nb`), tagged with the source "Meridian pricing". To see the form again after submitting, visit `/?showform`.
 - Never add a private Klaviyo key (starting `pk_`) to this repository.
 
 ## Deploying
