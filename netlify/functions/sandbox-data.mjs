@@ -13,7 +13,11 @@ async function ghl(path, params, version, token) {
   const res = await fetch(url, {
     headers: { Authorization: 'Bearer ' + token, Version: version, Accept: 'application/json' }
   });
-  if (!res.ok) throw new Error(path + ' returned ' + res.status);
+  if (!res.ok) {
+    let msg = '';
+    try { const b = await res.json(); msg = String(b.message || b.error || '').slice(0, 160); } catch (e) {}
+    throw new Error(path + ' returned ' + res.status + (msg ? ' (' + msg + ')' : ''));
+  }
   return res.json();
 }
 
@@ -90,7 +94,7 @@ export default async () => {
   });
 
   await safe('payments', async () => {
-    const r = await ghl('/payments/transactions', { altId: loc, altType: 'location', limit: '100' }, '2021-07-28', token);
+    const r = await ghl('/payments/transactions', { altId: loc, altType: 'location', locationId: loc, limit: '100' }, '2021-07-28', token);
     out.transactions = (r.data || r.transactions || []).map(t => ({
       amount: Number(t.amount) || 0,
       currency: t.currency || 'AUD',
