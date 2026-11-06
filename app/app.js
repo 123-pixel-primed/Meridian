@@ -20,7 +20,7 @@
   function bars(rows, fmt, gold, scale) {
     var max = scale || Math.max.apply(null, rows.map(function (r) { return r.v; })) || 1;
     return '<div class="bars">' + rows.map(function (r) {
-      return '<div class="bar-row"><span class="lab">' + esc(r.l) + '</span><div class="bar-track"><div class="bar-fill' + (gold ? ' gold' : '') + '" style="width:' + (r.v / max * 100) + '%"></div></div><span class="v">' + (fmt ? fmt(r.v) : r.v) + '</span></div>';
+      return '<div class="bar-row"><span class="lab">' + esc(r.l) + '</span><div class="bar-track"><div class="bar-fill' + (gold ? ' gold' : '') + '" style="width:' + (r.v / max * 100) + '%"></div></div><span class="v">' + (fmt ? fmt(r.v, r) : r.v) + '</span></div>';
     }).join('') + '</div>';
   }
 
@@ -29,7 +29,7 @@
     opts = opts || {};
     var W = 480, H = opts.h || 220, L = 36, R = 22, T = 14, B = 30;
     var lo = opts.min !== undefined ? opts.min : 0;
-    var hi = Math.max.apply(null, values.concat(target || 0)) * 1.12;
+    var hi = Math.max.apply(null, values.concat(target || 0)) * 1.12; if (!(hi > lo)) hi = lo + 4;
     var x = function (i) { return L + i * (W - L - R) / (values.length - 1); };
     var y = function (v) { return T + (1 - (v - lo) / (hi - lo)) * (H - T - B); };
     var pts = values.map(function (v, i) { return x(i) + ',' + y(v); }).join(' ');
@@ -51,7 +51,7 @@
   function columns(labels, a, b, opts) {
     opts = opts || {};
     var W = 480, H = 230, L = 36, R = 8, T = 12, B = 30;
-    var hi = Math.max.apply(null, a.concat(b)) * 1.12;
+    var hi = Math.max.apply(null, a.concat(b)) * 1.12 || 4;
     var slot = (W - L - R) / labels.length, bw = Math.min(18, slot / 3.2);
     var y = function (v) { return T + (1 - v / hi) * (H - T - B); };
     var grid = [0, hi / 2, hi].map(function (t) {
@@ -70,7 +70,7 @@
   function cols1(labels, values, opts) {
     opts = opts || {};
     var W = 480, H = opts.h || 200, L = 12, R = 12, T = 22, B = 30;
-    var hi = Math.max.apply(null, values) * 1.15;
+    var hi = Math.max.apply(null, values) * 1.15 || 4;
     var slot = (W - L - R) / labels.length, bw = Math.min(34, slot * 0.5);
     var y = function (v) { return T + (1 - v / hi) * (H - T - B); };
     return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(opts.aria || 'Column chart') + '">' +
@@ -160,8 +160,8 @@
       '<div class="grid g-hero">' + hero + side + '</div>' +
       '<div style="height:20px"></div>' + stats + '<div style="height:20px"></div>' +
       '<div class="grid g2">' +
-        panel('Where revenue came from', D.period, bars(D.revenueBySource, money)) +
-        panel('Bookings each week', 'Last 8 weeks, with your weekly goal', line(wb.labels, wb.values, wb.target, { min: 80, aria: 'Weekly bookings rising from 98 to 126' }) + '<div class="legend"><span><i></i>Bookings</span><span><i class="gold"></i>Weekly goal</span></div>') +
+        panel('Where revenue came from', D.period, D.revenueBySource.length ? bars(D.revenueBySource, money) : '<p class="meta">No payments yet. Revenue appears here as bookings are paid.</p>') +
+        panel('Bookings each week', wb.target ? 'Last 8 weeks, with your weekly goal' : 'Last 8 weeks', line(wb.labels, wb.values, wb.target, { min: wb.target ? 80 : 0, aria: 'Weekly bookings, ' + wb.values[0] + ' to ' + wb.values[wb.values.length - 1] }) + '<div class="legend"><span><i></i>Bookings</span>' + (wb.target ? '<span><i class="gold"></i>Weekly goal</span>' : '') + '</div>') +
       '</div><div style="height:20px"></div>' +
       '<div class="grid g2">' + insightPanel() + returnPanel() + '</div><div style="height:20px"></div>' +
       panel('What Meridian did for you', D.period, '<div class="activity">' + D.activity.filter(function (a) { return !a.needs || has(a.needs); }).map(function (a) {
@@ -192,7 +192,7 @@
     var list = '<ul class="inbox">' + M.map(function (m, k) {
       return '<li data-msg="' + k + '" class="' + (k === 0 ? 'sel' : '') + '"><div class="who"><strong>' + esc(m.name) + '</strong><span class="meta">' + esc(m.time) + '</span></div><div class="meta">' + esc(m.text) + '</div><div class="row"><span class="tag">' + esc(m.channel) + '</span>' + (m.status === 'Needs a reply' ? '<span class="tag warn">Needs a reply</span>' : '<span class="tag on">Answered</span>') + '</div></li>';
     }).join('') + '</ul>';
-    var thread = threadView(first);
+    var thread = first ? threadView(first) : '<div class="thread"><div class="meta">No conversations yet. Messages by text, WhatsApp, email and website chat appear here.</div></div>';
     return head('Messages', 'WhatsApp, text messages, Instagram, email and website chat in one inbox.') +
       '<div class="grid g3">' +
         panel('Waiting for a reply', '', '<div class="stat"><span class="n">' + open + '</span><span class="l">conversations</span></div>') +
@@ -247,15 +247,21 @@
     return head('Bookings', 'Treatments and bathhouse sessions this week.') +
       '<div class="grid g-hero">' +
         panel('Bookings by day', 'This week', columns(b.days, b.treatments, b.bathhouse, { aria: 'Bookings by day, treatments and bathhouse sessions' }) + '<div class="legend"><span><i></i>Treatments</span><span><i class="gold"></i>Bathhouse sessions</span></div>') +
-        panel('Today', 'Next four bookings', '<ul class="list">' + b.today.map(function (t) {
+        panel(b.todayTitle || 'Today', 'Next four bookings', !b.today.length ? '<p class="meta">Nothing booked yet.</p>' : '<ul class="list">' + b.today.map(function (t) {
           return '<li><span style="font-weight:600;width:48px">' + t.time + '</span><div class="grow"><div>' + esc(t.what) + '</div><div class="meta">' + esc(t.who) + '</div></div></li>';
         }).join('') + '</ul>') +
-      '</div><div style="height:20px"></div><div class="grid g3">' +
+      '</div><div style="height:20px"></div>' + sessionsPanel(b) + '<div class="grid g3">' +
         panel('Gift vouchers', 'Unredeemed balance', '<div class="stat"><span class="n">' + b.vouchers.outstanding + '</span><span class="l">' + b.vouchers.sold + ' sold and ' + b.vouchers.redeemed + ' redeemed this month</span></div>') +
         panel('Memberships', 'Active members', '<div class="stat"><span class="n">' + b.memberships.active + '</span><span class="delta">+' + b.memberships.newThisMonth + ' this month</span></div>') +
         panel('Busiest time', 'Plan staffing and offers', '<div class="stat"><span class="n">Sat</span><span class="l">Bathhouse fills by 10am</span></div>') +
       '</div>';
   };
+
+  function sessionsPanel(b) {
+    if (!b.sessions) return '';
+    return panel('Bathing sessions', 'Places booked in each upcoming session', !b.sessions.length ? '<p class="meta">No upcoming bathing sessions booked yet.</p>' :
+      bars(b.sessions.map(function (x) { return { l: x.l, v: x.booked, of: x.seats }; }), function (v, r) { return v + ' of ' + r.of; }, true, Math.max.apply(null, b.sessions.map(function (x) { return x.seats; })))) + '<div style="height:20px"></div>';
+  }
 
   V.guests = function () {
     var n = D.newGuests, o = D.outreach;
@@ -478,6 +484,7 @@
   });
 
   /* ---------- start ---------- */
+  if (D.liveNote) { var ln = document.createElement('div'); ln.className = 'live-note'; ln.setAttribute('role', 'status'); ln.textContent = D.liveNote; var pg = $('#page'); pg.parentNode.insertBefore(ln, pg); }
   $('#venue').innerHTML = esc(D.venue.name) + '<span>' + esc(D.venue.place) + '</span>';
   if (!D.sample) { var s = $('.sample'); if (s) s.remove(); }
   var c = $('#approvals-count'); if (c) c.textContent = D.approvalsCount;
