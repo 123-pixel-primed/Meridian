@@ -11,7 +11,11 @@ One repository for everything Meridian: the marketing homepage, the public demo,
 
 ## Homepage pricing form
 
-Pricing sign-ups are saved to the `meridian-pricing` form in Netlify Forms (Netlify project, Forms tab). They will be forwarded to the CRM once it is connected. To see the form again after submitting, visit `/?showform`.
+Pricing sign-ups go to the Klaviyo "Meridian Pricing" list (public key `TheXup`, list `Uc43nb`), tagged with the source "Meridian pricing". This stays until the CRM is ready, then moves across. To see the form again after submitting, visit `/?showform`. Never add a private Klaviyo key (starting `pk_`) to this repository.
+
+## Onboarding form
+
+Submissions save to the `meridian-onboarding` form in Netlify Forms, with the logo, style guide and up to five brand photos attached (8 MB in total). Turn on form detection in the Netlify project if submissions do not appear.
 
 ## Rules
 

@@ -2603,6 +2603,8 @@ body { color: var(--heading); }
 footer { background: var(--tile); border-top: 0; }
 
 @media (max-width: 960px) { .faq-inner { grid-template-columns: 1fr; gap: 40px; } .faq-photo { display: none; } }
+.pricing-grid.pricing-grid-3 { grid-template-columns: repeat(3, 1fr); max-width: 1040px; margin-left: auto; margin-right: auto; }
+@media (max-width: 900px) { .pricing-grid.pricing-grid-3 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -3172,13 +3174,9 @@ hcUpdate();
       <div style="width:44px;height:44px;border-radius:50%;background:var(--linen);border:1px solid rgba(95,143,136,0.35);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
         <svg viewBox="0 0 16 16" fill="none" width="18" height="18"><rect x="2" y="4" width="12" height="9" rx="1" stroke="var(--teal)" stroke-width="1.3"/><path d="M2 4.5l6 4.5 6-4.5" stroke="var(--teal)" stroke-width="1.3" stroke-linecap="round"/></svg>
       </div>
-      <div style="font-family:var(--serif);font-size:22px;font-weight:500;color:var(--heading);margin-bottom:8px;">See the four plans and what's in each</div>
+      <div style="font-family:var(--serif);font-size:22px;font-weight:500;color:var(--heading);margin-bottom:8px;">See the three plans and what's in each</div>
       <p class="gate-intro">Enter your email to see the plans. One monthly plan in place of the many platforms, subscriptions and logins you pay for and manage today.</p>
-      <form id="meridian-pricing-form" class="gate-form" name="meridian-pricing" method="POST" data-netlify="true" netlify-honeypot="company_website" novalidate>
-        <input type="hidden" name="form-name" value="meridian-pricing">
-        <input type="hidden" name="source" value="Pricing gate">
-        <input type="hidden" name="page" value="">
-        <p class="gate-label"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off"></label></p>
+      <form id="meridian-pricing-form" class="gate-form" novalidate>
         <label class="gate-label" for="pricing-email">Email address</label>
         <div class="gate-row">
           <input type="email" id="pricing-email" name="email" placeholder="you@yourbusiness.com" autocomplete="email" required>
@@ -3196,79 +3194,53 @@ hcUpdate();
         <button type="button" class="billing-toggle-btn" id="billYearlyBtn" onclick="setBilling('yearly')" role="tab" aria-selected="false">Yearly <span class="billing-toggle-save">Save 20%</span></button>
       </div>
     </div>
-    <div class="pricing-grid">
+    <div class="pricing-grid pricing-grid-3">
       <div class="pricing-card reveal">
         <div class="pricing-tier-label">Tier 1</div>
-        <div class="pricing-name">Acquire</div>
-        <div class="pricing-price" data-monthly="500" data-yearly="400">$500</div>
+        <div class="pricing-name">Core</div>
+        <div class="pricing-price" data-monthly="390" data-yearly="312">$390</div>
         <div class="pricing-period">per month<span class="pricing-period-annual-note"> · billed annually</span></div>
-        <p class="pricing-tier-desc">We help you get new customers, every week.</p>
+        <p class="pricing-tier-desc">Take bookings, keep guests coming back and grow your reviews, all from one place.</p>
         <div class="pricing-divider"></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We find your ideal customers</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We use AI to find new customers who match your best current customers, in the areas you want to grow.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We message new customers for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We reach out to new customers every week on LinkedIn, Instagram, Facebook and email, written in your voice.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We tell you who is interested</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We track who opens your messages, clicks your links and visits your website, so you know who is ready to talk.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">You see everything in one place</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">One screen shows every new customer, from first message to first booking, updated automatically.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We tell you what to do next</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Every week, AI looks at your numbers and tells you the one thing worth doing next, in plain English.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">It keeps getting better</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">The longer you use Meridian, the better your messages and targeting get, based on what is actually working.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We set it up with you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Someone from our team gets on a call, sets everything up around your business, and walks you through it before anything goes live.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Bookings, payments and gift vouchers</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">One booking page for treatments, sessions and packages, with payments, vouchers and memberships built in.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Guests come back at the right moment</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Welcome, aftercare, rebooking and win-back messages go out automatically, timed to each guest.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">More Google reviews that stay yours</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Every guest is asked at the right moment for their treatment. Reviews live on your own Google profile, always.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Memberships and loyalty</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Reward your regulars and invite them to become members when it suits them.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">One clear dashboard</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Bookings, revenue, reviews and your goals on one screen, updated automatically.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We set it up with you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Someone from our team sets everything up around your business and walks you through it before anything goes live.</div></div></div>
       </div>
       <div class="pricing-card featured reveal">
         <div class="pricing-badge">Most popular</div>
         <div class="pricing-tier-label">Tier 2</div>
-        <div class="pricing-name">Acquire + Retain</div>
-        <div class="pricing-price" data-monthly="1,000" data-yearly="800">$1,000</div>
+        <div class="pricing-name">Growth</div>
+        <div class="pricing-price" data-monthly="790" data-yearly="632">$790</div>
         <div class="pricing-period">per month<span class="pricing-period-annual-note"> · billed annually</span></div>
-        <p class="pricing-recommend">We help you get new customers, and keep the ones you already have coming back.</p>
+        <p class="pricing-recommend">Everything in Core, plus a plan that brings in new guests every month.</p>
         <div class="pricing-divider"></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Acquire, plus:</div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We message guests at the right moment</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">After their first visit, when they're due to come back, and everywhere in between, we send the right message at the right time.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We remind guests to rebook before they forget</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We know roughly when someone is due to come back, and send a nudge right before that moment, not months too late.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We win back guests who haven't been in a while</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">If someone hasn't booked in a while, we reach out with a reason to come back, instead of just hoping they remember you.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We suggest memberships to your regulars</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">When someone visits often enough that a membership would save them money, we let them know.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">It learns more about your guests every month</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">The more guests interact with you, the more Meridian learns what they like, so every message gets more relevant.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Your booking system and your messages talk to each other</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">When someone books, reschedules or cancels, that updates everywhere automatically, nothing falls through the cracks.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We find other businesses worth partnering with</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We match you with nearby businesses who aren't your competitors but share your ideal customer, for referrals both ways.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Core, plus:</div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">A marketing plan built from your goals</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Set your revenue goal and Meridian recommends the channels and budget to reach it, then adjusts every week from your results.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We find and message new guests for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Personal messages to new guests and local businesses, written in your voice.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Corporate wellness and partnerships</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Reach local businesses for team bookings and partner with nearby brands who share your ideal guest.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Content written for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Social posts, emails and articles drafted every week for you to approve.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Found on Google and AI assistants</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">A monthly website score with the fixes that help guests find you when they search or ask an AI assistant.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Your next step, every week</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">One clear recommendation each week, based on what is working for your business.</div></div></div>
       </div>
-      <div class="pricing-card phase-2 reveal">
-        <div class="phase-2-content">
+      <div class="pricing-card reveal">
         <div class="pricing-tier-label">Tier 3</div>
-        <div class="pricing-name">Complete Stack</div>
-        <div class="pricing-price" data-monthly="X" data-yearly="X">$X</div>
-        <div class="pricing-period">per month<span class="pricing-period-annual-note"> · billed annually</span></div>
-        <p class="pricing-tier-desc">We turn happy guests into public reviews, and help new ones find you when they search online.</p>
+        <div class="pricing-name">Growth + Media</div>
+        <div class="pricing-price" data-monthly="1,490" data-yearly="1,192">$1,490</div>
+        <div class="pricing-period">per month, plus ad spend<span class="pricing-period-annual-note"> · billed annually</span></div>
+        <p class="pricing-tier-desc">Everything in Growth, plus your content produced and your ads run for you.</p>
         <div class="pricing-divider"></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Acquire + Retain, plus:</div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We turn happy guests into 5-star reviews</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">After a great visit, we ask guests to leave a review at the right moment, so your Google rating keeps climbing.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We suggest the right upsell at the right time</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">When a guest is most likely to say yes, we offer them something extra, a treatment upgrade or an add-on that actually fits.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We recognise and reward your best guests</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Your most loyal guests get treated like it, with perks and recognition that make them want to tell their friends about you.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We write content that gets you found on Google</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We create blog posts and pages built around what people actually search for, so you show up when they're looking.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We watch what your competitors are doing</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We keep an eye on how similar businesses near you are marketing themselves, so you know where you stand.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We tell you exactly what to fix first</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Instead of a wall of numbers, we tell you the one thing worth doing next, and why.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">A real person checks in on your growth</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">You get an actual person from Meridian reviewing your numbers and helping you decide what to prioritise.</div></div></div>
-        </div>
-        <p class="pricing-phase-note">Coming soon. Join the waitlist to be first to know when this tier launches.</p>
-      </div>
-      <div class="pricing-card phase-2 reveal">
-        <div class="phase-2-content">
-        <div class="pricing-tier-label">Tier 4</div>
-        <div class="pricing-name">Full Stack</div>
-        <div class="pricing-price" data-monthly="X" data-yearly="X">$X</div>
-        <div class="pricing-period">per month<span class="pricing-period-annual-note"> · billed annually</span></div>
-        <p class="pricing-tier-desc">Everything above, built for a bigger business, multiple locations or guests coming from overseas.</p>
-        <div class="pricing-divider"></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Complete Stack, plus:</div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We message international guests in their own context</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">If your guests come from different countries, your messages adapt to make sense to them, not just translated, actually relevant.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We help you find entirely new revenue streams</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We help you explore things like corporate wellness deals or new partnerships that bring in revenue beyond your regular guests.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We predict who's about to leave, before they do</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">We spot the early signs someone is drifting away and step in before you lose them for good.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">New content goes out constantly, in your voice</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Social posts, emails and promotions, always being created and refined in your brand's voice, without you writing a word.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We tell you where your ad spend is working</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">If you run paid ads, we show you which ones are actually making you money, and which ones to stop.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We show you exactly where every booking came from</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Every booking gets traced back to what actually caused it, an email, an ad, a referral, so you know what's really working.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">One clear summary of your whole business</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Instead of digging through five dashboards, you get one plain-English summary of how everything is actually going.</div></div></div>
-        </div>
-        <p class="pricing-phase-note">Coming soon. Join the waitlist to be first to know when this tier launches.</p>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Growth, plus:</div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Ads run and refined for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Instagram, Facebook, Google and AI assistant ads, with budget moved to whatever brings bookings. Ad spend is paid to your own account.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Content produced in your style</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Imagery, social posts and email designs created in your brand style every week.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Every booking traced to its source</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">See which ad, post or message brought each guest, so you know where to spend next.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">A monthly strategy session</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">A person from our team reviews your numbers with you each month and agrees the next priorities.</div></div></div>
       </div>
     </div>
     <p class="pricing-note reveal">No setup fee · 3-month minimum · Cancel with 30 days notice</p>
+    <p class="pricing-note reveal">Every plan can be run by you or run for you by our team. Prices are per location.</p>
     </div>
   </div>
 </section>
@@ -3475,10 +3447,16 @@ const io = new IntersectionObserver((entries) => {
 reveals.forEach(el => io.observe(el));
 </script>
 
-<!-- Pricing gate: saves the email to the "meridian-pricing" form in Netlify Forms, then shows pricing.
-     Submissions appear in the Netlify project under Forms. Later they will be forwarded to the CRM. -->
+<!-- Pricing gate: subscribes the email to a Klaviyo list, then shows pricing.
+     Uses Klaviyo's public site key, which is designed to sit in website code.
+     Never put a private key (starting pk_) in this file. -->
 <script>
 (function(){
+  var KLAVIYO_PUBLIC_KEY = "TheXup";
+  var KLAVIYO_LIST_ID = "Uc43nb";   // Meridian Pricing list
+  // Until the list ID is added, sign-ups go to the HubSpot newsletter form so none are lost.
+  var HUBSPOT_PORTAL = "242476902", HUBSPOT_FORM = "fb939971-6d17-4d58-a10d-104ca9997c98";
+
   var unlocked = false;
   try {
     if (/[?&]showform\b/.test(location.search)) localStorage.removeItem('meridian_pricing_unlocked');
@@ -3491,9 +3469,29 @@ reveals.forEach(el => io.observe(el));
   var btn = document.getElementById('pricing-submit');
   var err = document.getElementById('pricing-error');
 
-  function save(email){
-    var body = new URLSearchParams({ 'form-name': 'meridian-pricing', email: email, source: 'Pricing gate', page: location.href, company_website: '' });
-    return fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() });
+  function toKlaviyo(email){
+    return fetch('https://a.klaviyo.com/client/subscriptions/?company_id=' + encodeURIComponent(KLAVIYO_PUBLIC_KEY), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
+      body: JSON.stringify({ data: {
+        type: 'subscription',
+        attributes: {
+          custom_source: 'Meridian pricing',
+          profile: { data: { type: 'profile', attributes: {
+            email: email,
+            properties: { meridian_source: 'Pricing gate', meridian_page: location.href }
+          } } }
+        },
+        relationships: { list: { data: { type: 'list', id: KLAVIYO_LIST_ID } } }
+      } })
+    });
+  }
+  function toHubSpot(email){
+    return fetch('https://api.hsforms.com/submissions/v3/integration/submit/' + HUBSPOT_PORTAL + '/' + HUBSPOT_FORM, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: [{ name: 'email', value: email }], context: { pageUri: location.href, pageName: document.title } })
+    });
   }
 
   form.addEventListener('submit', function(e){
@@ -3506,7 +3504,8 @@ reveals.forEach(el => io.observe(el));
     }
     err.textContent = '';
     btn.disabled = true; btn.textContent = 'One moment';
-    save(email).then(function(res){
+    var send = (KLAVIYO_LIST_ID && KLAVIYO_LIST_ID !== 'ADD_LIST_ID') ? toKlaviyo(email) : toHubSpot(email);
+    send.then(function(res){
       if (!res.ok) throw new Error('status ' + res.status);
       revealPricing();
     }).catch(function(){
