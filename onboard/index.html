@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get started · Meridian by Pixel Primed</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../app/app.css">
+<style>
+  .ob-top{background:var(--white);border-bottom:1px solid var(--rule);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px}
+  .ob-top .brand{padding:0}
+  .ob-top small{color:var(--label);font-size:13px}
+  .ob{max-width:760px;margin:0 auto;padding:44px 24px 80px}
+  .ob h1{font-family:var(--serif);font-weight:500;font-size:34px;line-height:1.15}
+  .ob .lead{color:var(--label);margin:8px 0 28px;max-width:58ch}
+  .steps{display:flex;gap:6px;margin-bottom:10px}
+  .steps span{flex:1;height:3px;border-radius:2px;background:var(--tile)}
+  .steps span.on{background:var(--teal)}
+  .step-label{font-size:12.5px;color:var(--label);margin-bottom:18px}
+  fieldset{border:0;display:none}
+  fieldset.active{display:block}
+  legend{font-family:var(--serif);font-size:24px;font-weight:500;margin-bottom:6px}
+  .why{color:var(--label);font-size:13.5px;margin-bottom:24px;max-width:60ch}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
+  .full{grid-column:1/-1}
+  .field label,.field .q{display:block;font-size:13px;font-weight:500;margin-bottom:6px}
+  .field .hint{display:block;font-size:12px;color:var(--label);margin:-2px 0 8px;font-weight:400}
+  .req{color:var(--teal-dk)}
+  input[type=text],input[type=email],input[type=url],input[type=tel],input[type=number],select,textarea{width:100%;border:1px solid var(--rule);background:var(--white);border-radius:var(--r);padding:11px 12px;font:inherit;font-size:14px;color:var(--ink)}
+  textarea{min-height:88px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal)}
+  .invalid{border-color:var(--warn)!important}
+  .choices{display:flex;flex-wrap:wrap;gap:8px}
+  .choices label{display:flex;align-items:center;gap:8px;border:1px solid var(--rule);background:var(--white);border-radius:var(--r);padding:9px 12px;font-size:13.5px;font-weight:400;cursor:pointer;margin:0}
+  .choices input{accent-color:var(--teal)}
+  .choices label:has(input:checked){border-color:var(--teal);color:var(--ink)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .cards label{display:block;border:1px solid var(--rule);background:var(--white);border-radius:var(--r);padding:16px 18px;cursor:pointer;margin:0}
+  .cards label:has(input:checked){border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+  .cards input{accent-color:var(--teal);margin-right:8px}
+  .cards strong{font-weight:600;font-size:14px}
+  .cards span{display:block;font-size:12.5px;color:var(--label);margin-top:4px;font-weight:400}
+  .nav-btns{display:flex;justify-content:space-between;margin-top:32px;padding-top:24px;border-top:1px solid var(--rule)}
+  .nav-btns .btn{padding:11px 22px;font-size:14px}
+  .err{color:var(--warn);font-size:13px;margin-top:14px;min-height:1em}
+  .hidden{display:none!important}
+  .done{text-align:center;padding:40px 0}
+  .done .brand-mark{width:44px;height:44px;margin:0 auto 20px}
+  .done ol{text-align:left;max-width:440px;margin:24px auto 0;color:var(--body);padding-left:20px}
+  .done li{margin-bottom:8px}
+  @media (max-width:640px){.fields,.cards{grid-template-columns:1fr}.ob h1{font-size:28px}.ob-top{padding:0 20px}.ob-top small{display:none}}
+</style>
+</head>
+<body>
+<header class="ob-top">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Meridian</span></div>
+  <small>by Pixel Primed</small>
+</header>
+
+<main class="ob">
+  <div id="intro">
+    <h1>Tell us about your business</h1>
+    <p class="lead">About 12 minutes. Your answers set up your goals, guest journeys and dashboard. Nothing goes out to your guests until you approve it.</p>
+    <div class="steps" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <p class="step-label" id="step-label">Step 1 of 6</p>
+  </div>
+
+  <form id="onboard" name="meridian-onboarding" method="POST" data-netlify="true" netlify-honeypot="company_website" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="form-name" value="meridian-onboarding">
+    <p class="hidden"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off"></label></p>
+
+    <!-- 1 -->
+    <fieldset class="active" data-title="About your business">
+      <legend>About your business</legend>
+      <p class="why">The basics, plus how you would like Meridian to run.</p>
+      <div class="fields">
+        <div class="field"><label for="business_name">Business name <span class="req">*</span></label><input type="text" id="business_name" name="business_name" required></div>
+        <div class="field"><label for="owner_name">Your first name <span class="req">*</span></label><input type="text" id="owner_name" name="owner_name" required></div>
+        <div class="field"><label for="email">Business email <span class="req">*</span></label><input type="email" id="email" name="email" required></div>
+        <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone"></div>
+        <div class="field"><label for="website">Website</label><input type="url" id="website" name="website" placeholder="https://"></div>
+        <div class="field"><label for="city">City <span class="req">*</span></label><input type="text" id="city" name="city" required></div>
+        <div class="field"><label for="country">Country</label><select id="country" name="country"><option>Australia</option><option>New Zealand</option><option>Indonesia</option><option>Singapore</option><option>United States</option><option>Other</option></select></div>
+        <div class="field"><label for="locations">Number of locations <span class="req">*</span></label><select id="locations" name="locations" required><option value="">Choose</option><option>1</option><option>2 to 10</option><option>11 or more</option></select></div>
+        <div class="field full"><label for="business_type">Business type <span class="req">*</span></label>
+          <select id="business_type" name="business_type" required><option value="">Choose</option>
+            <option>Day spa</option><option>Bathhouse</option><option>Day spa and bathhouse</option><option>Float and recovery centre</option><option>Recovery and IV clinic</option><option>Medical aesthetics</option><option>Beauty and skin clinic</option><option>Yoga or pilates studio</option><option>Holistic health centre</option><option>Wellness retreat</option><option>Retreat facilitator</option><option>Boutique hotel</option><option>Venue hire</option><option>Product brand</option><option>Other</option>
+          </select></div>
+        <div class="field full"><span class="q">How would you like Meridian run? <span class="req">*</span></span>
+          <div class="cards">
+            <label><input type="radio" name="management" value="Self-managed" required><strong>I'll run it myself</strong><span>You approve content and recommendations, with our team on hand.</span></label>
+            <label><input type="radio" name="management" value="Managed"><strong>Manage it for me</strong><span>Our team runs content, ads and strategy. You see everything in your dashboard.</span></label>
+          </div></div>
+      </div>
+    </fieldset>
+
+    <!-- 2 -->
+    <fieldset data-title="Your goals">
+      <legend>Your goals</legend>
+      <p class="why">Meridian works backwards from these to plan your channels and budget, then tracks progress every week.</p>
+      <div class="fields">
+        <div class="field"><label for="revenue_goal">Monthly revenue goal ($) <span class="req">*</span></label><input type="number" id="revenue_goal" name="revenue_goal" min="0" required></div>
+        <div class="field"><label for="current_revenue">Current monthly revenue ($)</label><input type="number" id="current_revenue" name="current_revenue" min="0"><span class="hint">An estimate is fine. Kept private.</span></div>
+        <div class="field"><label for="new_guest_goal">New guests a month</label><input type="number" id="new_guest_goal" name="new_guest_goal" min="0"></div>
+        <div class="field"><label for="avg_visit">Average spend per visit ($)</label><input type="number" id="avg_visit" name="avg_visit" min="0"></div>
+        <div class="field"><label for="rebook_goal">Share of guests you want to rebook (%)</label><input type="number" id="rebook_goal" name="rebook_goal" min="0" max="100" placeholder="For example 60"></div>
+        <div class="field"><label for="ad_budget">Monthly ad budget</label><select id="ad_budget" name="ad_budget"><option value="">Choose</option><option>None for now</option><option>Under $500</option><option>$500 to $1,500</option><option>$1,500 to $5,000</option><option>Over $5,000</option><option>Recommend one for me</option></select></div>
+        <div class="field full retreat-only hidden"><span class="q">Retreat goals</span><span class="hint">Shown because you chose a retreat business.</span>
+          <div class="fields"><div class="field"><label for="places_goal">Places to sell this year</label><input type="number" id="places_goal" name="places_goal" min="0"></div><div class="field"><label for="ticket_price">Price per place ($)</label><input type="number" id="ticket_price" name="ticket_price" min="0"></div></div></div>
+        <div class="field full"><span class="q">What matters most right now?</span><span class="hint">Choose all that apply.</span>
+          <div class="choices">
+            <label><input type="checkbox" name="priorities" value="New guests">More new guests</label>
+            <label><input type="checkbox" name="priorities" value="Rebookings">More rebookings</label>
+            <label><input type="checkbox" name="priorities" value="Corporate clients">Corporate clients</label>
+            <label><input type="checkbox" name="priorities" value="Reviews">More Google reviews</label>
+            <label><input type="checkbox" name="priorities" value="Partnerships">Partnerships with other businesses</label>
+            <label><input type="checkbox" name="priorities" value="Stockists">Getting products stocked</label>
+            <label><input type="checkbox" name="priorities" value="Retreat places">Filling retreat places</label>
+            <label><input type="checkbox" name="priorities" value="Memberships">Memberships</label>
+          </div></div>
+      </div>
+    </fieldset>
+
+    <!-- 3 -->
+    <fieldset data-title="Treatments and bookings">
+      <legend>Treatments and bookings</legend>
+      <p class="why">Your treatments set when guests get aftercare and when they are asked for a review.</p>
+      <div class="fields">
+        <div class="field full"><span class="q">What do you offer? <span class="req">*</span></span>
+          <div class="choices" data-required-group="offers">
+            <label><input type="checkbox" name="offers" value="Massage, bathhouse, sauna or float">Massage, bathhouse, sauna or float</label>
+            <label><input type="checkbox" name="offers" value="Facials, skin or LED">Facials, skin or LED</label>
+            <label><input type="checkbox" name="offers" value="Injectables, laser or peels">Injectables, laser or peels</label>
+            <label><input type="checkbox" name="offers" value="IV, NAD+ or hyperbaric">IV, NAD+ or hyperbaric</label>
+            <label><input type="checkbox" name="offers" value="Classes">Yoga, pilates or classes</label>
+            <label><input type="checkbox" name="offers" value="Retreats">Retreats</label>
+            <label><input type="checkbox" name="offers" value="Accommodation">Accommodation</label>
+            <label><input type="checkbox" name="offers" value="Products">Products</label>
+          </div></div>
+        <div class="field full"><span class="q">How would you like to take bookings? <span class="req">*</span></span>
+          <div class="cards">
+            <label><input type="radio" name="booking_choice" value="Meridian booking" required><strong>Use Meridian for bookings</strong><span>One system for bookings, payments, vouchers and memberships.</span></label>
+            <label><input type="radio" name="booking_choice" value="Keep current system"><strong>Keep my current system</strong><span>We connect Meridian to it.</span></label>
+          </div></div>
+        <div class="field"><label for="booking_platform">Current booking system</label><select id="booking_platform" name="booking_platform"><option value="">Choose</option><option>None yet</option><option>Fresha</option><option>Mindbody</option><option>Timely</option><option>Zenoti</option><option>Phorest</option><option>Jane App</option><option>Cliniko</option><option>Momence</option><option>WordPress or WooCommerce bookings</option><option>Other</option></select></div>
+        <div class="field"><label for="booking_url">Booking page link</label><input type="url" id="booking_url" name="booking_url" placeholder="https://"></div>
+        <div class="field full move-only hidden"><span class="q">What should we move across for you?</span><span class="hint">Moving your data is quoted separately.</span>
+          <div class="choices">
+            <label><input type="checkbox" name="migrate" value="Clients">Client list</label>
+            <label><input type="checkbox" name="migrate" value="Services">Services and prices</label>
+            <label><input type="checkbox" name="migrate" value="Gift vouchers">Gift voucher balances</label>
+            <label><input type="checkbox" name="migrate" value="Memberships">Memberships and packages</label>
+            <label><input type="checkbox" name="migrate" value="Future bookings">Future bookings</label>
+          </div></div>
+        <div class="field full"><span class="q">Do you sell any of these?</span>
+          <div class="choices">
+            <label><input type="checkbox" name="sells" value="Gift vouchers">Gift vouchers</label>
+            <label><input type="checkbox" name="sells" value="Packages">Packages</label>
+            <label><input type="checkbox" name="sells" value="Memberships">Memberships</label>
+            <label><input type="checkbox" name="sells" value="Intake forms">Treatments needing a health or intake form</label>
+          </div></div>
+      </div>
+    </fieldset>
+
+    <!-- 4 -->
+    <fieldset data-title="Your brand">
+      <legend>Your brand</legend>
+      <p class="why">So every message, post and image sounds and looks like you.</p>
+      <div class="fields">
+        <div class="field full"><label for="hero_offer">Your signature offer <span class="req">*</span></label><span class="hint">The treatment or experience you most want new guests to try.</span><textarea id="hero_offer" name="hero_offer" required></textarea></div>
+        <div class="field full"><label for="different">What makes you different</label><textarea id="different" name="different"></textarea></div>
+        <div class="field full"><label for="ideal_guest">Your ideal guest</label><textarea id="ideal_guest" name="ideal_guest"></textarea></div>
+        <div class="field full"><span class="q">Tone of voice <span class="req">*</span></span>
+          <div class="choices">
+            <label><input type="radio" name="tone" value="Luxurious and exclusive" required>Luxurious and exclusive</label>
+            <label><input type="radio" name="tone" value="Warm and nurturing">Warm and nurturing</label>
+            <label><input type="radio" name="tone" value="Clinical and professional">Clinical and professional</label>
+            <label><input type="radio" name="tone" value="Energetic and active">Energetic and active</label>
+          </div></div>
+        <div class="field full"><label for="voice_words">Describe your brand in your own words</label><textarea id="voice_words" name="voice_words"></textarea></div>
+        <div class="field"><label for="colour_primary">Main brand colour</label><input type="text" id="colour_primary" name="colour_primary" placeholder="For example #5F8F88"></div>
+        <div class="field"><label for="colour_accent">Accent colour</label><input type="text" id="colour_accent" name="colour_accent"></div>
+        <div class="field full"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG. We collect your brand photos on our onboarding call.</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
+      </div>
+    </fieldset>
+
+    <!-- 5 -->
+    <fieldset data-title="Reviews and online presence">
+      <legend>Reviews and online presence</legend>
+      <p class="why">Reviews collected through Meridian go to your own Google Business Profile, so they always belong to your business.</p>
+      <div class="fields">
+        <div class="field full"><span class="q">Do you have a Google Business Profile? <span class="req">*</span></span>
+          <div class="choices">
+            <label><input type="radio" name="gbp" value="Yes" required>Yes</label>
+            <label><input type="radio" name="gbp" value="No">No, please set one up</label>
+            <label><input type="radio" name="gbp" value="Not sure">Not sure</label>
+          </div></div>
+        <div class="field"><label for="gbp_name">Name on Google</label><input type="text" id="gbp_name" name="gbp_name"></div>
+        <div class="field"><label for="instagram">Instagram</label><input type="text" id="instagram" name="instagram" placeholder="@"></div>
+        <div class="field"><label for="facebook">Facebook page</label><input type="text" id="facebook" name="facebook"></div>
+        <div class="field"><label for="linkedin">LinkedIn</label><input type="text" id="linkedin" name="linkedin"></div>
+        <div class="field"><label for="site_platform">Website built on</label><select id="site_platform" name="site_platform"><option value="">Choose</option><option>WordPress</option><option>Shopify</option><option>Squarespace</option><option>Wix</option><option>Webflow</option><option>Other</option><option>Not sure</option></select></div>
+      </div>
+    </fieldset>
+
+    <!-- 6 -->
+    <fieldset data-title="Connections">
+      <legend>Connections</legend>
+      <p class="why">These let Meridian see which channels bring bookings, so it can move budget to what works. Not sure about any of these? Leave them and we will set them up with you on the call.</p>
+      <div class="fields">
+        <div class="field"><label for="ga4">Google Analytics measurement ID</label><span class="hint">Starts with G-</span><input type="text" id="ga4" name="ga4"></div>
+        <div class="field"><label for="search_console">Google Search Console</label><span class="hint">Shows the searches people use to find you.</span><select id="search_console" name="search_console"><option value="">Choose</option><option>Set up, I can give access</option><option>Not set up</option><option>Not sure</option></select></div>
+        <div class="field"><label for="meta_ads">Facebook and Instagram ads account</label><select id="meta_ads" name="meta_ads"><option value="">Choose</option><option>Yes, I can give access</option><option>No account yet</option><option>Not sure</option></select></div>
+        <div class="field"><label for="google_ads">Google Ads account</label><select id="google_ads" name="google_ads"><option value="">Choose</option><option>Yes, I can give access</option><option>No account yet</option><option>Not sure</option></select></div>
+        <div class="field"><label for="pixels">Tracking code on your website</label><span class="hint">Facebook pixel, Google tag or similar.</span><select id="pixels" name="pixels"><option value="">Choose</option><option>Installed</option><option>Not installed</option><option>Not sure</option></select></div>
+        <div class="field"><label for="email_provider">Your email is with</label><select id="email_provider" name="email_provider"><option value="">Choose</option><option>Google Workspace</option><option>Microsoft 365</option><option>Zoho</option><option>My website host</option><option>Other</option></select></div>
+        <div class="field full"><span class="q">Sending messages to new guests and businesses</span><span class="hint">We send from a separate address, such as hello@try-yourbusiness.com, so your main email stays protected.</span>
+          <div class="choices">
+            <label><input type="radio" name="outreach_domain" value="Set one up for me">Set one up for me</label>
+            <label><input type="radio" name="outreach_domain" value="I have one">I already have one</label>
+            <label><input type="radio" name="outreach_domain" value="Discuss on call">Let's discuss on the call</label>
+          </div></div>
+        <div class="field full"><label for="notes">Anything else we should know?</label><textarea id="notes" name="notes"></textarea></div>
+      </div>
+    </fieldset>
+
+    <p class="err" id="err" role="alert"></p>
+    <div class="nav-btns">
+      <button type="button" class="btn ghost" id="back">Back</button>
+      <button type="button" class="btn" id="next">Continue</button>
+    </div>
+  </form>
+
+  <section class="done hidden" id="done" aria-live="polite">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h1>Thank you, we have everything we need</h1>
+    <p class="lead" style="margin:10px auto 0">Here is what happens next.</p>
+    <ol>
+      <li>We set up your goals, guest journeys and dashboard.</li>
+      <li>We book your onboarding call to connect your accounts and collect brand photos.</li>
+      <li>You approve your first messages and content. Nothing is sent before you do.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(function () {
+  var form = document.getElementById('onboard');
+  var sets = Array.prototype.slice.call(form.querySelectorAll('fieldset'));
+  var bars = document.querySelectorAll('.steps span');
+  var back = document.getElementById('back'), next = document.getElementById('next'), err = document.getElementById('err');
+  var i = 0;
+
+  function show(n) {
+    sets.forEach(function (f, k) { f.classList.toggle('active', k === n); });
+    bars.forEach(function (b, k) { b.classList.toggle('on', k <= n); });
+    document.getElementById('step-label').textContent = 'Step ' + (n + 1) + ' of ' + sets.length + ', ' + sets[n].getAttribute('data-title');
+    back.style.visibility = n === 0 ? 'hidden' : 'visible';
+    next.textContent = n === sets.length - 1 ? 'Submit and start setup' : 'Continue';
+    err.textContent = '';
+    window.scrollTo(0, 0);
+  }
+
+  function valid(set) {
+    var ok = true;
+    set.querySelectorAll('[required]').forEach(function (el) {
+      if (el.type === 'radio') {
+        var any = set.querySelector('input[name="' + el.name + '"]:checked');
+        if (!any) ok = false;
+        return;
+      }
+      var good = el.value.trim() !== '' && (el.type !== 'email' || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(el.value));
+      el.classList.toggle('invalid', !good);
+      if (!good) ok = false;
+    });
+    set.querySelectorAll('[data-required-group]').forEach(function (g) {
+      if (!g.querySelector('input:checked')) ok = false;
+    });
+    return ok;
+  }
+
+  // Conditional questions
+  document.getElementById('business_type').addEventListener('change', function () {
+    var retreat = /Retreat/.test(this.value);
+    document.querySelector('.retreat-only').classList.toggle('hidden', !retreat);
+  });
+  form.querySelectorAll('input[name="booking_choice"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      document.querySelector('.move-only').classList.toggle('hidden', this.value !== 'Meridian booking');
+    });
+  });
+
+  back.addEventListener('click', function () { if (i > 0) show(--i); });
+  next.addEventListener('click', function () {
+    if (!valid(sets[i])) { err.textContent = 'Please complete the questions marked with a star.'; return; }
+    if (i < sets.length - 1) { show(++i); return; }
+    next.disabled = true; next.textContent = 'Sending';
+    fetch('/', { method: 'POST', body: new FormData(form) })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        form.classList.add('hidden'); document.getElementById('intro').classList.add('hidden');
+        document.getElementById('done').classList.remove('hidden');
+      })
+      .catch(function () {
+        next.disabled = false; next.textContent = 'Submit and start setup';
+        err.innerHTML = 'Your answers did not send. Please try again, or email <a href="mailto:contact@pixelprimed.com">contact@pixelprimed.com</a>.';
+      });
+  });
+
+  show(0);
+})();
+</script>
+</body>
+</html>

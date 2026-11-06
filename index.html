@@ -3174,7 +3174,11 @@ hcUpdate();
       </div>
       <div style="font-family:var(--serif);font-size:22px;font-weight:500;color:var(--heading);margin-bottom:8px;">See the four plans and what's in each</div>
       <p class="gate-intro">Enter your email to see the plans. One monthly plan in place of the many platforms, subscriptions and logins you pay for and manage today.</p>
-      <form id="meridian-pricing-form" class="gate-form" novalidate>
+      <form id="meridian-pricing-form" class="gate-form" name="meridian-pricing" method="POST" data-netlify="true" netlify-honeypot="company_website" novalidate>
+        <input type="hidden" name="form-name" value="meridian-pricing">
+        <input type="hidden" name="source" value="Pricing gate">
+        <input type="hidden" name="page" value="">
+        <p class="gate-label"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off"></label></p>
         <label class="gate-label" for="pricing-email">Email address</label>
         <div class="gate-row">
           <input type="email" id="pricing-email" name="email" placeholder="you@yourbusiness.com" autocomplete="email" required>
@@ -3471,16 +3475,10 @@ const io = new IntersectionObserver((entries) => {
 reveals.forEach(el => io.observe(el));
 </script>
 
-<!-- Pricing gate: subscribes the email to a Klaviyo list, then shows pricing.
-     Uses Klaviyo's public site key, which is designed to sit in website code.
-     Never put a private key (starting pk_) in this file. -->
+<!-- Pricing gate: saves the email to the "meridian-pricing" form in Netlify Forms, then shows pricing.
+     Submissions appear in the Netlify project under Forms. Later they will be forwarded to the CRM. -->
 <script>
 (function(){
-  var KLAVIYO_PUBLIC_KEY = "TheXup";
-  var KLAVIYO_LIST_ID = "Uc43nb";   // Meridian Pricing list
-  // Until the list ID is added, sign-ups go to the HubSpot newsletter form so none are lost.
-  var HUBSPOT_PORTAL = "242476902", HUBSPOT_FORM = "fb939971-6d17-4d58-a10d-104ca9997c98";
-
   var unlocked = false;
   try {
     if (/[?&]showform\b/.test(location.search)) localStorage.removeItem('meridian_pricing_unlocked');
@@ -3493,29 +3491,9 @@ reveals.forEach(el => io.observe(el));
   var btn = document.getElementById('pricing-submit');
   var err = document.getElementById('pricing-error');
 
-  function toKlaviyo(email){
-    return fetch('https://a.klaviyo.com/client/subscriptions/?company_id=' + encodeURIComponent(KLAVIYO_PUBLIC_KEY), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
-      body: JSON.stringify({ data: {
-        type: 'subscription',
-        attributes: {
-          custom_source: 'Meridian pricing',
-          profile: { data: { type: 'profile', attributes: {
-            email: email,
-            properties: { meridian_source: 'Pricing gate', meridian_page: location.href }
-          } } }
-        },
-        relationships: { list: { data: { type: 'list', id: KLAVIYO_LIST_ID } } }
-      } })
-    });
-  }
-  function toHubSpot(email){
-    return fetch('https://api.hsforms.com/submissions/v3/integration/submit/' + HUBSPOT_PORTAL + '/' + HUBSPOT_FORM, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: [{ name: 'email', value: email }], context: { pageUri: location.href, pageName: document.title } })
-    });
+  function save(email){
+    var body = new URLSearchParams({ 'form-name': 'meridian-pricing', email: email, source: 'Pricing gate', page: location.href, company_website: '' });
+    return fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() });
   }
 
   form.addEventListener('submit', function(e){
@@ -3528,8 +3506,7 @@ reveals.forEach(el => io.observe(el));
     }
     err.textContent = '';
     btn.disabled = true; btn.textContent = 'One moment';
-    var send = (KLAVIYO_LIST_ID && KLAVIYO_LIST_ID !== 'ADD_LIST_ID') ? toKlaviyo(email) : toHubSpot(email);
-    send.then(function(res){
+    save(email).then(function(res){
       if (!res.ok) throw new Error('status ' + res.status);
       revealPricing();
     }).catch(function(){
