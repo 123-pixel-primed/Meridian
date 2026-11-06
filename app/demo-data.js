@@ -12,10 +12,12 @@ window.MERIDIAN_DATA = {
   },
 
   stats: [
-    { n: '3.4x', l: 'Return on ad spend', d: '+0.6 on last month' },
+    { n: '3.4x', l: 'Return on ad spend', d: '+0.6 on last month', needs: 'ads' },
+    { n: '58%', l: 'Guests who rebook', d: '+3 points on last month' },
     { n: '486', l: 'Bookings', d: '+9% on last month' },
     { n: '4.8', l: 'Google rating, 126 reviews', d: '+14 reviews this month' },
-    { n: '72', l: 'Website score out of 100', d: '+6 since last month' }
+    { n: '72', l: 'Website score out of 100', d: '+6 since last month', needs: 'website' },
+    { n: '68', l: 'Growth audit score', d: '+14 since you joined' }
   ],
 
   revenueBySource: [
@@ -35,10 +37,11 @@ window.MERIDIAN_DATA = {
 
   activity: [
     { t: 'Aftercare messages sent', v: '212' },
-    { t: 'Messages to new guests', v: '146' },
+    { t: 'Messages to new guests', v: '146', needs: 'guests' },
     { t: 'Review requests sent', v: '98' },
     { t: 'Rebooking reminders', v: '74' },
-    { t: 'Contacts added to your list', v: '131' }
+    { t: 'Contacts added to your list', v: '131' },
+    { t: 'Questions answered for you', v: '204' }
   ],
 
   recommendation: {
@@ -333,3 +336,28 @@ window.MERIDIAN_DATA.inbox = [
  { name: 'Coastline Physio', channel: 'Email', time: 'Yesterday', status: 'Answered', text: 'Following up on the team recovery morning for 12 staff.', draft: '' },
  { name: 'Grace L.', channel: 'Website chat', time: 'Mon', status: 'Answered', text: 'Is the bathhouse suitable during pregnancy?', draft: '' }
 ];
+
+/* Plan the client is on: core, growth or scale. The demo lets visitors switch. */
+window.MERIDIAN_DATA.tier = 'growth';
+
+window.MERIDIAN_DATA.audit = {
+  joined: 'August 2026',
+  baseline: 54,
+  now: 68,
+  sections: [
+    { l: 'Reviews and Google profile', base: 62, now: 84 },
+    { l: 'Guest journeys and email', base: 38, now: 76 },
+    { l: 'Loyalty and return visits', base: 45, now: 66 },
+    { l: 'Website and booking flow', base: 58, now: 71 },
+    { l: 'Found by AI assistants', base: 41, now: 58 },
+    { l: 'Search and local visibility', base: 60, now: 69 },
+    { l: 'Paid ads', base: 50, now: 63 },
+    { l: 'Market position', base: 66, now: 70 },
+    { l: 'Systems and data', base: 52, now: 74 }
+  ],
+  next: [
+    { t: 'Add treatment pages with prices and booking buttons', i: 'Biggest gap in website and booking flow' },
+    { t: 'Answer the 8 questions guests ask most', i: 'Lifts your AI assistant score' },
+    { t: 'Invite regulars to membership after their fourth visit', i: 'Lifts loyalty and return visits' }
+  ]
+};

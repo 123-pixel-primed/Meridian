@@ -7,6 +7,8 @@ One repository for everything Meridian: the marketing homepage, the public demo,
 | `index.html` | Marketing homepage | https://meridian.pixelprimed.com |
 | `demo/` | Click-through demo with sample data. Safe for anyone to explore: no logins, no live connections | /demo |
 | `onboard/` | Onboarding form for new clients | /onboard |
+| `book-a-demo/` | Book a demo form (Netlify form `meridian-demo-request`) |
+| `docs/` | Build scope summary; the full Master Scope doc is linked inside |
 | `app/` | The client dashboard. The demo runs the same screens with sample data | /app (not live yet) |
 
 ## Homepage pricing form

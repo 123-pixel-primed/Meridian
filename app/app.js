@@ -103,6 +103,30 @@
     return '<div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="approve">Approve</button></div>';
   }
 
+  /* ---------- plans ---------- */
+  var TIER_NAMES = { core: 'Core', growth: 'Growth', scale: 'Scale' };
+  var TIER_SCREENS = {
+    core: ['overview', 'messages', 'bookings', 'returning', 'reviews', 'audit'],
+    growth: ['overview', 'messages', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners'],
+    scale: ['overview', 'messages', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners', 'ads']
+  };
+  var UPGRADE = {
+    plan: ['Growth', 'A marketing plan built from your goals', ['Set a revenue goal and see the channels and budget to reach it', 'Progress tracked against your goal every week', 'One clear recommendation each Monday']],
+    guests: ['Growth', 'New guests, found and messaged for you', ['Personal messages to new guests and local businesses', 'Corporate wellness and partner referrals', 'See every first visit and where it came from']],
+    content: ['Growth', 'Content written for you every week', ['Social posts, emails and articles in your voice', 'Approve or edit before anything is published', 'Imagery created in your brand style on Scale']],
+    website: ['Growth', 'Get found on Google and AI assistants', ['A monthly website score', 'The fixes that bring the most bookings, made for you', 'Track how often AI assistants recommend you']],
+    partners: ['Growth', 'Partner with businesses that share your guests', ['Matched with nearby businesses, never competitors', 'Referral ideas that suit both sides', 'Track partner referrals in your dashboard']],
+    ads: ['Scale', 'Ads run and refined for you', ['Instagram, Facebook, Google and AI assistant ads', 'Budget moved to whatever brings bookings', 'Every booking traced to the ad that brought it']]
+  };
+  function tier() { return D.tier || 'core'; }
+  function has(screen) { return TIER_SCREENS[tier()].indexOf(screen) >= 0; }
+  function upgradeView(r) {
+    var u = UPGRADE[r], title = { plan: 'Plan and goals', guests: 'New guests', content: 'Content', website: 'Website', partners: 'Partners', ads: 'Ads' }[r];
+    return head(title, 'Available on the ' + u[0] + ' plan.') +
+      '<section class="panel upgrade"><div class="up-mark" aria-hidden="true"></div><h2 class="up-title">' + esc(u[1]) + '</h2><ul class="up-list">' + u[2].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+      '<div class="actions"><a class="btn" href="' + (D.sample ? '../book-a-demo/' : 'mailto:contact@pixelprimed.com?subject=Upgrade%20to%20' + u[0]) + '" style="text-decoration:none">Talk to us about ' + u[0] + '</a></div></section>';
+  }
+
   /* ---------- screens ---------- */
   var V = {};
 
@@ -117,12 +141,16 @@
           mini(g.rebookRate.actual / g.rebookRate.target, g.rebookRate.actual + '%', 'Guests who rebook', 'Goal is ' + g.rebookRate.target + '%') +
 '</div></div></section>';
 
-    var recItem = '<li><span class="thumb icon" aria-hidden="true">\u2197</span><div class="grow"><div>' + esc(D.recommendation.t) + '</div><div class="meta">Recommendation, <a href="#plan">see why</a></div></div><button class="btn" data-act="approve">Approve</button></li>';
-    var side = panel('Waiting for you', D.approvalsCount + ' things to approve', '<ul class="list">' + recItem + D.approvals.map(function (a) {
+    var recItem = has('plan') ? '<li><span class="thumb icon" aria-hidden="true">\u2197</span><div class="grow"><div>' + esc(D.recommendation.t) + '</div><div class="meta">Recommendation, <a href="#plan">see why</a></div></div><button class="btn" data-act="approve">Approve</button></li>' : '';
+    var msgItems = (D.inbox || []).filter(function (m) { return m.status === 'Needs a reply'; }).map(function (m) {
+      return '<li><span class="thumb icon" aria-hidden="true">\u2709</span><div class="grow"><div>Reply to ' + esc(m.name) + '</div><div class="meta">' + esc(m.channel) + ', reply drafted</div></div><a class="btn" href="#messages" style="text-decoration:none">Open</a></li>';
+    }).join('');
+    recItem = recItem + msgItems;
+    var side = panel('Waiting for you', 'Drafted for you to approve', '<ul class="list">' + recItem + D.approvals.filter(function (a) { return has('content') || a.type === 'Review reply'; }).map(function (a) {
       return '<li>' + (a.img ? '<img class="thumb" src="' + a.img + '" alt="">' : '<span class="thumb icon" aria-hidden="true">\u2605</span>') + '<div class="grow"><div>' + esc(a.title) + '</div><div class="meta">' + esc(a.type) + ', ' + esc(a.when) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
-    }).join('') + '</ul>', '', ['See all', '#content']);
+    }).join('') + '</ul>', '', has('content') ? ['See all', '#content'] : null);
 
-    var stats = '<div class="stats-row">' + D.stats.map(function (s) {
+    var stats = '<div class="stats-row">' + D.stats.filter(function (s) { return !s.needs || has(s.needs); }).slice(0, 4).map(function (s) {
       return '<section class="panel stat"><span class="n">' + s.n + '</span><span class="l">' + esc(s.l) + '</span><span class="delta">' + esc(s.d) + '</span></section>';
     }).join('') + '</div>';
 
@@ -135,7 +163,7 @@
         panel('Where revenue came from', D.period, bars(D.revenueBySource, money)) +
         panel('Bookings each week', 'Last 8 weeks, with your weekly goal', line(wb.labels, wb.values, wb.target, { min: 80, aria: 'Weekly bookings rising from 98 to 126' }) + '<div class="legend"><span><i></i>Bookings</span><span><i class="gold"></i>Weekly goal</span></div>') +
       '</div><div style="height:20px"></div>' +
-      panel('What Meridian did for you', D.period, '<div class="activity">' + D.activity.map(function (a) {
+      panel('What Meridian did for you', D.period, '<div class="activity">' + D.activity.filter(function (a) { return !a.needs || has(a.needs); }).map(function (a) {
         return '<div class="stat"><span class="n" style="font-size:26px">' + a.v + '</span><span class="l">' + esc(a.t) + '</span></div>';
       }).join('') + '</div>');
   };
@@ -163,6 +191,22 @@
       '<div class="bubble in">' + esc(first.text) + '</div>' +
       (first.draft ? '<div class="draft"><div class="meta">Suggested reply, checked against your live availability</div><textarea aria-label="Reply">' + esc(first.draft) + '</textarea><div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="approve">Send</button></div></div>' : '<div class="meta">Answered. Nothing waiting.</div>') + '</div>';
   }
+
+  V.audit = function () {
+    var a = D.audit, monthly = has('plan');
+    var rows = a.sections.map(function (x) {
+      var v = monthly ? x.now : x.base;
+      return '<div class="bar-row"><span class="lab">' + esc(x.l) + '</span><div class="bar-track" style="position:relative"><div class="bar-fill" style="width:' + v + '%"></div>' + (monthly ? '<span class="base-mark" style="left:' + x.base + '%" title="When you joined: ' + x.base + '"></span>' : '') + '</div><span class="v">' + v + (monthly ? ' <small class="up">+' + (x.now - x.base) + '</small>' : '') + '</span></div>';
+    }).join('');
+    var score = monthly ? a.now : a.baseline;
+    return head('Growth audit', monthly ? 'Re-run every month and compared with your first audit in ' + a.joined + '.' : 'Your audit from when you joined in ' + a.joined + '. Monthly scorecards come with Growth.', '<button class="btn ghost" data-act="edit">Download full report</button>') +
+      '<section class="panel"><div class="hero"><div class="ring-big">' + ring(score / 100, 236, 3, TEAL, 'Audit score ' + score) + '<div class="in"><span class="val">' + score + '</span><span class="of">out of 100</span>' + (monthly ? '<span class="pct">+' + (a.now - a.baseline) + ' since you joined</span>' : '<span class="pct" style="color:' + LABEL + '">Starting point</span>') + '</div></div>' +
+      '<div style="width:100%;max-width:640px"><div class="bars wide">' + rows + '</div>' + (monthly ? '<div class="legend"><span><i></i>This month</span><span><i class="gold" style="width:2px;height:10px"></i>When you joined</span></div>' : '') + '</div></div></section>' +
+      '<div style="height:20px"></div>' +
+      panel('Biggest opportunities now', 'Ranked by likely effect on bookings', '<ul class="list">' + a.next.map(function (f) {
+        return '<li><span class="dot gold"></span><div class="grow"><div>' + esc(f.t) + '</div><div class="meta">' + esc(f.i) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
+      }).join('') + '</ul>');
+  };
 
   V.plan = function () {
     var c = D.plan.channels;
@@ -291,14 +335,22 @@
   };
 
   /* ---------- routing ---------- */
-  var routes = ['overview', 'messages', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
+  var routes = ['overview', 'messages', 'audit', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
   function render() {
     var r = (location.hash || '#overview').slice(1);
     if (routes.indexOf(r) < 0) r = 'overview';
-    $('#page').innerHTML = V[r]();
+    $('#page').innerHTML = has(r) ? V[r]() : upgradeView(r);
     document.querySelectorAll('.nav a').forEach(function (a) {
-      if (a.getAttribute('href') === '#' + r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      var key = a.getAttribute('href').slice(1);
+      if (key === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      var locked = !has(key);
+      a.classList.toggle('locked', locked);
+      var lk = a.querySelector('.lock');
+      if (locked && !lk) { lk = document.createElement('span'); lk.className = 'lock'; a.appendChild(lk); }
+      if (lk) lk.textContent = locked ? (UPGRADE[key] ? UPGRADE[key][0] : '') : '';
+      if (!locked && lk) lk.remove();
     });
+    var pl = $('#plan-name'); if (pl) pl.textContent = TIER_NAMES[tier()];
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', render);
@@ -335,5 +387,10 @@
   if (!D.sample) { var s = $('.sample'); if (s) s.remove(); }
   var c = $('#approvals-count'); if (c) c.textContent = D.approvalsCount;
   var mc = $('#messages-count'); if (mc) mc.textContent = (D.inbox || []).filter(function (m) { return m.status === 'Needs a reply'; }).length;
+  var sw = $('#tier-switch');
+  if (sw) {
+    if (!D.sample) sw.remove();
+    else { sw.value = tier(); sw.addEventListener('change', function () { D.tier = sw.value; render(); }); }
+  }
   render();
 })();

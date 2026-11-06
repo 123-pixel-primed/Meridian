@@ -18,6 +18,7 @@
       <ul class="nav">
         <li><a href="#overview"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 2v12"/></svg>Overview</a></li>
         <li><a href="#messages"><svg viewBox="0 0 16 16"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>Messages<span class="count" id="messages-count"></span></a></li>
+        <li><a href="#audit"><svg viewBox="0 0 16 16"><path d="M3 13V8M8 13V3M13 13V6"/></svg>Growth audit</a></li>
         <li><a href="#plan"><svg viewBox="0 0 16 16"><path d="M2 13l4-4 3 3 5-6"/></svg>Plan and goals</a></li>
         <li><a href="#bookings"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>Bookings</a></li>
         <li><a href="#guests"><svg viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 14c.8-2.8 2.7-4 5-4s4.2 1.2 5 4"/></svg>New guests</a></li>
@@ -29,7 +30,7 @@
         <li><a href="#partners"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="8" r="3.5"/><circle cx="10.5" cy="8" r="3.5"/></svg>Partners</a></li>
       </ul>
     </nav>
-    <div class="side-foot"><strong>Managed by Pixel Primed</strong>Questions? contact@pixelprimed.com</div>
+    <div class="side-foot"><strong><span id="plan-name"></span> plan</strong>Questions? contact@pixelprimed.com</div>
   </aside>
 
   <div class="main">
@@ -37,6 +38,8 @@
       <div class="venue" id="venue"></div>
       <div class="top-right">
         <span class="sample">Sample data</span>
+        <select class="tier-switch" id="tier-switch" aria-label="View the dashboard on a plan"><option value="core">Core plan</option><option value="growth">Growth plan</option><option value="scale">Scale plan</option></select>
+        <a class="btn" href="../book-a-demo/">Book a demo</a>
         <select class="period" aria-label="Time period"><option>Last 30 days</option><option>Last 90 days</option><option>This year</option></select>
       </div>
     </header>
