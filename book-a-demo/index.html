@@ -17,6 +17,10 @@
   .bd{max-width:1100px;margin:0 auto;padding:56px 24px 80px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:start}
   .bd h1{font-family:var(--serif);font-weight:500;font-size:40px;line-height:1.12}
   .bd .lead{color:var(--body);margin:14px 0 30px;font-size:15px;max-width:44ch}
+  .shot{margin:0 0 30px;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--white);box-shadow:0 18px 40px -24px rgba(40,50,48,.35)}
+  .shot .bar{height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;border-bottom:1px solid var(--rule)}
+  .shot .bar i{width:7px;height:7px;border-radius:50%;background:var(--rule)}
+  .shot img{display:block;width:100%;height:auto}
   .see{list-style:none;border-top:1px solid var(--rule)}
   .see li{padding:14px 0 14px 26px;border-bottom:1px solid var(--rule);position:relative;font-size:14px}
   .see li::before{content:'';position:absolute;left:0;top:19px;width:10px;height:10px;border:1px solid var(--teal);border-radius:50%}
@@ -57,6 +61,10 @@
   <section>
     <h1>See Meridian working for a business like yours</h1>
     <p class="lead">A 30 minute walkthrough, set up around your type of business before we meet.</p>
+    <figure class="shot">
+      <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <img src="dashboard.jpg" width="1600" height="1022" alt="The Meridian dashboard for a sample day spa, showing its revenue goal, new guests, guests who rebook and items waiting for approval" loading="eager">
+    </figure>
     <ul class="see">
       <li><strong>Your goals, mapped</strong><span>How Meridian plans your channels and budget from a revenue goal.</span></li>
       <li><strong>Bookings and guest journeys</strong><span>Booking, payments, vouchers and the messages that bring guests back.</span></li>
