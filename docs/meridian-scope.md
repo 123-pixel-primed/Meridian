@@ -26,7 +26,7 @@ Prices are per location per month (AUD). Every plan can be run by the client or 
 | --- | --- | --- |
 | Core | $390 | Keeping the guests you have: bookings, payments, vouchers, guest journeys, reviews, memberships and loyalty, one inbox, baseline growth audit, dashboard |
 | Growth | $790 | Core plus new guests: marketing plan from goals, outreach, corporate wellness and partnerships, content, Google and AI visibility, monthly growth audit, weekly next step |
-| Scale | $1,490 plus ad spend | Growth plus media: ads run and refined, content produced in the client's style, booking attribution, monthly strategy session |
+| Scale | $1,290 plus ad spend | Growth plus media: ads run and refined, content produced in the client's style, booking attribution, monthly strategy session |
 
 Core is retention and booking, not acquisition. A business that only wants to keep its guests buys Core; acquisition starts at Growth.
 

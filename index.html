@@ -2606,6 +2606,10 @@ footer { background: var(--tile); border-top: 0; }
 .pricing-grid.pricing-grid-3 { grid-template-columns: repeat(3, 1fr); max-width: 1040px; margin-left: auto; margin-right: auto; }
 @media (max-width: 900px) { .pricing-grid.pricing-grid-3 { grid-template-columns: 1fr; } }
 </style>
+<script>
+/* Tidy the address bar: remove tracking codes added by links from other sites. Meridian has no analytics that read them. */
+(function(){try{var u=new URL(location.href),k=['_gl','_ga','_gac'],c=false;k.forEach(function(x){if(u.searchParams.has(x)){u.searchParams.delete(x);c=true}});if(c)history.replaceState(history.state,'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams:'')+u.hash)}catch(e){}})();
+</script>
 </head>
 <body>
 
@@ -3231,7 +3235,7 @@ hcUpdate();
       <div class="pricing-card reveal">
         <div class="pricing-tier-label">Tier 3</div>
         <div class="pricing-name">Scale</div>
-        <div class="pricing-price" data-monthly="1,490" data-yearly="1,192">$1,490</div>
+        <div class="pricing-price" data-monthly="1,290" data-yearly="1,032">$1,290</div>
         <div class="pricing-period">per month, plus ad spend<span class="pricing-period-annual-note"> · billed annually</span></div>
         <p class="pricing-tier-desc">Everything in Growth, plus your content produced and your ads run for you.</p>
         <div class="pricing-divider"></div>
