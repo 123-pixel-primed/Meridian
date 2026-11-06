@@ -46,6 +46,7 @@
   .nav-btns{display:flex;justify-content:space-between;margin-top:32px;padding-top:24px;border-top:1px solid var(--rule)}
   .nav-btns .btn{padding:11px 22px;font-size:14px}
   .err{color:var(--warn);font-size:13px;margin-top:14px;min-height:1em}
+  .uploads{display:flex;flex-direction:column;gap:8px}
   .hidden{display:none!important}
   .done{text-align:center;padding:40px 0}
   .done .brand-mark{width:44px;height:44px;margin:0 auto 20px}
@@ -183,7 +184,10 @@
         <div class="field full"><label for="voice_words">Describe your brand in your own words</label><textarea id="voice_words" name="voice_words"></textarea></div>
         <div class="field"><label for="colour_primary">Main brand colour</label><input type="text" id="colour_primary" name="colour_primary" placeholder="For example #5F8F88"></div>
         <div class="field"><label for="colour_accent">Accent colour</label><input type="text" id="colour_accent" name="colour_accent"></div>
-        <div class="field full"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG. We collect your brand photos on our onboarding call.</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
+        <div class="field"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
+        <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, if you have one</span><input type="file" id="style_guide" name="style_guide" accept=".pdf"></div>
+        <div class="field full"><span class="q">Brand photos</span><span class="hint">Up to 5 photos of your space and treatments. Your favourite becomes the header image in your dashboard.</span><div class="uploads"><input type="file" id="brand_image_1" name="brand_image_1" accept=".jpg,.jpeg,.png" aria-label="Brand photo 1"><input type="file" id="brand_image_2" name="brand_image_2" accept=".jpg,.jpeg,.png" aria-label="Brand photo 2"><input type="file" id="brand_image_3" name="brand_image_3" accept=".jpg,.jpeg,.png" aria-label="Brand photo 3"><input type="file" id="brand_image_4" name="brand_image_4" accept=".jpg,.jpeg,.png" aria-label="Brand photo 4"><input type="file" id="brand_image_5" name="brand_image_5" accept=".jpg,.jpeg,.png" aria-label="Brand photo 5"></div></div>
+        <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Uploads are limited to 8 MB in total. Larger files can be shared on your onboarding call.</p>
       </div>
     </fieldset>
 
@@ -297,6 +301,9 @@
   next.addEventListener('click', function () {
     if (!valid(sets[i])) { err.textContent = 'Please complete the questions marked with a star.'; return; }
     if (i < sets.length - 1) { show(++i); return; }
+    var total = 0;
+    form.querySelectorAll('input[type=file]').forEach(function (f) { Array.prototype.forEach.call(f.files, function (x) { total += x.size; }); });
+    if (total > 8 * 1024 * 1024) { err.textContent = 'Your uploads are over 8 MB. Remove a photo and share it on your onboarding call instead.'; return; }
     next.disabled = true; next.textContent = 'Sending';
     fetch('/', { method: 'POST', body: new FormData(form) })
       .then(function (res) {
