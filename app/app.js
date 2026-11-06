@@ -106,9 +106,9 @@
   /* ---------- plans ---------- */
   var TIER_NAMES = { core: 'Core', growth: 'Growth', scale: 'Scale' };
   var TIER_SCREENS = {
-    core: ['overview', 'messages', 'bookings', 'returning', 'reviews', 'audit'],
-    growth: ['overview', 'messages', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners'],
-    scale: ['overview', 'messages', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners', 'ads']
+    core: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit'],
+    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners'],
+    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners', 'ads']
   };
   var UPGRADE = {
     plan: ['Growth', 'A marketing plan built from your goals', ['Set a revenue goal and see the channels and budget to reach it', 'Progress tracked against your goal every week', 'One clear recommendation each Monday']],
@@ -163,10 +163,25 @@
         panel('Where revenue came from', D.period, bars(D.revenueBySource, money)) +
         panel('Bookings each week', 'Last 8 weeks, with your weekly goal', line(wb.labels, wb.values, wb.target, { min: 80, aria: 'Weekly bookings rising from 98 to 126' }) + '<div class="legend"><span><i></i>Bookings</span><span><i class="gold"></i>Weekly goal</span></div>') +
       '</div><div style="height:20px"></div>' +
+      '<div class="grid g2">' + insightPanel() + returnPanel() + '</div><div style="height:20px"></div>' +
       panel('What Meridian did for you', D.period, '<div class="activity">' + D.activity.filter(function (a) { return !a.needs || has(a.needs); }).map(function (a) {
         return '<div class="stat"><span class="n" style="font-size:26px">' + a.v + '</span><span class="l">' + esc(a.t) + '</span></div>';
-      }).join('') + '</div>');
+      }).join('') + '</div>') +
+      '<div style="height:20px"></div><div class="grid g2">' +
+        panel('Your setup', D.setup.filter(okNeeds).length + ' of ' + D.setup.filter(okNeeds).length + ' complete', '<ul class="checks">' + D.setup.filter(okNeeds).map(function (x) { return '<li><span class="tick" aria-hidden="true"></span><div><div>' + esc(x.t) + '</div><div class="meta">' + esc(x.d) + '</div></div></li>'; }).join('') + '</ul>') +
+        panel('Everything running', 'Checked every morning', '<ul class="checks">' + D.status.filter(okNeeds).map(function (x) { return '<li><span class="live" aria-hidden="true"></span><div class="grow">' + esc(x.t) + '</div><span class="meta">' + esc(x.d) + '</span></li>'; }).join('') + '</ul>') +
+      '</div>';
   };
+  function okNeeds(x) { return !x.needs || has(x.needs); }
+  function insightPanel() {
+    var w = D.weeklyInsight, i = has('guests') ? w.growth : w.core;
+    return panel('Weekly insight', 'Meridian AI, ' + w.date, '<div class="rec"><div class="t">' + esc(i.t) + '</div><p>' + esc(i.p) + '</p><div class="actions"><button class="btn" data-act="approve">' + esc(i.a) + '</button><a class="btn ghost" href="#insights" style="text-decoration:none">More insights</a></div></div>');
+  }
+  function returnPanel() {
+    var t = tier(), cost = D.planPrice[t], rev = D.attributed[t], x = rev / cost;
+    return panel('Return on Meridian', D.period, '<div class="roi"><div class="stat"><span class="n">' + money(rev) + '</span><span class="l">Revenue Meridian brought in</span></div><div class="roi-x">' + x.toFixed(1) + 'x</div><div class="stat"><span class="n">' + money(cost) + '</span><span class="l">Your ' + TIER_NAMES[t] + ' plan</span></div></div>' +
+      '<div class="split" aria-label="Revenue compared with plan cost"><span style="width:' + Math.round(cost / rev * 100) + '%" class="cost"></span><span class="gain"></span></div><div class="legend"><span><i class="gold"></i>Plan cost</span><span><i></i>Revenue brought in</span></div>');
+  }
   function mini(p, val, t, d) {
     return '<div class="mini"><div class="mini-ring">' + ring(p, 64, 3, TEAL, t) + '<b>' + val + '</b></div><div><div class="t">' + esc(t) + '</div><div class="d">' + esc(d) + '</div></div></div>';
   }
@@ -243,16 +258,54 @@
   };
 
   V.guests = function () {
-    var n = D.newGuests;
-    return head('New guests', 'People reached for the first time and how many booked.') +
+    var n = D.newGuests, o = D.outreach;
+    return head('New guests', 'People reached for the first time, the messages that reach them and who is ready to book.') +
+      '<div class="stats-row">' + o.stats.map(function (x) { return '<section class="panel stat"><span class="n">' + x.n + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>' +
       '<div class="grid g2">' +
         panel('From first message to first visit', D.period, funnel(n.funnel)) +
         panel('Where new guests came from', D.period, bars(n.bySource)) +
       '</div><div style="height:20px"></div>' +
-      panel('Recent first visits', '', '<ul class="list">' + n.recent.map(function (r) {
-        return '<li><span class="dot"></span><div class="grow"><div>' + esc(r.name) + '</div><div class="meta">' + esc(r.first) + '</div></div><span class="tag">' + esc(r.src) + '</span><span style="width:70px;text-align:right;font-weight:500">' + r.val + '</span></li>';
-      }).join('') + '</ul>');
+      panel('Ready to book this week', 'Replied or visited your booking page. A reply is drafted for each.', '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Who</th><th>Where</th><th>Sign</th><th>Channel</th><th>When</th><th></th></tr></thead><tbody>' + o.ready.map(function (r) {
+        return '<tr><td><strong>' + esc(r.n) + '</strong></td><td>' + esc(r.w) + '</td><td>' + esc(r.s) + '</td><td><span class="tag">' + esc(r.c) + '</span></td><td class="meta">' + esc(r.when) + '</td><td><button class="btn" data-act="approve">Send reply</button></td></tr>';
+      }).join('') + '</tbody></table></div>') +
+      '<div style="height:20px"></div>' +
+      panel('Messages to new guests', 'Written in your voice. Nothing sends until you approve it.', '<div class="tabs" role="tablist">' +
+        ['Email', 'Instagram', 'LinkedIn'].map(function (c, k) { return '<button class="tab" role="tab" aria-selected="' + (k === 0) + '" data-ch="' + k + '">' + c + '</button>'; }).join('') +
+        '</div><div id="ch-view">' + chView(0) + '</div>') +
+      '<div style="height:20px"></div><div class="grid g2">' +
+        panel('Channels', 'Pause any channel at any time', '<ul class="list">' + o.channels.map(function (c) {
+          return '<li><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + esc(c.d) + '</div></div><button class="switch" role="switch" aria-checked="' + c.on + '" aria-label="' + esc(c.l) + '" data-act="switch"><span></span></button></li>';
+        }).join('') + '</ul>') +
+        panel('Instagram follow-backs', 'Local businesses and people who share your guests', funnel(o.follows)) +
+      '</div><div style="height:20px"></div><div class="grid g2">' +
+        panel('Going out next week', o.next.length + o.nextMore + ' messages', '<ul class="list">' + o.next.map(function (r) {
+          return '<li><span class="dot"></span><div class="grow"><div>' + esc(r.n) + '</div><div class="meta">' + esc(r.w) + ', ' + esc(r.m) + '</div></div><span class="tag">' + esc(r.c) + '</span><button class="btn ghost" data-act="edit">Edit</button></li>';
+        }).join('') + '<li><div class="grow meta">And ' + o.nextMore + ' more</div></li></ul>') +
+        panel('Recent first visits', '', '<ul class="list">' + n.recent.map(function (r) {
+          return '<li><span class="dot"></span><div class="grow"><div>' + esc(r.name) + '</div><div class="meta">' + esc(r.first) + '</div></div><span class="tag">' + esc(r.src) + '</span><span style="width:60px;text-align:right;font-weight:500">' + r.val + '</span></li>';
+        }).join('') + '</ul>') +
+      '</div>';
   };
+  function chView(k) {
+    var o = D.outreach;
+    if (k === 0) {
+      var done = o.email.filter(function (e) { return e.status === 'Approved'; }).length;
+      return '<p class="trigger">' + done + ' of ' + o.email.length + ' approved. Sent from your own email address.</p><div class="tabs">' + o.email.map(function (e, i) {
+        return '<button class="tab" aria-selected="' + (i === 0) + '" data-em="' + i + '">Email ' + (i + 1) + (e.status === 'Approved' ? '' : '<span class="pend">to approve</span>') + '</button>';
+      }).join('') + '</div><div id="em-view">' + emView(0) + '</div>';
+    }
+    var list = k === 1 ? o.instagram : o.linkedin;
+    var msgs = '<ol class="steps">' + list.map(function (m) { return '<li><div class="email-when">' + esc(m.when) + '</div><p>' + esc(m.b) + '</p><div class="actions"><button class="btn ghost" data-act="edit">Edit</button></div></li>'; }).join('') + '</ol>';
+    if (k === 2) return '<p class="trigger">A connection request, then one message when they accept. Best for corporate wellness.</p>' + msgs;
+    return '<p class="trigger">Starts when someone follows you back. Sent from your own Instagram account.</p><div class="ig">' + msgs +
+      '<div><div class="phone"><div class="ph-top"><span class="ph-av">L</span><div><b>' + esc(D.venue.name) + '</b><span>Instagram</span></div></div><div class="ph-msg out">' + esc(list[0].b) + '</div><div class="ph-msg in">Oh I have been meaning to try Biologique Recherche for ages. How do I book?</div></div>' +
+      '<div class="mini-stats">' + o.igStats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:22px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div></div></div>';
+  }
+  function emView(i) {
+    var e = D.outreach.email[i], ok = e.status === 'Approved';
+    return '<div class="em"><div class="em-meta"><div class="email-when">' + esc(e.when) + '</div><div class="em-subj">' + esc(e.s) + '</div><span class="tag ' + (ok ? 'on' : 'warn') + '">' + esc(e.status) + '</span>' + (e.r ? '<div class="meta" style="margin-top:10px">' + esc(e.r) + '</div>' : '') + '</div>' +
+      '<div class="em-body">' + esc(e.b).replace(/\n/g, '<br>') + '<div class="actions" style="margin-top:18px">' + (ok ? '<button class="btn ghost" data-act="edit">Edit</button>' : '<button class="btn ghost" data-act="edit">Request a change</button><button class="btn" data-act="approve">Approve</button>') + '</div></div></div>';
+  }
 
   V.returning = function () {
     var r = D.returning, rr = r.rebookRate;
@@ -292,7 +345,19 @@
   };
 
   V.content = function () {
-    return head('Content', 'Drafted for you. Nothing is published until you approve it.') +
+    var a = D.aiSearch;
+    return head('Content', 'Written for you every week. Nothing is published until you approve it.') +
+      '<div class="grid g-hero">' +
+        panel('Found by AI assistants', 'When guests ask an AI assistant for a recommendation', '<div class="mini-stats" style="margin-bottom:18px">' + a.stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:26px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
+          '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>') +
+        panel('Coming next month', D.nextMonth.length + ' articles planned', '<ul class="list">' + D.nextMonth.map(function (x) { return '<li><span class="dot off"></span><div class="grow">' + esc(x.t) + '</div><span class="meta">' + esc(x.d) + '</span></li>'; }).join('') + '</ul>') +
+      '</div><div style="height:20px"></div>' +
+      panel('Articles this month', 'How each article is found on Google', '<ul class="list arts">' + D.articles.map(function (x) {
+        var pub = x.status === 'Published';
+        return '<li><div class="grow"><div class="meta">' + esc(x.when) + '</div><div class="art-t">' + esc(x.t) + '</div><div class="kws">' + x.kw.map(function (k) { return '<span class="tag">' + esc(k) + '</span>'; }).join('') + '</div>' + (x.note ? '<div class="meta" style="margin-top:8px;max-width:60ch">' + esc(x.note) + '</div>' : '') + '</div>' +
+          (pub ? '<div class="art-n"><div><b>' + x.views + '</b><span>views</span></div><div><b>' + x.clicks + '</b><span>clicks</span></div><div><b>' + x.pos + '</b><span>position</span></div></div>' : '<div class="actions"><button class="btn ghost" data-act="edit">Preview</button><button class="btn" data-act="approve">Publish</button></div>') + '</li>';
+      }).join('') + '</ul>') +
+      '<div style="height:20px"></div><h2 class="sec">Posts and emails to approve</h2>' +
       '<div class="grid g3">' + D.content.map(function (c) {
         return '<section class="panel" style="padding:0;overflow:hidden"><img src="' + c.img + '" alt="" style="width:100%;height:180px;object-fit:cover;display:block"><div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px;color:' + LABEL + '">' + esc(c.type) + ', ' + esc(c.when) + '</div><div style="font-weight:500;margin:4px 0 16px">' + esc(c.title) + '</div>' + approveBtns() + '</div></section>';
       }).join('') + '</div>';
@@ -322,20 +387,45 @@
         panel('Top fixes this month', 'We can make these changes for you', '<ul class="list">' + w.fixes.map(function (f) {
           return '<li><span class="dot gold"></span><div class="grow"><div>' + esc(f.t) + '</div><div class="meta">' + esc(f.i) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
         }).join('') + '</ul>') +
-      '</div>';
+      '</div><div style="height:20px"></div>' + visitsBlock();
   };
+  function visitsBlock() {
+    var v = D.webVisits;
+    return '<h2 class="sec">Website visits</h2><div class="stats-row">' + v.stats.map(function (x) { return '<section class="panel stat"><span class="n">' + x.n + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>' +
+      '<div class="grid g3">' + panel('Most visited pages', D.period, bars(v.pages)) + panel('Where visitors came from', D.period, bars(v.sources)) +
+      panel('Who visits', D.period, '<div class="minis">' + mini(v.mobile / 100, v.mobile + '%', 'On a phone', 'Make booking easy on mobile') + mini(v.local / 100, v.local + '%', 'Gold Coast based', 'Within 30 minutes of you') + '</div>') + '</div>';
+  }
 
   V.partners = function () {
-    return head('Partners', 'Businesses on Meridian whose guests are a natural fit for yours.') +
-      '<div class="grid g3">' + D.partners.map(function (p) {
-        return '<section class="panel"><div style="display:flex;align-items:center;gap:14px;margin-bottom:14px"><div class="mini-ring">' + ring(p.fit / 100, 64, 3, TEAL, 'Guest fit ' + p.fit + ' percent') + '<b>' + p.fit + '%</b></div><div><div style="font-weight:600">' + esc(p.name) + '</div><div class="meta" style="font-size:12.5px;color:' + LABEL + '">' + esc(p.where) + ', guest fit</div></div></div>' +
-          '<p style="font-size:13.5px;color:#4A4A48;margin-bottom:12px">' + esc(p.why) + '</p><p style="font-size:13px;margin-bottom:16px"><strong style="font-weight:600">Idea:</strong> ' + esc(p.idea) + '</p>' +
-          '<div class="actions"><button class="btn ghost" data-act="later">Not now</button><button class="btn" data-act="interest">Express interest</button></div></section>';
-      }).join('') + '</div>';
+    return head('Partners', 'Businesses on Meridian whose guests are a natural fit for yours. Never competitors.') +
+      D.partners.map(function (p, k) {
+        var x = D.partnerDetail[k] || { traits: [] };
+        return '<section class="panel partner"><div class="p-head"><div class="mini-ring">' + ring(p.fit / 100, 64, 3, TEAL, 'Guest fit ' + p.fit + ' percent') + '<b>' + p.fit + '%</b></div><div class="grow"><div style="font-weight:600;font-size:15px">' + esc(p.name) + '</div><div class="meta">' + esc(p.where) + ', guest fit</div></div><span class="tag">' + esc(x.kind || '') + '</span></div>' +
+          '<div class="p-grid"><div><h3>Why you were matched</h3><p>' + esc(p.why) + '</p><h3>Guests you share</h3><ul class="traits">' + x.traits.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' +
+          '<div><h3>Idea</h3><p>' + esc(p.idea) + '. Meridian writes the messages for both of you.</p><h3>Likely result</h3><p>' + esc(x.outcome || '') + '</p><div class="actions" style="margin-top:16px"><button class="btn ghost" data-act="later">Not now</button><button class="btn" data-act="interest">Express interest</button></div></div></div></section><div style="height:20px"></div>';
+      }).join('') + '<p class="meta" style="font-size:12.5px;color:' + LABEL + ';max-width:70ch">Matches are based on shared guests, location and services that complement each other. Your interest stays private until both businesses say yes.</p>';
+  };
+
+  V.insights = function () {
+    var I = D.insights, own = I.ownership, pct = own.own / (own.own + own.rented), g = has('guests');
+    var out = head('Insights', 'What your numbers are telling you, updated every week.') +
+      insightPanel() + '<div style="height:20px"></div>' +
+      '<div class="grid g-hero">' +
+        panel('Guest behaviour', 'What guests do after their first visit', '<div class="beh">' + I.behaviour.map(function (b) { return '<div class="stat"><span class="n" style="font-size:26px">' + b.v + '</span><span class="l">' + esc(b.l) + '</span><span class="meta" style="font-size:12px">' + esc(b.d) + '</span></div>'; }).join('') + '</div>') +
+        panel('Guest details you own', 'Contacts on your own list, compared with followers held by social platforms', '<div class="hero" style="gap:24px"><div class="mini-ring" style="width:120px;height:120px">' + ring(pct, 120, 3, TEAL, 'You own ' + Math.round(pct * 100) + ' percent') + '<b style="font-size:22px;font-family:var(--serif);font-weight:500">' + Math.round(pct * 100) + '%</b></div><div><div class="stat"><span class="n" style="font-size:22px">' + own.own.toLocaleString('en-AU') + '</span><span class="l">On your list</span></div><div class="stat" style="margin-top:10px"><span class="n" style="font-size:22px">' + own.rented.toLocaleString('en-AU') + '</span><span class="l">Social followers only</span></div></div></div><p class="meta" style="margin-top:14px">' + esc(own.note) + '</p>') +
+      '</div>';
+    if (!g) return out + '<div style="height:20px"></div>' + panel('More insights on Growth', '', '<p style="max-width:60ch;color:#4A4A48">On the Growth plan this page also shows who your best new guests are, the words that get replies and which channels bring guests most efficiently.</p><div class="actions" style="margin-top:14px"><a class="btn" href="' + (D.sample ? '../book-a-demo/' : 'mailto:contact@pixelprimed.com') + '" style="text-decoration:none">Talk to us about Growth</a></div>');
+    return out + '<div style="height:20px"></div>' +
+      panel('What your data is telling you', 'Meridian AI', '<div class="g3 grid">' + I.telling.map(function (t) { return '<div class="rec"><div class="t">' + esc(t.h) + '</div><p style="margin-bottom:0">' + esc(t.p) + '</p></div>'; }).join('') + '</div>') +
+      '<div style="height:20px"></div><div class="grid g2">' +
+        panel('Who your new guests are', 'By age and suburb, last 90 days', '<h3 class="mini-h">Age</h3>' + bars(I.ages, function (v) { return v + '%'; }, false, 50) + '<h3 class="mini-h" style="margin-top:20px">Suburb</h3>' + bars(I.places, function (v) { return v + '%'; }, false, 50) + '<p class="best">' + esc(I.bestFit) + '</p>') +
+        panel('Words that get replies', 'Open rate compared with your 41% average', '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Wording</th><th>Opened</th><th>Change</th></tr></thead><tbody>' + I.words.map(function (w) { return '<tr><td>' + esc(w.l) + '</td><td>' + w.open + '%</td><td class="' + (w.lift < 0 ? 'neg' : 'pos') + '">' + (w.lift > 0 ? '+' : '') + w.lift + '%</td></tr>'; }).join('') + '</tbody></table></div><p class="meta" style="margin-top:12px">' + esc(I.wordsNote) + '</p>') +
+      '</div><div style="height:20px"></div>' +
+      panel('Which channels work best', 'Share of people reached who became interested', bars(I.channels.map(function (c) { return { l: c.l, v: c.rate }; }), function (v) { return v + '%'; }, false, 12) + '<ul class="list" style="margin-top:18px">' + I.channels.map(function (c) { return '<li><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + c.reached + ' reached, ' + c.warm + ' interested. ' + esc(c.note) + '</div></div></li>'; }).join('') + '</ul>');
   };
 
   /* ---------- routing ---------- */
-  var routes = ['overview', 'messages', 'audit', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
+  var routes = ['overview', 'messages', 'insights', 'audit', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
   function render() {
     var r = (location.hash || '#overview').slice(1);
     if (routes.indexOf(r) < 0) r = 'overview';
@@ -374,10 +464,15 @@
       document.getElementById('journey-view').innerHTML = journeyView(+t.getAttribute('data-journey'));
       return;
     }
+    var ch = e.target.closest('[data-ch]');
+    if (ch) { document.querySelectorAll('[data-ch]').forEach(function (x) { x.setAttribute('aria-selected', x === ch); }); document.getElementById('ch-view').innerHTML = chView(+ch.getAttribute('data-ch')); return; }
+    var em = e.target.closest('[data-em]');
+    if (em) { document.querySelectorAll('[data-em]').forEach(function (x) { x.setAttribute('aria-selected', x === em); }); document.getElementById('em-view').innerHTML = emView(+em.getAttribute('data-em')); return; }
     var b = e.target.closest('[data-act]'); if (!b) return;
     var act = b.getAttribute('data-act');
     if (act === 'approve') { b.textContent = 'Approved'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Approved. In the demo nothing is sent.' : 'Approved'); }
     else if (act === 'interest') { b.textContent = 'Interest sent'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Interest sent. In the demo nothing is sent.' : 'Interest sent'); }
+    else if (act === 'switch') { var on = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', on); toast(on ? 'Channel switched on' : 'Channel paused'); }
     else if (act === 'edit') { toast('Editing opens here in the full version'); }
     else if (act === 'later') { var p = b.closest('.rec, .panel, li'); if (p) p.style.opacity = '.45'; toast('Saved for later'); }
   });
@@ -392,5 +487,49 @@
     if (!D.sample) sw.remove();
     else { sw.value = tier(); sw.addEventListener('change', function () { D.tier = sw.value; render(); }); }
   }
+  /* ---------- notifications ---------- */
+  var bell = $('#bell');
+  if (bell) {
+    var notes = $('#notes');
+    function drawNotes() {
+      var list = (D.notifications || []).filter(okNeeds);
+      $('#bell-n').textContent = list.length;
+      notes.innerHTML = '<div class="notes-head"><b>Notifications</b><button data-clear>Mark all read</button></div><ul>' + list.map(function (n) {
+        return '<li><a href="#' + n.go + '"><div class="nt">' + esc(n.t) + '</div><div class="meta">' + esc(n.d) + '</div><div class="nw">' + esc(n.when) + '</div></a></li>';
+      }).join('') + '</ul>';
+    }
+    drawNotes();
+    bell.addEventListener('click', function (e) { e.stopPropagation(); var open = notes.hidden; notes.hidden = !open; bell.setAttribute('aria-expanded', open); });
+    notes.addEventListener('click', function (e) {
+      if (e.target.closest('[data-clear]')) { $('#bell-n').textContent = ''; notes.hidden = true; bell.setAttribute('aria-expanded', false); }
+      if (e.target.closest('a')) { notes.hidden = true; bell.setAttribute('aria-expanded', false); }
+    });
+    document.addEventListener('click', function (e) { if (!e.target.closest('.bell-wrap')) { notes.hidden = true; bell.setAttribute('aria-expanded', false); } });
+    var _render = render; render = function () { _render(); drawNotes(); };
+  }
+
+  /* ---------- Meridian AI ---------- */
+  var aiBtn = $('#ai-btn');
+  if (aiBtn && D.chat) {
+    var ai = $('#ai'), body = $('#ai-body'), prompts = $('#ai-prompts');
+    function say(who, html) { var d = document.createElement('div'); d.className = 'ai-msg ' + who; d.innerHTML = html; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+    say('bot', esc(D.chat.hello.replace('Amélie', D.venue.owner || '')));
+    prompts.innerHTML = D.chat.prompts.map(function (q) { return '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('');
+    function ask(q) {
+      say('me', esc(q)); prompts.hidden = true;
+      var t = document.createElement('div'); t.className = 'ai-msg bot typing'; t.textContent = 'Thinking'; body.appendChild(t);
+      setTimeout(function () {
+        t.remove();
+        var growthQ = q === 'Which channel brings the best new guests?';
+        say('bot', growthQ && !has('guests') ? esc(D.chat.coreOnly) : (D.chat.answers[q] || esc(D.chat.fallback)));
+      }, 800);
+    }
+    function toggle(open) { ai.hidden = !open; aiBtn.setAttribute('aria-expanded', open); aiBtn.hidden = open; if (open) $('#ai-in').focus(); }
+    aiBtn.addEventListener('click', function () { toggle(true); });
+    $('#ai-x').addEventListener('click', function () { toggle(false); });
+    prompts.addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) ask(b.getAttribute('data-q')); });
+    $('#ai-form').addEventListener('submit', function (e) { e.preventDefault(); var v = $('#ai-in').value.trim(); if (v) { $('#ai-in').value = ''; ask(v); } });
+  }
+
   render();
 })();
