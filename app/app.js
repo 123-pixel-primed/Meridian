@@ -127,7 +127,8 @@
     }).join('') + '</div>';
 
     var wb = D.weeklyBookings;
-    return head('Good morning', 'Here is how ' + D.venue.name + ' is tracking against its goals.') +
+    var banner = D.venue.headerImage ? '<div class="banner"><img src="' + D.venue.headerImage + '" alt="' + esc(D.venue.name) + '"></div>' : '';
+    return banner + head('Good morning', 'Here is how ' + D.venue.name + ' is tracking against its goals.') +
       '<div class="grid g-hero">' + hero + side + '</div>' +
       '<div style="height:20px"></div>' + stats + '<div style="height:20px"></div>' +
       '<div class="grid g2">' +
@@ -140,6 +141,27 @@
   };
   function mini(p, val, t, d) {
     return '<div class="mini"><div class="mini-ring">' + ring(p, 64, 3, TEAL, t) + '<b>' + val + '</b></div><div><div class="t">' + esc(t) + '</div><div class="d">' + esc(d) + '</div></div></div>';
+  }
+
+  V.messages = function () {
+    var M = D.inbox || [], open = M.filter(function (m) { return m.status === 'Needs a reply'; }).length;
+    var first = M[0];
+    var list = '<ul class="inbox">' + M.map(function (m, k) {
+      return '<li data-msg="' + k + '" class="' + (k === 0 ? 'sel' : '') + '"><div class="who"><strong>' + esc(m.name) + '</strong><span class="meta">' + esc(m.time) + '</span></div><div class="meta">' + esc(m.text) + '</div><div class="row"><span class="tag">' + esc(m.channel) + '</span>' + (m.status === 'Needs a reply' ? '<span class="tag warn">Needs a reply</span>' : '<span class="tag on">Answered</span>') + '</div></li>';
+    }).join('') + '</ul>';
+    var thread = threadView(first);
+    return head('Messages', 'WhatsApp, text messages, Instagram, email and website chat in one inbox.') +
+      '<div class="grid g3">' +
+        panel('Waiting for a reply', '', '<div class="stat"><span class="n">' + open + '</span><span class="l">conversations</span></div>') +
+        panel('Answered automatically', D.period, '<div class="stat"><span class="n">68%</span><span class="l">of questions about times, prices and vouchers</span></div>') +
+        panel('Average reply time', D.period, '<div class="stat"><span class="n">4 min</span><span class="l">down from 3 hours</span></div>') +
+      '</div><div style="height:20px"></div>' +
+      '<section class="panel inbox-wrap">' + list + '<div id="thread">' + thread + '</div></section>';
+  };
+  function threadView(first) {
+    return '<div class="thread"><div class="thread-head"><strong>' + esc(first.name) + '</strong><span class="tag">' + esc(first.channel) + '</span></div>' +
+      '<div class="bubble in">' + esc(first.text) + '</div>' +
+      (first.draft ? '<div class="draft"><div class="meta">Suggested reply, checked against your live availability</div><textarea aria-label="Reply">' + esc(first.draft) + '</textarea><div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="approve">Send</button></div></div>' : '<div class="meta">Answered. Nothing waiting.</div>') + '</div>';
   }
 
   V.plan = function () {
@@ -195,10 +217,21 @@
         panel('Guests who rebook', 'Share of guests booking again within 90 days', line(rr.labels, rr.values, rr.target, { suffix: '%', min: 30, aria: 'Rebooking rate rising from 41 to 58 percent' }) + '<div class="legend"><span><i></i>Rebooking rate</span><span><i class="gold"></i>Goal, ' + rr.target + '%</span></div>') +
         panel('Loyalty', 'Guests at each level', bars(r.tiers, null, true)) +
       '</div><div style="height:20px"></div>' +
-      panel('Guest journeys', 'All running automatically', '<ul class="list">' + r.journeys.map(function (j) {
-        return '<li><span class="dot' + (j.on ? '' : ' off') + '"></span><div class="grow">' + esc(j.l) + '</div><span class="meta">' + esc(j.m) + '</span><span class="tag on">On</span></li>';
-      }).join('') + '</ul>');
+      journeysPanel();
   };
+  function journeysPanel() {
+    var J = D.journeyEmails || [];
+    if (!J.length) return '';
+    var tabs = J.map(function (j, k) { return '<button class="tab" role="tab" aria-selected="' + (k === 0) + '" data-journey="' + k + '">' + esc(j.name) + '<span>' + j.emails.length + '</span></button>'; }).join('');
+    return panel('Guest journeys', 'Every journey is running. Select one to see its messages.', '<div class="tabs" role="tablist">' + tabs + '</div><div id="journey-view">' + journeyView(0) + '</div>');
+  }
+  function journeyView(k) {
+    var j = D.journeyEmails[k];
+    return '<p class="trigger">Starts: ' + esc(j.trigger) + '</p><div class="emails">' + j.emails.map(function (e) {
+      return '<article class="email"><div class="email-when">' + esc(e.when) + '</div><div class="email-card"><img src="' + e.img + '" alt=""><div class="email-body"><div class="email-brand">' + esc(D.venue.name) + '</div><div class="email-head">' + esc(e.headline) + '</div><div class="email-rule"></div><div class="email-btn">Book now</div></div></div><div class="email-subj">' + esc(e.subject) + '</div></article>';
+    }).join('') + '</div>';
+  }
+
 
   V.reviews = function () {
     var r = D.reviews;
@@ -258,7 +291,7 @@
   };
 
   /* ---------- routing ---------- */
-  var routes = ['overview', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
+  var routes = ['overview', 'messages', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
   function render() {
     var r = (location.hash || '#overview').slice(1);
     if (routes.indexOf(r) < 0) r = 'overview';
@@ -277,6 +310,18 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
   }
   document.addEventListener('click', function (e) {
+    var mm = e.target.closest('[data-msg]');
+    if (mm) {
+      document.querySelectorAll('[data-msg]').forEach(function (x) { x.classList.toggle('sel', x === mm); });
+      document.getElementById('thread').innerHTML = threadView(D.inbox[+mm.getAttribute('data-msg')]);
+      return;
+    }
+    var t = e.target.closest('[data-journey]');
+    if (t) {
+      document.querySelectorAll('[data-journey]').forEach(function (x) { x.setAttribute('aria-selected', x === t); });
+      document.getElementById('journey-view').innerHTML = journeyView(+t.getAttribute('data-journey'));
+      return;
+    }
     var b = e.target.closest('[data-act]'); if (!b) return;
     var act = b.getAttribute('data-act');
     if (act === 'approve') { b.textContent = 'Approved'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Approved. In the demo nothing is sent.' : 'Approved'); }
@@ -289,5 +334,6 @@
   $('#venue').innerHTML = esc(D.venue.name) + '<span>' + esc(D.venue.place) + '</span>';
   if (!D.sample) { var s = $('.sample'); if (s) s.remove(); }
   var c = $('#approvals-count'); if (c) c.textContent = D.approvalsCount;
+  var mc = $('#messages-count'); if (mc) mc.textContent = (D.inbox || []).filter(function (m) { return m.status === 'Needs a reply'; }).length;
   render();
 })();

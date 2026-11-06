@@ -170,3 +170,166 @@ window.MERIDIAN_DATA = {
     { name: 'Harbour Skin Clinic', where: 'Palm Beach', fit: 79, why: 'Clinical skin results paired with your relaxation treatments, with no overlap.', idea: 'Refer between facials and clinical treatments' }
   ]
 };
+
+/* Journey emails shown in the demo. Lumière brand copy from the original demo. */
+window.MERIDIAN_DATA.journeyEmails = [
+ {
+  "name": "Welcome",
+  "trigger": "When someone joins your list",
+  "emails": [
+   {
+    "when": "Immediate",
+    "subject": "An invitation into Lumière",
+    "headline": "There is a world beyond the everyday.",
+    "img": "../demo/images/review-1-ritual-objects.jpg"
+   },
+   {
+    "when": "Day 3",
+    "subject": "Your first ritual, reserved",
+    "headline": "Begin with something chosen for you.",
+    "img": "../demo/images/rebooking-2-composing.jpg"
+   },
+   {
+    "when": "Day 7",
+    "subject": "The luxury of being known",
+    "headline": "The rarest luxury is being known.",
+    "img": "../demo/images/postvisit-5-colonnade.jpg"
+   },
+   {
+    "when": "Day 14",
+    "subject": "In the words of our guests",
+    "headline": "Some experiences are difficult to put into words.",
+    "img": "../demo/images/review-3-guest-reflecting.jpg"
+   }
+  ]
+ },
+ {
+  "name": "Aftercare",
+  "trigger": "After every visit",
+  "emails": [
+   {
+    "when": "3hrs post-visit",
+    "subject": "The care continues",
+    "headline": "Your ritual continues beyond our doors.",
+    "img": "../demo/images/postvisit-1-water.jpg"
+   },
+   {
+    "when": "Day 1",
+    "subject": "How are you feeling today?",
+    "headline": "How has the feeling stayed with you?",
+    "img": "../demo/images/postvisit-2-garden.jpg"
+   },
+   {
+    "when": "Day 2 (if positive)",
+    "subject": "A reflection, if you wish",
+    "headline": "Some experiences stay with us.",
+    "img": "../demo/images/postvisit-3-card.jpg"
+   },
+   {
+    "when": "Day 5",
+    "subject": "A ritual for the days between",
+    "headline": "The space between matters too.",
+    "img": "../demo/images/postvisit-4-bowls.jpg"
+   },
+   {
+    "when": "Day 30",
+    "subject": "A thought for what comes next",
+    "headline": "Care becomes more powerful when it has continuity.",
+    "img": "../demo/images/postvisit-5-colonnade.jpg"
+   },
+   {
+    "when": "Week 6",
+    "subject": "Your next ritual is ready to be considered",
+    "headline": "A natural moment to return.",
+    "img": "../demo/images/postvisit-6-curtain.jpg"
+   },
+   {
+    "when": "Week 8 (final)",
+    "subject": "An invitation, kept for you",
+    "headline": "We know where to begin.",
+    "img": "../demo/images/postvisit-7-entryway.jpg"
+   }
+  ]
+ },
+ {
+  "name": "Rebooking",
+  "trigger": "From 6 weeks after a visit",
+  "emails": [
+   {
+    "when": "Day 45",
+    "subject": "The right moment to continue",
+    "headline": "The best results are rarely created in a single moment.",
+    "img": "../demo/images/rebooking-1-resting.jpg"
+   },
+   {
+    "when": "Day 52",
+    "subject": "Your care, remembered",
+    "headline": "Nothing about your care is off the shelf.",
+    "img": "../demo/images/rebooking-2-composing.jpg"
+   },
+   {
+    "when": "Day 60",
+    "subject": "Your return to Lumière",
+    "headline": "Return to the feeling of Lumière.",
+    "img": "../demo/images/rebooking-3-entrance.jpg"
+   }
+  ]
+ },
+ {
+  "name": "Win back",
+  "trigger": "90 days without a visit",
+  "emails": [
+   {
+    "when": "Day 90",
+    "subject": "Do you remember how Lumière felt?",
+    "headline": "Some feelings are worth returning to.",
+    "img": "../demo/images/rebooking-1-resting.jpg"
+   },
+   {
+    "when": "Day 104",
+    "subject": "Something new has been composed",
+    "headline": "The Lumière experience continues to evolve.",
+    "img": "../demo/images/review-2-reflection-card.jpg"
+   },
+   {
+    "when": "Day 118",
+    "subject": "A private welcome back",
+    "headline": "The door remains open.",
+    "img": "../demo/images/postvisit-7-entryway.jpg"
+   }
+  ]
+ },
+ {
+  "name": "Loyalty",
+  "trigger": "At visit milestones",
+  "emails": [
+   {
+    "when": "3rd visit",
+    "subject": "You have become part of Lumière",
+    "headline": "You are no longer simply visiting Lumière.",
+    "img": "../demo/images/postvisit-2-garden.jpg"
+   },
+   {
+    "when": "5th visit",
+    "subject": "Something more, reserved for you",
+    "headline": "Loyalty should be felt, not counted.",
+    "img": "../demo/images/postvisit-4-bowls.jpg"
+   },
+   {
+    "when": "Anniversary",
+    "subject": "A year of Lumière",
+    "headline": "Some time is worth marking.",
+    "img": "../demo/images/postvisit-6-curtain.jpg"
+   }
+  ]
+ }
+];
+
+window.MERIDIAN_DATA.venue.headerImage = '../demo/images/postvisit-5-colonnade.jpg';
+window.MERIDIAN_DATA.inbox = [
+ { name: 'Sophie M.', channel: 'WhatsApp', time: '9:12', status: 'Needs a reply', text: 'Hi, do you have space for two in the bathhouse on Saturday morning?', draft: 'Hi Sophie, we have two places at 9:30 or 11:00 on Saturday. Would you like me to hold one for you?' },
+ { name: 'Daniel K.', channel: 'SMS', time: '8:47', status: 'Needs a reply', text: 'Can I move my massage from Thursday to Friday?', draft: 'Hi Daniel, Friday at 2:00 or 4:30 is free with Mia. Which suits you best?' },
+ { name: 'Ella W.', channel: 'Instagram', time: 'Yesterday', status: 'Answered', text: 'Do you sell gift vouchers online?', draft: '' },
+ { name: 'Coastline Physio', channel: 'Email', time: 'Yesterday', status: 'Answered', text: 'Following up on the team recovery morning for 12 staff.', draft: '' },
+ { name: 'Grace L.', channel: 'Website chat', time: 'Mon', status: 'Answered', text: 'Is the bathhouse suitable during pregnancy?', draft: '' }
+];
