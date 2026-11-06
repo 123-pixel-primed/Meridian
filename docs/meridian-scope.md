@@ -10,8 +10,8 @@ Last updated 6 November 2026.
 One white-labelled platform for wellness and hospitality businesses, covering acquisition, booking, content, reviews, retention, loyalty, ads, messaging and an AI receptionist.
 
 - **Engine:** GHL Agency Pro (CRM, journeys, email, SMS, WhatsApp, calendars, payments, POS, reputation, Ad Manager, Voice AI, white label). One flat agency fee, not per client.
-- **Ours:** this repo on Netlify. Client dashboard, marketing plan engine, loyalty, partnerships network, growth audit, group layer for multi-site clients, integrations.
-- **Intelligence:** Claude for research, copy, insights and audits. gpt-image-2 for imagery. geo-seo-claude plus OpenSEO with DataForSEO for website and AI visibility scores.
+- **Ours:** this repo on Netlify. Client dashboard, marketing plan engine, loyalty, partnerships network, Growth Blueprint, group layer for multi-site clients, integrations.
+- **Intelligence:** Claude for research, copy, insights and Growth Blueprints. gpt-image-2 for imagery. geo-seo-claude plus OpenSEO with DataForSEO for website and AI visibility scores.
 - **Dropped:** Klaviyo (once GHL is ready), Clay, Instantly, Expandi, Phantombuster, Make.com, Resend, HubSpot, Triffft, ManyChat, Supermetrics, Ahrefs, Semrush, Canva. Zapier only where a client already runs it.
 
 ## Who it serves
@@ -24,8 +24,8 @@ Prices are per location per month (AUD). Every plan can be run by the client or 
 
 | Plan | Price | Focus |
 | --- | --- | --- |
-| Core | $390 | Keeping the guests you have: bookings, payments, vouchers, guest journeys, reviews, memberships and loyalty, one inbox, baseline growth audit, dashboard |
-| Growth | $790 | Core plus new guests: marketing plan from goals, outreach, corporate wellness and partnerships, content, Google and AI visibility, monthly growth audit, weekly next step |
+| Core | $390 | Keeping the guests you have: bookings, payments, vouchers, guest journeys, reviews, memberships and loyalty, one inbox, starting Growth Blueprint, dashboard |
+| Growth | $790 | Core plus new guests: marketing plan from goals, outreach, corporate wellness and partnerships, content, Google and AI visibility, monthly Growth Blueprint, weekly next step |
 | Scale | $1,290 plus ad spend | Growth plus media: ads run and refined, content produced in the client's style, booking attribution, monthly strategy session |
 
 Core is retention and booking, not acquisition. A business that only wants to keep its guests buys Core; acquisition starts at Growth.
@@ -45,7 +45,7 @@ Set in `app/app.js` (`TIER_SCREENS`).
 | Bookings | Yes | Yes | Yes |
 | Returning guests | Yes | Yes | Yes |
 | Reviews | Yes | Yes | Yes |
-| Growth audit | Baseline | Monthly | Monthly |
+| Growth Blueprint | Starting point | Monthly | Monthly |
 | Plan and goals | | Yes | Yes |
 | New guests | | Yes | Yes |
 | Content | | Yes | Yes |
@@ -55,9 +55,9 @@ Set in `app/app.js` (`TIER_SCREENS`).
 
 Screens outside a client's plan stay in the menu with a plan badge and open an upgrade card instead of data. Overview stats, activity and "Waiting for you" items are filtered the same way. The demo has a plan switcher so prospects can compare; a real client's plan comes from their account.
 
-## Growth audit in the platform
+## Growth Blueprint in the platform
 
-The Pixel Primed growth audit is each client's day-one baseline. Core clients see that baseline score with the top next actions. Growth and Scale clients see the audit re-run monthly against the baseline, section by section, with a downloadable report.
+The Growth Blueprint (previously called the growth audit) is each client's day-one starting point. Core clients see that starting score with the biggest opportunities. Growth and Scale clients see the Blueprint updated monthly against the starting point, section by section, with a downloadable report.
 
 ## Forms
 

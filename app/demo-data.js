@@ -17,7 +17,7 @@ window.MERIDIAN_DATA = {
     { n: '486', l: 'Bookings', d: '+9% on last month' },
     { n: '4.8', l: 'Google rating, 126 reviews', d: '+14 reviews this month' },
     { n: '72', l: 'Website score out of 100', d: '+6 since last month', needs: 'website' },
-    { n: '68', l: 'Growth audit score', d: '+14 since you joined' }
+    { n: '68', l: 'Growth Blueprint score', d: '+14 since you joined' }
   ],
 
   revenueBySource: [
