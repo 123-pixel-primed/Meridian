@@ -393,8 +393,24 @@
         panel('Top fixes this month', 'We can make these changes for you', '<ul class="list">' + w.fixes.map(function (f) {
           return '<li><span class="dot gold"></span><div class="grow"><div>' + esc(f.t) + '</div><div class="meta">' + esc(f.i) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
         }).join('') + '</ul>') +
-      '</div><div style="height:20px"></div>' + visitsBlock();
+      '</div><div style="height:20px"></div>' + searchBlock() + visitsBlock();
   };
+  function searchBlock() {
+    var G = D.searchTerms;
+    if (!G) return '';
+    var n = G.now, b = G.before;
+    var ch = function (a, c) { if (!c) return 'Last 4 weeks'; var d = Math.round(100 * (a - c) / c); return (d >= 0 ? '+' : '') + d + '% on the 4 weeks before'; };
+    var rows = G.terms.length ? G.terms.map(function (t) {
+      return '<tr><td><strong>' + esc(t.term) + '</strong></td><td>' + t.clicks + '</td><td>' + t.impressions + '</td><td>' + t.position + '</td></tr>';
+    }).join('') : '<tr><td colspan="4" class="meta">No searches recorded yet.</td></tr>';
+    return '<h2 class="sec">Found on Google</h2><div class="stats-row">' +
+      '<section class="panel stat"><span class="n">' + Math.round(n.clicks) + '</span><span class="l">Clicks from Google search</span><span class="delta">' + esc(ch(n.clicks, b.clicks)) + '</span></section>' +
+      '<section class="panel stat"><span class="n">' + Math.round(n.impressions).toLocaleString('en-AU') + '</span><span class="l">Times you appeared in results</span><span class="delta">' + esc(ch(n.impressions, b.impressions)) + '</span></section>' +
+      '<section class="panel stat"><span class="n">' + (Math.round(n.position * 10) / 10 || '-') + '</span><span class="l">Average position on Google</span><span class="delta">Lower is better</span></section>' +
+      '</div><div style="height:20px"></div>' +
+      panel('What people searched to find you', 'Last 4 weeks, from Google Search Console', '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Search</th><th>Clicks</th><th>Appeared</th><th>Position</th></tr></thead><tbody>' + rows + '</tbody></table></div>') +
+      '<div style="height:20px"></div>';
+  }
   function visitsBlock() {
     var v = D.webVisits;
     return '<h2 class="sec">Website visits</h2><div class="stats-row">' + v.stats.map(function (x) { return '<section class="panel stat"><span class="n">' + x.n + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>' +

@@ -5,11 +5,11 @@ import { createSign } from 'node:crypto';
 
 function b64url(s) { return Buffer.from(s).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_'); }
 
-async function accessToken(sa) {
+async function accessToken(sa, scope) {
   const now = Math.floor(Date.now() / 1000);
   const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
   const claim = b64url(JSON.stringify({
-    iss: sa.client_email, scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    iss: sa.client_email, scope: scope || 'https://www.googleapis.com/auth/analytics.readonly',
     aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600
   }));
   const signer = createSign('RSA-SHA256'); signer.update(head + '.' + claim);
@@ -60,5 +60,50 @@ export async function readGA() {
     mobile: Math.round(100 * (dev.find(x => x.d[0] === 'mobile') || { m: [0] }).m[0] / devTotal),
     topCity: city[0] ? { name: city[0].d[0], share: Math.round(100 * city[0].m[0] / (dev.reduce((a, x) => a + x.m[0], 0) || 1)) } : null,
     cityTotal
+  };
+}
+
+// Google Search Console: top search terms and totals for the last 28 days.
+// Uses the same service account; needs the Search Console API enabled and the
+// service account added as a Restricted user on the property. Read-only.
+const GSC = 'https://www.googleapis.com/webmasters/v3';
+function day(offset) { const d = new Date(Date.now() - offset * 86400000); return d.toISOString().slice(0, 10); }
+
+async function gscQuery(site, token, body) {
+  const res = await fetch(GSC + '/sites/' + encodeURIComponent(site) + '/searchAnalytics/query', {
+    method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    let m = ''; try { m = String((await res.json()).error.message).slice(0, 160); } catch (e) {}
+    throw new Error('Search Console returned ' + res.status + (m ? ' (' + m + ')' : ''));
+  }
+  return res.json();
+}
+
+export async function readGSC() {
+  const raw = process.env.GA_SERVICE_ACCOUNT_JSON;
+  if (!raw) return null;
+  const token = await accessToken(JSON.parse(raw), 'https://www.googleapis.com/auth/webmasters.readonly');
+  const list = await fetch(GSC + '/sites', { headers: { Authorization: 'Bearer ' + token } });
+  if (!list.ok) {
+    let m = ''; try { m = String((await list.json()).error.message).slice(0, 160); } catch (e) {}
+    throw new Error('Search Console returned ' + list.status + (m ? ' (' + m + ')' : ''));
+  }
+  const sites = ((await list.json()).siteEntry || []).filter(x => x.permissionLevel !== 'siteUnverifiedUser');
+  const want = process.env.GSC_SITE;
+  const site = (want && sites.find(x => x.siteUrl === want)) || sites.find(x => x.siteUrl.startsWith('sc-domain:')) || sites[0];
+  if (!site) return { connected: false };
+  // Search Console data lags about 2 days.
+  const cur = { startDate: day(30), endDate: day(3) }, prev = { startDate: day(58), endDate: day(31) };
+  const [terms, tot, totPrev] = await Promise.all([
+    gscQuery(site.siteUrl, token, Object.assign({ dimensions: ['query'], rowLimit: 5 }, cur)),
+    gscQuery(site.siteUrl, token, cur),
+    gscQuery(site.siteUrl, token, prev)
+  ]);
+  const t = (r => (r.rows && r.rows[0]) || { clicks: 0, impressions: 0, position: 0 });
+  return {
+    connected: true, site: site.siteUrl,
+    now: t(tot), before: t(totPrev),
+    terms: (terms.rows || []).map(r => ({ term: r.keys[0], clicks: r.clicks, impressions: r.impressions, position: Math.round(r.position * 10) / 10 }))
   };
 }

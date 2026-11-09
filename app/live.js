@@ -118,7 +118,8 @@
         localSub: 'Your biggest single city'
       };
     }
-    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits and the website score' : '') + '. Other panels show sample content until they are connected.';
+    if (S.search && S.search.connected) D.searchTerms = S.search;
+    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' + (S.search && S.search.connected ? ', Google searches' : '') + ' and the website score' : '') + '. Other panels show sample content until they are connected.';
     if (S.errors && S.errors.length) D.liveNote += ' Some data could not be read: ' + S.errors.join('; ') + '.';
   }
 
