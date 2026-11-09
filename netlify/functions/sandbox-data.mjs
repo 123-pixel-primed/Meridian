@@ -76,6 +76,25 @@ export default async () => {
     }));
   })));
 
+  // Treatments booked through GHL Services (v2) live in their own bookings list, not on calendars.
+  await safe('service bookings', async () => {
+    let r = null, lastErr = null;
+    for (const v of ['v3', '2021-04-15']) {
+      try { r = await ghl('/calendars/services/bookings', { locationId: loc, startTime: String(start), endTime: String(end) }, v, token); break; } catch (e) { lastErr = e; }
+    }
+    if (!r) throw lastErr;
+    (r.bookings || []).filter(b => !b.deleted).forEach(b => out.events.push({
+      id: b.bookingId,
+      calendarId: 'services',
+      title: b.title || 'Treatment',
+      start: ms(b.startTime),
+      end: ms(b.endTime),
+      status: b.status || 'confirmed',
+      contactId: b.contactId || null,
+      service: true
+    }));
+  });
+
   await safe('contacts', async () => {
     const r = await ghl('/contacts/', { locationId: loc, limit: '100' }, '2021-07-28', token);
     out.contacts = (r.contacts || []).map(c => ({

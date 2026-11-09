@@ -28,7 +28,7 @@
   }
 
   function apply(S) {
-    var cal = {}; S.calendars.forEach(function (c) { cal[c.id] = c; });
+    var cal = { services: { id: 'services', name: 'Treatment', type: 'service', seats: 1 } }; S.calendars.forEach(function (c) { cal[c.id] = c; });
     var isClass = function (e) { var c = cal[e.calendarId]; return c && /class/i.test(c.type); };
     var ok = S.events.filter(function (e) { return !/cancel|invalid|noshow/i.test(e.status) && e.start; });
     var past30 = ok.filter(function (e) { return e.start <= now && e.start > now - 30 * DAY; });
