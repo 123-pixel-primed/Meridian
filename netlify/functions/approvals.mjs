@@ -30,8 +30,25 @@ async function requestsContact(store, token, loc) {
   return id;
 }
 
+async function makeTask(store, token, loc, rec) {
+  if (!token || !loc) return;
+  try {
+    const cid = await requestsContact(store, token, loc);
+    const due = new Date(Date.now() + 3 * 86400000).toISOString();
+    const t = await ghl('/contacts/' + cid + '/tasks', token, { method: 'POST', body: {
+      title: 'Approved: ' + rec.title,
+      body: (rec.detail ? rec.detail + '\n\n' : '') + 'Approved on the Meridian dashboard (' + rec.page + ' page). Mark this task complete when it is done and the dashboard will show it as Done.',
+      dueDate: due, completed: false
+    } });
+    rec.taskId = (t.task && (t.task.id || t.task._id)) || null;
+    rec.contactId = cid;
+    rec.status = rec.taskId ? 'in_progress' : 'approved';
+    rec.note = null;
+  } catch (e) { rec.note = 'Saved. The task could not be created yet: ' + String(e.message || e); }
+}
+
 export default async (req) => {
-  const store = getStore('approvals');
+  const store = getStore({ name: 'approvals', consistency: 'strong' });
   const token = process.env.GHL_SANDBOX_TOKEN, loc = process.env.GHL_SANDBOX_LOCATION_ID;
 
   if (req.method === 'POST') {
@@ -44,20 +61,7 @@ export default async (req) => {
       key, title: String(item.title || '').slice(0, 200), detail: String(item.detail || '').slice(0, 500),
       page: String(item.page || '').slice(0, 40), approvedAt: new Date().toISOString(), status: 'approved', taskId: null, note: null
     };
-    if (token && loc) {
-      try {
-        const cid = await requestsContact(store, token, loc);
-        const due = new Date(Date.now() + 3 * 86400000).toISOString();
-        const t = await ghl('/contacts/' + cid + '/tasks', token, { method: 'POST', body: {
-          title: 'Approved: ' + rec.title,
-          body: (rec.detail ? rec.detail + '\n\n' : '') + 'Approved on the Meridian dashboard (' + rec.page + ' page). Mark this task complete when it is done and the dashboard will show it as Done.',
-          dueDate: due, completed: false
-        } });
-        rec.taskId = (t.task && t.task.id) || null;
-        rec.contactId = cid;
-        rec.status = rec.taskId ? 'in_progress' : 'approved';
-      } catch (e) { rec.note = 'Saved. The task could not be created yet: ' + String(e.message || e); }
-    }
+    await makeTask(store, token, loc, rec);
     await store.setJSON(key, rec);
     return Response.json(rec);
   }
@@ -65,6 +69,8 @@ export default async (req) => {
   // GET: list approvals and refresh status from GHL tasks.
   const { blobs } = await store.list();
   const recs = (await Promise.all(blobs.filter(b => b.key !== '_contact').map(b => store.get(b.key, { type: 'json' })))).filter(Boolean);
+  // Approvals saved before tasks could be created get their task now (a few per visit, to stay within GHL limits).
+  for (const r of recs.filter(x => !x.taskId).slice(0, 3)) { await makeTask(store, token, loc, r); await store.setJSON(r.key, r); }
   const contact = await store.get('_contact', { type: 'json' });
   if (token && contact && contact.id && recs.some(r => r.taskId && r.status !== 'done')) {
     try {
