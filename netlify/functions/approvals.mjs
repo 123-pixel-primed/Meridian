@@ -4,21 +4,9 @@
 // Creating tasks needs the "Edit Contacts" (contacts.write) scope on the GHL private integration.
 import { getStore } from '@netlify/blobs';
 
-const API = 'https://services.leadconnectorhq.com';
-const REQUESTS_CONTACT = 'Meridian requests';
+import { ghl, assignee, issues } from '../lib/ghl.mjs';
 
-async function ghl(path, token, opts = {}) {
-  const res = await fetch(API + path, {
-    method: opts.method || 'GET',
-    headers: { Authorization: 'Bearer ' + token, Version: '2021-07-28', Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  });
-  if (!res.ok) {
-    let m = ''; try { m = String((await res.json()).message || '').slice(0, 160); } catch (e) {}
-    throw new Error(path.split('?')[0] + ' returned ' + res.status + (m ? ' (' + m + ')' : ''));
-  }
-  return res.json();
-}
+const REQUESTS_CONTACT = 'Meridian requests';
 
 // One contact in the client's account holds all Meridian request tasks.
 async function requestsContact(store, token, loc) {
@@ -28,23 +16,6 @@ async function requestsContact(store, token, loc) {
   const id = r.contact && r.contact.id;
   if (id) await store.setJSON('_contact', { id });
   return id;
-}
-
-let assigneeIssue = null;
-// The GHL user who receives approval tasks. Set TASK_ASSIGNEE_EMAIL in Netlify to choose someone else.
-async function assignee(store, token, loc) {
-  const saved = await store.get('_assignee', { type: 'json' });
-  if (saved && saved.id) return saved.id;
-  try {
-    const r = await ghl('/users/?locationId=' + loc, token);
-    const users = r.users || [];
-    const wanted = [process.env.TASK_ASSIGNEE_EMAIL, 'contact@pixelprimed.com', 'jemimarmiller@gmail.com'].filter(Boolean).map(e => e.toLowerCase());
-    let u = null;
-    for (const w of wanted) { u = users.find(x => String(x.email || '').toLowerCase() === w); if (u) break; }
-    if (u) { await store.setJSON('_assignee', { id: u.id, email: u.email }); return u.id; }
-    assigneeIssue = 'No GHL user found with ' + wanted.join(' or ') + ' (' + users.length + ' users in this account)';
-  } catch (e) { assigneeIssue = String(e.message || e); }
-  return null;
 }
 
 async function makeTask(store, token, loc, rec) {
@@ -104,5 +75,5 @@ export default async (req) => {
       for (const r of recs) if (r.taskId && done.has(r.taskId) && r.status !== 'done') { r.status = 'done'; await store.setJSON(r.key, r); }
     } catch (e) {}
   }
-  return Response.json({ approvals: recs, assigneeIssue }, { headers: { 'Cache-Control': 'no-store' } });
+  return Response.json({ approvals: recs, assigneeIssue: issues.assignee }, { headers: { 'Cache-Control': 'no-store' } });
 };

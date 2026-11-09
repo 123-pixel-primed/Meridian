@@ -164,6 +164,38 @@
     D.searchInsight = total ? (share >= 60 ? 'Most of your Google clicks (' + share + '%) come from people who already know your name. Growth will come from appearing for the services you offer.' : 'Most Google clicks come from searches for your services, not just your name.') : null;
   }
 
+
+  // A client who has finished onboarding: their answers set the brand, plan, goals, voice and imagery.
+  function loadClient() {
+    var id = new URLSearchParams(location.search).get('client');
+    if (!id) return;
+    var api = '/.netlify/functions/onboard?id=' + encodeURIComponent(id);
+    return fetch(api, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (C) {
+      if (!C || !C.profile) { D.liveNote = (D.liveNote ? D.liveNote + ' ' : '') + 'That client profile could not be found.'; return; }
+      var P = C.profile, f = C.files || [];
+      D.client = { id: C.id, files: f };
+      D.venue.name = P.venue.name; D.venue.place = P.venue.place;
+      if (P.venue.owner) D.venue.owner = P.venue.owner;
+      if (P.venue.website) D.venue.website = P.venue.website;
+      if (f.indexOf('brand_image_1') >= 0) D.venue.headerImage = api + '&file=brand_image_1';
+      if (f.indexOf('logo') >= 0) D.venue.logo = api + '&file=logo';
+      D.tier = P.plan;
+      var g = P.goals || {};
+      if (g.revenue) D.goals.revenue.target = g.revenue;
+      if (g.newGuests) D.goals.newGuests.target = g.newGuests;
+      if (g.rebookRate) D.goals.rebookRate.target = g.rebookRate;
+      if (P.outreach) {
+        D.outreach.email = P.outreach.email; D.outreach.instagram = P.outreach.instagram; D.outreach.linkedin = P.outreach.linkedin;
+      }
+      D.brandProfile = { voice: P.voice, imagery: P.imagery, photos: f.filter(function (x) { return /^brand_image_/.test(x); }).map(function (x) { return api + '&file=' + x; }) };
+      if (P.brand && P.brand.usePrimary && P.brand.primary) {
+        window.MERIDIAN_TEAL = P.brand.primary;
+        document.documentElement.style.setProperty('--teal', P.brand.primary);
+      }
+      document.title = 'Meridian · ' + P.venue.name;
+    }).catch(function () {});
+  }
+
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
 
   fetch('/.netlify/functions/sandbox-data', { credentials: 'same-origin' })
@@ -175,5 +207,6 @@
     .catch(function () { D.liveNote = 'The sandbox could not be reached. Showing sample content for now.'; })
     .then(loadScore)
     .then(deriveInsights)
+    .then(loadClient)
     .then(boot);
 })();

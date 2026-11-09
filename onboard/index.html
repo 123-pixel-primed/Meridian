@@ -48,6 +48,8 @@
   .err{color:var(--warn);font-size:13px;margin-top:14px;min-height:1em}
   .uploads{display:flex;flex-direction:column;gap:8px}
   .hidden{display:none!important}
+  .plan-chip{display:inline-block;font-size:12.5px;color:var(--teal-dk);border:1px solid var(--teal);border-radius:999px;padding:5px 12px;margin:-6px 0 22px}
+  .sub-h{grid-column:1/-1;font-family:var(--serif);font-size:19px;font-weight:500;margin:14px 0 -4px}
   .done{text-align:center;padding:40px 0}
   .done .brand-mark{width:44px;height:44px;margin:0 auto 20px}
   .done ol{text-align:left;max-width:440px;margin:24px auto 0;color:var(--body);padding-left:20px}
@@ -67,10 +69,11 @@
     <p class="lead">About 12 minutes. Your answers set up your goals, guest journeys and dashboard. Nothing goes out to your guests until you approve it.</p>
     <div class="steps" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <p class="step-label" id="step-label">Step 1 of 6</p>
+    <p class="plan-chip hidden" id="plan-chip"></p>
   </div>
 
-  <form id="onboard" name="meridian-onboarding" method="POST" data-netlify="true" netlify-honeypot="company_website" enctype="multipart/form-data" novalidate>
-    <input type="hidden" name="form-name" value="meridian-onboarding">
+  <form id="onboard" name="meridian-onboarding" novalidate>
+    <input type="hidden" name="plan" id="plan"><input type="hidden" name="billing" id="billing">
     <p class="hidden"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off"></label></p>
 
     <!-- 1 -->
@@ -182,12 +185,32 @@
             <label><input type="radio" name="tone" value="Energetic and active">Energetic and active</label>
           </div></div>
         <div class="field full"><label for="voice_words">Describe your brand in your own words</label><textarea id="voice_words" name="voice_words"></textarea></div>
+        <div class="field"><label for="words_love">Words and phrases you love using</label><span class="hint">Separate with commas</span><input type="text" id="words_love" name="words_love" placeholder="For example ritual, unhurried, restore"></div>
+        <div class="field"><label for="words_avoid">Words to never use</label><span class="hint">Separate with commas</span><input type="text" id="words_avoid" name="words_avoid" placeholder="For example pamper, cheap, treat yourself"></div>
+        <div class="field full"><label for="voice_sample">An email, post or caption that sounds like you</label><span class="hint">Paste one you are proud of. Meridian matches its drafts to it.</span><textarea id="voice_sample" name="voice_sample"></textarea></div>
+        <div class="field full"><label for="signoff">How your emails and messages are signed</label><span class="hint">This is who new guests hear from.</span><input type="text" id="signoff" name="signoff" placeholder="For example Amélie and the team at Lumière"></div>
+        <p class="sub-h">Your imagery</p>
+        <div class="field full"><span class="q">The look of your photos and content <span class="req">*</span></span>
+          <div class="cards">
+            <label><input type="radio" name="imagery_style" value="Soft natural light" required><strong>Soft natural light</strong><span>Daylight, gentle shadows, calm and airy.</span></label>
+            <label><input type="radio" name="imagery_style" value="Moody and atmospheric"><strong>Moody and atmospheric</strong><span>Low light, steam and candlelight, rich warm tones.</span></label>
+            <label><input type="radio" name="imagery_style" value="Bright and clean"><strong>Bright and clean</strong><span>Even light, crisp whites, fresh and uncluttered.</span></label>
+            <label><input type="radio" name="imagery_style" value="Earthy and textured"><strong>Earthy and textured</strong><span>Stone, timber, linen and plants up close.</span></label>
+            <label><input type="radio" name="imagery_style" value="Minimal and editorial"><strong>Minimal and editorial</strong><span>Lots of space, one subject, a muted palette.</span></label>
+          </div></div>
+        <div class="field full"><span class="q">People in your imagery</span>
+          <div class="choices">
+            <label><input type="radio" name="imagery_people" value="Guests and team in shot">Guests and team in shot</label>
+            <label><input type="radio" name="imagery_people" value="Spaces, details and products only">Spaces, details and products only</label>
+            <label><input type="radio" name="imagery_people" value="A mix of both">A mix of both</label>
+          </div></div>
+        <div class="field full"><label for="imagery_inspo">Brands or accounts whose imagery you love</label><textarea id="imagery_inspo" name="imagery_inspo" placeholder="Instagram handles or website links"></textarea></div>
         <div class="field"><label for="colour_primary">Main brand colour</label><input type="text" id="colour_primary" name="colour_primary" placeholder="For example #5F8F88"></div>
         <div class="field"><label for="colour_accent">Accent colour</label><input type="text" id="colour_accent" name="colour_accent"></div>
         <div class="field"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
         <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, if you have one</span><input type="file" id="style_guide" name="style_guide" accept=".pdf"></div>
-        <div class="field full"><span class="q">Brand photos</span><span class="hint">Up to 5 photos of your space and treatments. Your favourite becomes the header image in your dashboard.</span><div class="uploads"><input type="file" id="brand_image_1" name="brand_image_1" accept=".jpg,.jpeg,.png" aria-label="Brand photo 1"><input type="file" id="brand_image_2" name="brand_image_2" accept=".jpg,.jpeg,.png" aria-label="Brand photo 2"><input type="file" id="brand_image_3" name="brand_image_3" accept=".jpg,.jpeg,.png" aria-label="Brand photo 3"><input type="file" id="brand_image_4" name="brand_image_4" accept=".jpg,.jpeg,.png" aria-label="Brand photo 4"><input type="file" id="brand_image_5" name="brand_image_5" accept=".jpg,.jpeg,.png" aria-label="Brand photo 5"></div></div>
-        <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Uploads are limited to 8 MB in total. Larger files can be shared on your onboarding call.</p>
+        <div class="field full"><span class="q">Brand photos</span><span class="hint">Up to 5 photos of your space and treatments. Put your favourite first, it becomes the header image in your dashboard.</span><div class="uploads"><input type="file" id="brand_image_1" name="brand_image_1" accept=".jpg,.jpeg,.png" aria-label="Brand photo 1"><input type="file" id="brand_image_2" name="brand_image_2" accept=".jpg,.jpeg,.png" aria-label="Brand photo 2"><input type="file" id="brand_image_3" name="brand_image_3" accept=".jpg,.jpeg,.png" aria-label="Brand photo 3"><input type="file" id="brand_image_4" name="brand_image_4" accept=".jpg,.jpeg,.png" aria-label="Brand photo 4"><input type="file" id="brand_image_5" name="brand_image_5" accept=".jpg,.jpeg,.png" aria-label="Brand photo 5"></div></div>
+        <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Photos are resized automatically. Logos and style guides can be up to 4 MB each. Anything larger can be shared on your onboarding call.</p>
       </div>
     </fieldset>
 
@@ -247,6 +270,8 @@
       <li>We book your onboarding call to connect your accounts and collect brand photos.</li>
       <li>You approve your first messages and content. Nothing is sent before you do.</li>
     </ol>
+    <p style="margin-top:28px"><a class="btn" id="dash-link" href="/app/">See your dashboard</a></p>
+    <p class="meta" id="upload-warn" style="margin-top:14px"></p>
   </section>
 </main>
 
@@ -301,21 +326,73 @@
   next.addEventListener('click', function () {
     if (!valid(sets[i])) { err.textContent = 'Please complete the questions marked with a star.'; return; }
     if (i < sets.length - 1) { show(++i); return; }
-    var total = 0;
-    form.querySelectorAll('input[type=file]').forEach(function (f) { Array.prototype.forEach.call(f.files, function (x) { total += x.size; }); });
-    if (total > 8 * 1024 * 1024) { err.textContent = 'Your uploads are over 8 MB. Remove a photo and share it on your onboarding call instead.'; return; }
     next.disabled = true; next.textContent = 'Sending';
-    fetch('/', { method: 'POST', body: new FormData(form) })
-      .then(function (res) {
-        if (!res.ok) throw new Error(res.status);
-        form.classList.add('hidden'); document.getElementById('intro').classList.add('hidden');
-        document.getElementById('done').classList.remove('hidden');
-      })
-      .catch(function () {
-        next.disabled = false; next.textContent = 'Submit and start setup';
-        err.innerHTML = 'Your answers did not send. Please try again, or email <a href="mailto:contact@pixelprimed.com">contact@pixelprimed.com</a>.';
-      });
+    send().catch(function () {
+      next.disabled = false; next.textContent = 'Submit and start setup';
+      err.innerHTML = 'Your answers did not send. Please try again, or email <a href="mailto:contact@pixelprimed.com">contact@pixelprimed.com</a>.';
+    });
   });
+
+  // Plan chosen on the pricing page
+  var qs = new URLSearchParams(location.search);
+  var PLANS = { core: 'Core', growth: 'Growth', scale: 'Scale' };
+  var plan = PLANS[qs.get('plan')] ? qs.get('plan') : '', billing = qs.get('billing') === 'yearly' ? 'yearly' : 'monthly';
+  document.getElementById('plan').value = plan || 'growth';
+  document.getElementById('billing').value = billing;
+  if (plan) { var chip = document.getElementById('plan-chip'); chip.textContent = PLANS[plan] + ' plan, billed ' + billing; chip.classList.remove('hidden'); }
+  if (qs.get('email')) document.getElementById('email').value = qs.get('email');
+
+  function answers() {
+    var o = {};
+    new FormData(form).forEach(function (v, k) {
+      if (v instanceof File) return;
+      if (o[k] === undefined) o[k] = v;
+      else o[k] = [].concat(o[k], v);
+    });
+    ['priorities', 'offers', 'migrate', 'sells'].forEach(function (k) { if (o[k] !== undefined) o[k] = [].concat(o[k]); });
+    return o;
+  }
+
+  // Photos are resized in the browser so uploads stay small.
+  function shrink(file) {
+    if (!/^image\/(jpeg|png)$/.test(file.type) || file.size < 900 * 1024) return Promise.resolve(file);
+    return new Promise(function (ok) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var max = 2000, k = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(function (b) { URL.revokeObjectURL(url); ok(b || file); }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { ok(file); };
+      img.src = url;
+    });
+  }
+
+  function send() {
+    var api = '/.netlify/functions/onboard';
+    return fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(answers()) })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (res) {
+        var id = res.id, failed = [];
+        var inputs = Array.prototype.slice.call(form.querySelectorAll('input[type=file]')).filter(function (f) { return f.files.length; });
+        next.textContent = 'Uploading your files';
+        return inputs.reduce(function (p, f) {
+          return p.then(function () { return shrink(f.files[0]); }).then(function (blob) {
+            var type = blob.type || f.files[0].type;
+            return fetch(api + '?id=' + encodeURIComponent(id) + '&file=' + f.name, { method: 'POST', headers: { 'Content-Type': type }, body: blob })
+              .then(function (r) { if (!r.ok) failed.push(f.files[0].name); })
+              .catch(function () { failed.push(f.files[0].name); });
+          });
+        }, Promise.resolve()).then(function () {
+          document.getElementById('dash-link').href = '/app/?client=' + encodeURIComponent(id);
+          if (failed.length) document.getElementById('upload-warn').textContent = 'These files did not upload: ' + failed.join(', ') + '. Send them to contact@pixelprimed.com and we will add them.';
+          form.classList.add('hidden'); document.getElementById('intro').classList.add('hidden');
+          document.getElementById('done').classList.remove('hidden');
+          window.scrollTo(0, 0);
+        });
+      });
+  }
 
   show(0);
 })();

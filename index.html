@@ -2605,6 +2605,11 @@ footer { background: var(--tile); border-top: 0; }
 @media (max-width: 960px) { .faq-inner { grid-template-columns: 1fr; gap: 40px; } .faq-photo { display: none; } }
 .pricing-grid.pricing-grid-3 { grid-template-columns: repeat(3, 1fr); max-width: 1040px; margin-left: auto; margin-right: auto; }
 @media (max-width: 900px) { .pricing-grid.pricing-grid-3 { grid-template-columns: 1fr; } }
+
+/* Plan buttons */
+.pricing-cta{display:block;text-align:center;margin:22px 0 4px;padding:15px 20px;font-family:var(--sans,Inter,sans-serif);font-size:14px;font-weight:500;letter-spacing:.02em;text-decoration:none;color:var(--teal-text,#5F8F88);border:1px solid var(--teal,#5F8F88);background:transparent;transition:background .2s,color .2s}
+.pricing-cta:hover,.pricing-cta-solid{background:var(--teal,#5F8F88);color:#fff}
+.pricing-cta-solid:hover{opacity:.9}
 </style>
 <script>
 /* Tidy the address bar: remove tracking codes added by links from other sites. Meridian has no analytics that read them. */
@@ -3205,6 +3210,7 @@ hcUpdate();
         <div class="pricing-price" data-monthly="390" data-yearly="312">$390</div>
         <div class="pricing-period">per month<span class="pricing-period-annual-note"> · billed annually</span></div>
         <p class="pricing-tier-desc">For keeping the guests you have: bookings, return visits and reviews, all in one place.</p>
+        <a class="pricing-cta" href="/onboard/?plan=core&billing=monthly" data-plan="core">Start with Core</a>
         <div class="pricing-divider"></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Bookings, payments and gift vouchers</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">One booking page for treatments, sessions and packages, with payments, vouchers and memberships built in.</div></div></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Guests come back at the right moment</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Welcome, aftercare, rebooking and win-back messages go out automatically, timed to each guest.</div></div></div>
@@ -3222,6 +3228,7 @@ hcUpdate();
         <div class="pricing-price" data-monthly="790" data-yearly="632">$790</div>
         <div class="pricing-period">per month<span class="pricing-period-annual-note"> · billed annually</span></div>
         <p class="pricing-recommend">Everything in Core, plus a plan that brings in new guests every month.</p>
+        <a class="pricing-cta pricing-cta-solid" href="/onboard/?plan=growth&billing=monthly" data-plan="growth">Start with Growth</a>
         <div class="pricing-divider"></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Core, plus:</div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">A marketing plan built from your goals</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Set your revenue goal and Meridian recommends the channels and budget to reach it, then adjusts every week from your results.</div></div></div>
@@ -3238,6 +3245,7 @@ hcUpdate();
         <div class="pricing-price" data-monthly="1,290" data-yearly="1,032">$1,290</div>
         <div class="pricing-period">per month, plus ad spend<span class="pricing-period-annual-note"> · billed annually</span></div>
         <p class="pricing-tier-desc">Everything in Growth, plus your content produced and your ads run for you.</p>
+        <a class="pricing-cta" href="/onboard/?plan=scale&billing=monthly" data-plan="scale">Start with Scale</a>
         <div class="pricing-divider"></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Growth, plus:</div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Ads run and refined for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Instagram, Facebook, Google and AI assistant ads, with budget moved to whatever brings bookings. Ad spend is paid to your own account.</div></div></div>
@@ -3440,6 +3448,23 @@ function setBilling(period) {
     el.textContent = '$' + (isYearly ? el.dataset.yearly : el.dataset.monthly);
   });
 }
+
+
+// Plan buttons: send each plan to its checkout. Until checkout links are added,
+// buttons go straight to the onboarding form so the journey can be tested.
+var MERIDIAN_CHECKOUT = {
+  core:   { monthly: '', yearly: '' },
+  growth: { monthly: '', yearly: '' },
+  scale:  { monthly: '', yearly: '' }
+};
+function planHref(plan) {
+  var billing = document.querySelector('.pricing-inner.billing-yearly') ? 'yearly' : 'monthly';
+  var url = (MERIDIAN_CHECKOUT[plan] || {})[billing];
+  return url || ('/onboard/?plan=' + plan + '&billing=' + billing);
+}
+document.querySelectorAll('.pricing-cta[data-plan]').forEach(function (a) {
+  a.addEventListener('click', function () { a.href = planHref(a.dataset.plan); });
+});
 
 // Scroll reveal
 const reveals = document.querySelectorAll('.reveal');

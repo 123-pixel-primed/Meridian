@@ -2,7 +2,7 @@
    The demo loads sample data; the live app will load each client's data instead. */
 (function () {
   var D = window.MERIDIAN_DATA;
-  var TEAL = '#5F8F88', GOLD = '#B08D57', TILE = '#EDEAE3', RULE = '#E2DED5', LABEL = '#707070';
+  var TEAL = window.MERIDIAN_TEAL || '#5F8F88', GOLD = '#B08D57', TILE = '#EDEAE3', RULE = '#E2DED5', LABEL = '#707070';
 
   /* ---------- helpers ---------- */
   function $(s) { return document.querySelector(s); }
@@ -304,7 +304,7 @@
     var msgs = '<ol class="steps">' + list.map(function (m) { return '<li><div class="email-when">' + esc(m.when) + '</div><p>' + esc(m.b) + '</p><div class="actions"><button class="btn ghost" data-act="edit">Edit</button></div></li>'; }).join('') + '</ol>';
     if (k === 2) return '<p class="trigger">A connection request, then one message when they accept. Best for corporate wellness.</p>' + msgs;
     return '<p class="trigger">Starts when someone follows you back. Sent from your own Instagram account.</p><div class="ig">' + msgs +
-      '<div><div class="phone"><div class="ph-top"><span class="ph-av">L</span><div><b>' + esc(D.venue.name) + '</b><span>Instagram</span></div></div><div class="ph-msg out">' + esc(list[0].b) + '</div><div class="ph-msg in">Oh I have been meaning to try Biologique Recherche for ages. How do I book?</div></div>' +
+      '<div><div class="phone"><div class="ph-top"><span class="ph-av">' + esc(D.venue.name.charAt(0)) + '</span><div><b>' + esc(D.venue.name) + '</b><span>Instagram</span></div></div><div class="ph-msg out">' + esc(list[0].b) + '</div><div class="ph-msg in">' + (D.brandProfile ? 'That sounds lovely. How do I book?' : 'Oh I have been meaning to try Biologique Recherche for ages. How do I book?') + '</div></div>' +
       '<div class="mini-stats">' + o.igStats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:22px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div></div></div>';
   }
   function emView(i) {
@@ -350,9 +350,34 @@
       '</div>';
   };
 
+
+  // Set from the onboarding form: how every draft sounds and how every image looks.
+  function brandBlock() {
+    var B = D.brandProfile; if (!B) return '';
+    var v = B.voice, im = B.imagery;
+    var li = function (a) { return '<ul class="list">' + a.map(function (x) { return '<li><span class="dot"></span><div class="grow">' + esc(x) + '</div></li>'; }).join('') + '</ul>'; };
+    var words = (v.love ? '<p class="meta" style="margin-top:12px"><b>Words you love:</b> ' + esc(v.love) + '</p>' : '') + (v.avoidWords ? '<p class="meta"><b>Never used:</b> ' + esc(v.avoidWords) + '</p>' : '') +
+      (v.flagged && v.flagged.length ? '<p class="meta" style="color:var(--warn)">' + esc(v.flagged.join('. ')) + '. Edit before approving.</p>' : '');
+    var voice = '<p style="font-family:var(--serif);font-size:20px;margin-bottom:6px">' + esc(v.tone) + '</p><p class="meta" style="margin-bottom:14px">' + esc(v.summary) + '</p>' +
+      '<div class="grid g2" style="gap:18px"><div><div class="email-when">Always</div>' + li(v.do) + '</div><div><div class="email-when">Never</div>' + li(v.avoid) + '</div></div>' + words +
+      '<p class="meta" style="margin-top:12px">Signed as ' + esc(v.signoff) + '. Every email, message and post is drafted in this voice, including your welcome email and the messages that find new guests.</p>';
+    var sw = im.palette.map(function (c) { return '<span title="' + esc(c) + '" style="display:inline-block;width:26px;height:26px;border-radius:50%;background:' + esc(c) + ';border:1px solid var(--rule);margin-right:6px"></span>'; }).join('');
+    var photos = B.photos.length ? '<div style="display:flex;gap:8px;margin:12px 0">' + B.photos.slice(0, 5).map(function (u) { return '<img src="' + u + '" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') + '</div>' : '';
+    var img = '<p style="font-family:var(--serif);font-size:20px;margin-bottom:6px">' + esc(im.style) + '</p><p class="meta" style="margin-bottom:12px">' + esc(im.look) + '</p>' +
+      (sw ? '<div style="margin-bottom:10px">' + sw + '</div>' : '') + photos +
+      '<div class="email-when">Shots to plan this month</div>' + li(im.shots) +
+      '<p class="meta" style="margin-top:10px"><b>People:</b> ' + esc(im.people) + '. <b>Avoid:</b> ' + esc(im.avoid.join(', ').toLowerCase()) + '.</p>' +
+      (im.inspiration ? '<p class="meta"><b>Inspired by:</b> ' + esc(im.inspiration) + '</p>' : '');
+    var w = v.welcome;
+    var welcome = '<div class="em"><div class="em-meta"><div class="email-when">Welcome email</div><div class="em-subj">' + esc(w.subject) + '</div><span class="tag warn">Waiting for you</span></div>' +
+      '<div class="em-body">' + esc(w.b).replace(/\n/g, '<br>') + '<div style="margin-top:18px">' + approveBtns() + '</div></div></div>';
+    return '<div class="grid g2">' + panel('Your brand voice', 'From your onboarding answers', voice) + panel('Your imagery style', 'From your onboarding answers', img) + '</div><div style="height:20px"></div>' +
+      panel('Your welcome email, first draft', 'Written in your voice. Approve it or ask for changes.', welcome) + '<div style="height:20px"></div>';
+  }
+
   V.content = function () {
     var a = D.aiSearch;
-    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + socialBlock() +
+    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + brandBlock() + socialBlock() +
       '<div class="grid g-hero">' +
         panel('Found by AI assistants', 'When guests ask an AI assistant for a recommendation', '<div class="mini-stats" style="margin-bottom:18px">' + a.stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:26px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
           '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>') +
@@ -519,8 +544,8 @@
   // Each Approve button is identified by its page and the item's title, so the saved state survives reloads.
   var APPROVALS = {};
   function approvalItem(b) {
-    var box = b.closest('li, tr') || b.parentNode;
-    var tEl = box.querySelector('.grow > div:first-child, td strong, strong') || box;
+    var box = b.closest('.em, li, tr') || b.parentNode;
+    var tEl = box.querySelector('.em-subj') || box.querySelector('.grow > div:first-child, td strong, strong') || box;
     var title = (tEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160);
     var mEl = box.querySelector('.grow .meta, .meta');
     var page = (location.hash || '#overview').slice(1);
@@ -582,7 +607,7 @@
 
   /* ---------- start ---------- */
   if (D.liveNote) { var ln = document.createElement('div'); ln.className = 'live-note'; ln.setAttribute('role', 'status'); ln.textContent = D.liveNote; var pg = $('#page'); pg.parentNode.insertBefore(ln, pg); }
-  $('#venue').innerHTML = esc(D.venue.name) + '<span>' + esc(D.venue.place) + '</span>';
+  $('#venue').innerHTML = (D.venue.logo ? '<img src="' + D.venue.logo + '" alt="" style="height:30px;max-width:120px;object-fit:contain;vertical-align:middle;margin-right:12px">' : '') + esc(D.venue.name) + '<span>' + esc(D.venue.place) + '</span>';
   if (!D.sample) { var s = $('.sample'); if (s) s.remove(); }
   var c = $('#approvals-count'); if (c) c.textContent = D.approvalsCount;
   var mc = $('#messages-count'); if (mc) mc.textContent = (D.inbox || []).filter(function (m) { return m.status === 'Needs a reply'; }).length;
