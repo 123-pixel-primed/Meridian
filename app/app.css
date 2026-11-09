@@ -338,3 +338,4 @@ a{color:var(--teal-dk)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* Narrow three-column panels: give the bar more room */
 .g3 .bar-row{grid-template-columns:minmax(0,112px) 1fr 40px;gap:10px}
+.hero .bar-row{grid-template-columns:minmax(0,230px) 1fr 40px}
