@@ -7,6 +7,7 @@ import { getStore } from '@netlify/blobs';
 import { buildProfile } from '../lib/profile.mjs';
 import { ghl, assignee } from '../lib/ghl.mjs';
 import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mjs';
+import { listLocations, savePit } from '../lib/ghl-access.mjs';
 
 const FILE_FIELDS = ['logo', 'style_guide', 'brand_image_1', 'brand_image_2', 'brand_image_3', 'brand_image_4', 'brand_image_5'];
 const MAX_FILE = 4 * 1024 * 1024;
@@ -64,6 +65,29 @@ export default async (req) => {
   const clients = getStore({ name: 'clients', consistency: 'strong' });
   const files = getStore({ name: 'client-files', consistency: 'strong' });
 
+  // Staff: the agency's sub-accounts, to link a client to their own account.
+  if (req.method === 'GET' && url.searchParams.get('locations')) {
+    const sess = readSession(req);
+    if (!sess || !sess.admin) return unauthorised();
+    try { return Response.json({ locations: await listLocations() }, { headers: { 'Cache-Control': 'no-store' } }); }
+    catch (e) { return Response.json({ locations: [], error: String(e.message || e) }, { headers: { 'Cache-Control': 'no-store' } }); }
+  }
+  // Staff: link a client to their account, optionally with a sub-account Private Integration token.
+  if (req.method === 'POST' && url.searchParams.get('link')) {
+    const sess = readSession(req);
+    if (!sess || !sess.admin) return unauthorised();
+    if (!validId(id)) return Response.json({ error: 'Missing client' }, { status: 400 });
+    const rec = await clients.get(id, { type: 'json' });
+    if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
+    let b = {}; try { b = await req.json(); } catch (e) {}
+    const loc = String(b.locationId || '').replace(/[^A-Za-z0-9]/g, '');
+    if (!loc) return Response.json({ error: 'Choose an account' }, { status: 400 });
+    rec.locationId = loc;
+    if (b.token) await savePit(loc, String(b.token).trim());
+    await clients.setJSON(id, rec);
+    return Response.json({ ok: true, locationId: loc });
+  }
+
   if (req.method === 'GET' && url.searchParams.get('list')) {
     // Pixel Primed staff: every onboarding submission, newest first.
     const sess = readSession(req);
@@ -72,7 +96,7 @@ export default async (req) => {
     const recs = (await Promise.all(blobs.map(b => clients.get(b.key, { type: 'json' })))).filter(Boolean);
     recs.sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
     return Response.json({ clients: recs.map(r => ({
-      id: r.id, createdAt: r.createdAt, files: r.files || [], taskIssue: r.taskIssue || null,
+      id: r.id, createdAt: r.createdAt, files: r.files || [], taskIssue: r.taskIssue || null, locationId: r.locationId || null,
       answers: r.answers, missing: missing(r.answers || {}), labels: KEY_FIELDS
     })) }, { headers: { 'Cache-Control': 'no-store' } });
   }
@@ -117,6 +141,11 @@ export default async (req) => {
   const newId = slug(a.business_name) + '-' + Math.random().toString(36).slice(2, 8);
   const rec = { id: newId, createdAt: new Date().toISOString(), answers: a, profile: buildProfile(a), files: [] };
   rec.taskIssue = await notify(rec);
+  try {
+    const em = String(a.email).trim().toLowerCase();
+    const match = (await listLocations()).find(l => l.email === em);
+    if (match) rec.locationId = match.id;
+  } catch (e) { rec.linkIssue = String(e.message || e); }
   await clients.setJSON(newId, rec);
   // Their email signs them in to this dashboard from now on.
   const email = String(a.email).trim().toLowerCase();

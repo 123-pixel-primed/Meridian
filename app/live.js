@@ -210,10 +210,19 @@
         document.body.classList.add('client-view');
         // A client always lands on their own dashboard.
         if (qs.get('client') !== me.cid) { qs.set('client', me.cid); history.replaceState(null, '', '?' + qs.toString() + location.hash); }
-        D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.';
-        return loadClient().then(boot);
+        // Their own account: bookings, guests, messages and payments.
+        return fetch('/.netlify/functions/sandbox-data?client=' + encodeURIComponent(me.cid), { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (S) {
+            if (S && S.connected) apply(S);
+            else D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.';
+          })
+          .catch(function () { D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.'; })
+          .then(loadClient).then(boot);
       }
-      return fetch('/.netlify/functions/sandbox-data', { credentials: 'same-origin' })
+      // Staff viewing a client see that client's own account; otherwise the sandbox.
+      var dataUrl = '/.netlify/functions/sandbox-data' + (qs.get('client') ? '?client=' + encodeURIComponent(qs.get('client')) : '');
+      return fetch(dataUrl, { credentials: 'same-origin' })
         .then(function (r) { return r.json(); })
         .then(function (S) {
           if (S && S.connected) apply(S);

@@ -5,7 +5,9 @@
 // Read-only: this function never creates, changes or sends anything in GHL.
 
 import { readGA, readGSC } from '../lib/ga.mjs';
-import { readSession, unauthorised } from '../lib/session.mjs';
+import { readSession, unauthorised, canSee } from '../lib/session.mjs';
+import { getStore } from '@netlify/blobs';
+import { tokenFor } from '../lib/ghl-access.mjs';
 
 const API = 'https://services.leadconnectorhq.com';
 const DAY = 86400000;
@@ -41,11 +43,19 @@ function ms(v) {
 }
 
 export default async (req) => {
-  // The sandbox holds real contacts and payments, so only Pixel Primed staff can read it.
+  // Staff can read the sandbox or any client; a client can only read their own account.
   const sess = readSession(req);
-  if (!sess || !sess.admin) return unauthorised();
-  const token = process.env.GHL_SANDBOX_TOKEN;
-  const loc = process.env.GHL_SANDBOX_LOCATION_ID;
+  const cid = new URL(req.url).searchParams.get('client');
+  if (!sess) return unauthorised();
+  if (!cid && !sess.admin) return unauthorised();
+  if (cid && !canSee(sess, cid)) return unauthorised();
+  let loc = process.env.GHL_SANDBOX_LOCATION_ID, token = process.env.GHL_SANDBOX_TOKEN, isSandbox = true;
+  if (cid) {
+    const rec = await getStore({ name: 'clients', consistency: 'strong' }).get(cid, { type: 'json' });
+    if (!rec || !rec.locationId) return Response.json({ connected: false, reason: 'Your account is being connected.' }, { headers: { 'Cache-Control': 'no-store' } });
+    loc = rec.locationId; isSandbox = loc === process.env.GHL_SANDBOX_LOCATION_ID;
+    try { token = await tokenFor(loc); } catch (e) { return Response.json({ connected: false, reason: 'Your account is being connected.', detail: sess.admin ? String(e.message || e) : undefined }, { headers: { 'Cache-Control': 'no-store' } }); }
+  }
   if (!token || !loc) {
     return Response.json({ connected: false, reason: 'The sandbox connection is not set up yet.' }, { status: 200 });
   }
@@ -150,8 +160,10 @@ export default async (req) => {
     }
   });
 
-  await safe('website', async () => { out.web = await readGA(); });
-  await safe('search', async () => { out.search = await readGSC(); });
+  if (isSandbox) {
+    await safe('website', async () => { out.web = await readGA(); });
+    await safe('search', async () => { out.search = await readGSC(); });
+  }
 
   // Cache at Netlify's edge for 2 minutes so page loads share one set of GHL requests.
   return Response.json(out, { headers: { 'Cache-Control': 'public, max-age=0, must-revalidate', 'Netlify-CDN-Cache-Control': 'public, durable, s-maxage=120, stale-while-revalidate=600', 'Netlify-Vary': 'cookie=mer_s' } });

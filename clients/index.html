@@ -33,6 +33,10 @@
   .links{margin-top:18px;display:flex;gap:18px;font-size:13px}
   .links a{color:#4A7570}
   .empty{color:#5C6660}
+  .acct{margin-top:18px;padding:14px 16px;background:#F5F0EA;font-size:13px;color:#22322C}
+  .acct select,.acct input{border:1px solid #E2DED5;background:#fff;padding:7px 9px;font:inherit;font-size:13px;margin:6px 8px 0 0;max-width:100%}
+  .acct button{background:#5F8F88;color:#fff;border:0;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;margin-top:6px}
+  .acct .ok{color:#4A7570}
 </style>
 </head>
 <body>
@@ -46,7 +50,27 @@
 (function () {
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function val(v) { return Array.isArray(v) ? v.join(', ') : v; }
-  fetch('/.netlify/functions/onboard?list=1', { cache: 'no-store' })
+  var LOCS = [], LOC_ERR = '';
+  function acct(c) {
+    var linked = c.locationId ? LOCS.find(function (l) { return l.id === c.locationId; }) : null;
+    var opts = '<option value="">Choose their account</option>' + LOCS.map(function (l) { return '<option value="' + esc(l.id) + '"' + (l.id === c.locationId ? ' selected' : '') + '>' + esc(l.name) + (l.email ? ' (' + esc(l.email) + ')' : '') + '</option>'; }).join('');
+    return '<div class="acct" data-id="' + esc(c.id) + '"><b>Their account</b><br>' +
+      (c.locationId ? '<span class="ok">Linked to ' + esc(linked ? linked.name : c.locationId) + '. Their dashboard shows their own bookings, guests, messages and payments.</span><br>' : 'Not linked yet, so their dashboard shows sample figures.<br>') +
+      (LOCS.length ? '<select class="loc">' + opts + '</select>' : '<input class="loc" placeholder="Account (location) ID">') +
+      '<input class="pit" placeholder="Sub-account token (only if needed)" autocomplete="off"><button class="link">Save</button>' +
+      (LOC_ERR ? '<div class="m" style="margin-top:8px">Agency connection: ' + esc(LOC_ERR) + '</div>' : '') + '<span class="res m" style="margin-left:8px"></span></div>';
+  }
+  document.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('link')) return;
+    var box = e.target.closest('.acct'), res = box.querySelector('.res');
+    var body = { locationId: box.querySelector('.loc').value.trim(), token: box.querySelector('.pit').value.trim() || undefined };
+    res.textContent = 'Saving';
+    fetch('/.netlify/functions/onboard?link=1&id=' + encodeURIComponent(box.dataset.id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { res.textContent = j.ok ? 'Saved' : (j.error || 'Not saved'); box.querySelector('.pit').value = ''; });
+  });
+  fetch('/.netlify/functions/onboard?locations=1', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { LOCS = j.locations || []; LOC_ERR = j.error || ''; }).catch(function () {}).then(function () { return load(); });
+  function load() { return fetch('/.netlify/functions/onboard?list=1', { cache: 'no-store' })
     .then(function (r) { if (r.status === 401) { location.replace('/login/'); throw 0; } return r.json(); })
     .then(function (res) {
       var list = res.clients || [];
@@ -61,10 +85,10 @@
           (c.missing.length ? '<div class="eyebrow">TO ASK ON THE SETUP CALL</div><div class="missing">' + c.missing.map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
           '<div class="eyebrow">THEIR ANSWERS</div><dl>' + rows + '</dl>' +
           '<div class="links"><a href="/app/?client=' + encodeURIComponent(c.id) + '">Open their dashboard</a>' + (a.email ? '<a href="mailto:' + esc(a.email) + '">Email them</a>' : '') + '<span class="m">' + c.files.length + ' upload' + (c.files.length === 1 ? '' : 's') + '</span></div>' +
-          (c.taskIssue ? '<p class="m" style="margin-top:12px">Setup task note: ' + esc(c.taskIssue) + '</p>' : '') + '</div></details>';
+          acct(c) + (c.taskIssue ? '<p class="m" style="margin-top:12px">Setup task note: ' + esc(c.taskIssue) + '</p>' : '') + '</div></details>';
       }).join('');
     })
-    .catch(function (e) { if (e !== 0) document.getElementById('list').innerHTML = '<p class="empty">The client list could not be loaded.</p>'; });
+    .catch(function (e) { if (e !== 0) document.getElementById('list').innerHTML = '<p class="empty">The client list could not be loaded.</p>'; }); }
 })();
 </script>
 </body>
