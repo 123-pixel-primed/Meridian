@@ -37,7 +37,7 @@ async function makeTask(store, token, loc, rec) {
     const due = new Date(Date.now() + 3 * 86400000).toISOString();
     const t = await ghl('/contacts/' + cid + '/tasks', token, { method: 'POST', body: {
       title: 'Approved: ' + rec.title,
-      body: (rec.detail ? rec.detail + '\n\n' : '') + 'Approved on the Meridian dashboard (' + rec.page + ' page). Mark this task complete when it is done and the dashboard will show it as Done.',
+      body: (rec.detail ? '<p>' + rec.detail + '.</p>' : '') + '<p>Approved on the Meridian dashboard (' + rec.page + ' page). Mark this task complete when it is done and the dashboard will show it as Done.</p>',
       dueDate: due, completed: false
     } });
     rec.taskId = (t.task && (t.task.id || t.task._id)) || null;
@@ -75,7 +75,7 @@ export default async (req) => {
   if (token && contact && contact.id && recs.some(r => r.taskId && r.status !== 'done')) {
     try {
       const t = await ghl('/contacts/' + contact.id + '/tasks', token);
-      const done = new Set((t.tasks || []).filter(x => x.completed).map(x => x.id || x._id));
+      const done = new Set((t.tasks || []).filter(x => x.completed === true || /complete/i.test(String(x.status || ''))).map(x => x.id || x._id));
       for (const r of recs) if (r.taskId && done.has(r.taskId) && r.status !== 'done') { r.status = 'done'; await store.setJSON(r.key, r); }
     } catch (e) {}
   }
