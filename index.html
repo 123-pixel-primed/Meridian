@@ -3453,13 +3453,15 @@ function setBilling(period) {
 // Plan buttons: send each plan to its checkout. Until checkout links are added,
 // buttons go straight to the onboarding form so the journey can be tested.
 var MERIDIAN_CHECKOUT = {
-  core:   { monthly: '', yearly: '' },
-  growth: { monthly: '', yearly: '' },
-  scale:  { monthly: '', yearly: '' }
+  core:   { monthly: 'https://buy.stripe.com/5kQ5kEddr8bp5637bl2Fa0o', yearly: 'https://buy.stripe.com/eVq5kEb5jdvJfKHcvF2Fa0p' },
+  growth: { monthly: 'https://buy.stripe.com/4gM00kgpD0IXcyveDN2Fa0q', yearly: 'https://buy.stripe.com/5kQ6oIddrfDRburfHR2Fa0r' },
+  scale:  { monthly: 'https://buy.stripe.com/eVq28s5KZ9ft2XV67h2Fa0s', yearly: 'https://buy.stripe.com/8x29AUgpD2R5fKH7bl2Fa0t' }
 };
+// Checkout is switched off until each plan has its snapshot and the after-payment redirect is set in Stripe.
+var CHECKOUT_LIVE = false;
 function planHref(plan) {
   var billing = document.querySelector('.pricing-inner.billing-yearly') ? 'yearly' : 'monthly';
-  var url = (MERIDIAN_CHECKOUT[plan] || {})[billing];
+  var url = CHECKOUT_LIVE && (MERIDIAN_CHECKOUT[plan] || {})[billing];
   return url || ('/onboard/?plan=' + plan + '&billing=' + billing);
 }
 document.querySelectorAll('.pricing-cta[data-plan]').forEach(function (a) {
