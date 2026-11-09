@@ -31,7 +31,7 @@
         <li><a href="#partners"><svg viewBox="0 0 16 16"><circle cx="5.5" cy="8" r="3.5"/><circle cx="10.5" cy="8" r="3.5"/></svg>Partners</a></li>
       </ul>
     </nav>
-    <div class="side-foot"><strong><span id="plan-name"></span> plan</strong>Questions? contact@pixelprimed.com</div>
+    <div class="side-foot"><strong><span id="plan-name"></span> plan</strong>Questions? contact@pixelprimed.com<a href="/login/" id="signout" class="signout">Sign out</a></div>
   </aside>
 
   <div class="main">
@@ -57,5 +57,11 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="demo-data.js"></script>
 <script src="live.js"></script>
+<script>
+document.getElementById('signout').addEventListener('click', function (e) {
+  e.preventDefault();
+  fetch('/.netlify/functions/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"logout":true}' }).then(function () { location.replace('/login/'); });
+});
+</script>
 </body>
 </html>

@@ -5,6 +5,7 @@
 // Read-only: this function never creates, changes or sends anything in GHL.
 
 import { readGA, readGSC } from '../lib/ga.mjs';
+import { readSession, unauthorised } from '../lib/session.mjs';
 
 const API = 'https://services.leadconnectorhq.com';
 const DAY = 86400000;
@@ -39,7 +40,10 @@ function ms(v) {
   return Number.isNaN(t) ? null : t;
 }
 
-export default async () => {
+export default async (req) => {
+  // The sandbox holds real contacts and payments, so only Pixel Primed staff can read it.
+  const sess = readSession(req);
+  if (!sess || !sess.admin) return unauthorised();
   const token = process.env.GHL_SANDBOX_TOKEN;
   const loc = process.env.GHL_SANDBOX_LOCATION_ID;
   if (!token || !loc) {
@@ -150,5 +154,5 @@ export default async () => {
   await safe('search', async () => { out.search = await readGSC(); });
 
   // Cache at Netlify's edge for 2 minutes so page loads share one set of GHL requests.
-  return Response.json(out, { headers: { 'Cache-Control': 'public, max-age=0, must-revalidate', 'Netlify-CDN-Cache-Control': 'public, durable, s-maxage=120, stale-while-revalidate=600' } });
+  return Response.json(out, { headers: { 'Cache-Control': 'public, max-age=0, must-revalidate', 'Netlify-CDN-Cache-Control': 'public, durable, s-maxage=120, stale-while-revalidate=600', 'Netlify-Vary': 'cookie=mer_s' } });
 };

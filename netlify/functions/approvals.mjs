@@ -5,6 +5,7 @@
 import { getStore } from '@netlify/blobs';
 
 import { ghl, assignee, issues } from '../lib/ghl.mjs';
+import { readSession, unauthorised } from '../lib/session.mjs';
 
 const REQUESTS_CONTACT = 'Meridian requests';
 
@@ -37,6 +38,7 @@ async function makeTask(store, token, loc, rec) {
 }
 
 export default async (req) => {
+  if (!readSession(req)) return unauthorised();
   const store = getStore({ name: 'approvals', consistency: 'strong' });
   const token = process.env.GHL_SANDBOX_TOKEN, loc = process.env.GHL_SANDBOX_LOCATION_ID;
 

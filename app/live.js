@@ -170,7 +170,7 @@
     var id = new URLSearchParams(location.search).get('client');
     if (!id) return;
     var api = '/.netlify/functions/onboard?id=' + encodeURIComponent(id);
-    return fetch(api, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (C) {
+    return fetch(api, { cache: 'no-store' }).then(function (r) { if (r.status === 401) { location.replace('/login/'); return null; } return r.ok ? r.json() : null; }).then(function (C) {
       if (!C || !C.profile) { D.liveNote = (D.liveNote ? D.liveNote + ' ' : '') + 'That client profile could not be found.'; return; }
       var P = C.profile, f = C.files || [];
       D.client = { id: C.id, files: f };
@@ -198,15 +198,32 @@
 
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
 
-  fetch('/.netlify/functions/sandbox-data', { credentials: 'same-origin' })
+  // Everyone signs in first. Pixel Primed staff see the sandbox; a client sees only their own dashboard.
+  function toLogin() { location.replace('/login/'); }
+  fetch('/.netlify/functions/auth?me=1', { credentials: 'same-origin', cache: 'no-store' })
     .then(function (r) { return r.json(); })
-    .then(function (S) {
-      if (S && S.connected) apply(S);
-      else D.liveNote = (S && S.reason ? S.reason + ' ' : '') + 'Showing sample content for now.';
+    .then(function (me) {
+      if (!me || !me.email) { toLogin(); return; }
+      D.me = me;
+      var qs = new URLSearchParams(location.search);
+      if (!me.admin) {
+        document.body.classList.add('client-view');
+        // A client always lands on their own dashboard.
+        if (qs.get('client') !== me.cid) { qs.set('client', me.cid); history.replaceState(null, '', '?' + qs.toString() + location.hash); }
+        D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.';
+        return loadClient().then(boot);
+      }
+      return fetch('/.netlify/functions/sandbox-data', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (S) {
+          if (S && S.connected) apply(S);
+          else D.liveNote = (S && S.reason ? S.reason + ' ' : '') + 'Showing sample content for now.';
+        })
+        .catch(function () { D.liveNote = 'The sandbox could not be reached. Showing sample content for now.'; })
+        .then(loadScore)
+        .then(deriveInsights)
+        .then(loadClient)
+        .then(boot);
     })
-    .catch(function () { D.liveNote = 'The sandbox could not be reached. Showing sample content for now.'; })
-    .then(loadScore)
-    .then(deriveInsights)
-    .then(loadClient)
-    .then(boot);
+    .catch(toLogin);
 })();

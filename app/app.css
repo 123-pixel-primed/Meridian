@@ -339,3 +339,8 @@ a{color:var(--teal-dk)}
 /* Narrow three-column panels: give the bar more room */
 .g3 .bar-row{grid-template-columns:minmax(0,112px) 1fr 40px;gap:10px}
 .hero .bar-row{grid-template-columns:minmax(0,230px) 1fr 40px}
+
+/* Sign out, and what a signed-in client does not see */
+.signout{display:block;margin-top:10px;color:var(--teal-dk);font-size:12px;text-decoration:none}
+.signout:hover{text-decoration:underline}
+.client-view .tier-switch,.client-view .sample{display:none}

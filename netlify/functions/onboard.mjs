@@ -6,6 +6,7 @@
 import { getStore } from '@netlify/blobs';
 import { buildProfile } from '../lib/profile.mjs';
 import { ghl, assignee } from '../lib/ghl.mjs';
+import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mjs';
 
 const FILE_FIELDS = ['logo', 'style_guide', 'brand_image_1', 'brand_image_2', 'brand_image_3', 'brand_image_4', 'brand_image_5'];
 const MAX_FILE = 4 * 1024 * 1024;
@@ -48,11 +49,13 @@ export default async (req) => {
 
   if (req.method === 'GET') {
     if (!validId(id)) return Response.json({ error: 'Missing client' }, { status: 400 });
+    // Only the client themselves (or Pixel Primed staff) can see a client's profile and files.
+    if (!canSee(readSession(req), id)) return unauthorised();
     if (file) {
       if (FILE_FIELDS.indexOf(file) < 0) return new Response('Not found', { status: 404 });
       const r = await files.getWithMetadata(id + '/' + file, { type: 'arrayBuffer' });
       if (!r) return new Response('Not found', { status: 404 });
-      return new Response(r.data, { headers: { 'Content-Type': (r.metadata && r.metadata.type) || 'application/octet-stream', 'Cache-Control': 'public, max-age=3600' } });
+      return new Response(r.data, { headers: { 'Content-Type': (r.metadata && r.metadata.type) || 'application/octet-stream', 'Cache-Control': 'private, max-age=3600' } });
     }
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
@@ -64,6 +67,7 @@ export default async (req) => {
   // One upload for an existing client.
   if (file) {
     if (!validId(id) || FILE_FIELDS.indexOf(file) < 0) return Response.json({ error: 'Bad upload' }, { status: 400 });
+    if (!canSee(readSession(req), id)) return unauthorised();
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
     const type = req.headers.get('content-type') || 'application/octet-stream';
@@ -84,5 +88,11 @@ export default async (req) => {
   const rec = { id: newId, createdAt: new Date().toISOString(), answers: a, profile: buildProfile(a), files: [] };
   rec.taskIssue = await notify(rec);
   await clients.setJSON(newId, rec);
-  return Response.json({ id: newId, taskIssue: rec.taskIssue });
+  // Their email signs them in to this dashboard from now on.
+  const email = String(a.email).trim().toLowerCase();
+  await getStore({ name: 'client-index', consistency: 'strong' }).set(email, newId);
+  // Sign them in straight away so "See your dashboard" works at the end of the form.
+  const sess = readSession(req);
+  const headers = sess && sess.admin ? {} : { 'Set-Cookie': makeCookie({ email, cid: newId, admin: false }) };
+  return Response.json({ id: newId, taskIssue: rec.taskIssue }, { headers });
 };
