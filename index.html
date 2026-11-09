@@ -2615,6 +2615,14 @@ footer { background: var(--tile); border-top: 0; }
 /* Tidy the address bar: remove tracking codes added by links from other sites. Meridian has no analytics that read them. */
 (function(){try{var u=new URL(location.href),k=['_gl','_ga','_gac'],c=false;k.forEach(function(x){if(u.searchParams.has(x)){u.searchParams.delete(x);c=true}});if(c)history.replaceState(history.state,'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams:'')+u.hash)}catch(e){}})();
 </script>
+<!-- Google Analytics - Pixel Primed (public pages only) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GT-M38DFGN8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GT-M38DFGN8');
+</script>
 </head>
 <body>
 
