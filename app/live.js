@@ -132,6 +132,21 @@
     }).catch(function () {});
   }
 
+  // Turn live figures into plain recommendations at the top of the Website page's fixes.
+  function deriveInsights() {
+    var G = D.searchTerms; if (!G || !G.now || !G.terms) return;
+    var root = String(G.site || '').replace(/^sc-domain:|^https?:\/\/(www\.)?/g, '').split('.')[0].toLowerCase();
+    var squash = function (t) { return t.toLowerCase().replace(/[^a-z0-9]/g, ''); };
+    var brand = G.terms.filter(function (t) { return root && squash(t.term).indexOf(root) >= 0; }).reduce(function (a, t) { return a + t.clicks; }, 0);
+    var total = G.now.clicks || 0, share = total ? Math.round(100 * brand / total) : 0;
+    var add = [];
+    if (total && share >= 60) add.push({ t: 'Win searches from people who do not know your name yet', i: share + '% of Google clicks come from people searching your name. Short answer sections and service details help you appear for the services you offer' });
+    var p0 = G.before && G.before.position, p1 = G.now.position;
+    if (p0 && p1 && p1 - p0 >= 1.5) add.push({ t: 'Lift your average Google position back up', i: 'It moved from ' + (Math.round(p0 * 10) / 10) + ' to ' + (Math.round(p1 * 10) / 10) + ' over the last 4 weeks. Refreshing your top pages usually helps' });
+    if (add.length && D.website && D.website.fixes) D.website.fixes = add.concat(D.website.fixes).slice(0, 6);
+    D.searchInsight = total ? (share >= 60 ? 'Most of your Google clicks (' + share + '%) come from people who already know your name. Growth will come from appearing for the services you offer.' : 'Most Google clicks come from searches for your services, not just your name.') : null;
+  }
+
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
 
   fetch('/.netlify/functions/sandbox-data', { credentials: 'same-origin' })
@@ -142,5 +157,6 @@
     })
     .catch(function () { D.liveNote = 'The sandbox could not be reached. Showing sample content for now.'; })
     .then(loadScore)
+    .then(deriveInsights)
     .then(boot);
 })();

@@ -408,6 +408,7 @@
       '<section class="panel stat"><span class="n">' + Math.round(n.impressions).toLocaleString('en-AU') + '</span><span class="l">Times you appeared in results</span><span class="delta">' + esc(ch(n.impressions, b.impressions)) + '</span></section>' +
       '<section class="panel stat"><span class="n">' + (Math.round(n.position * 10) / 10 || '-') + '</span><span class="l">Average position on Google</span><span class="delta">Lower is better</span></section>' +
       '</div><div style="height:20px"></div>' +
+      (D.searchInsight ? '<p class="live-note" style="margin:0 0 20px;padding:12px 16px">' + esc(D.searchInsight) + '</p>' : '') +
       panel('What people searched to find you', 'Last 4 weeks, from Google Search Console', '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Search</th><th>Clicks</th><th>Appeared</th><th>Position</th></tr></thead><tbody>' + rows + '</tbody></table></div>') +
       '<div style="height:20px"></div>';
   }

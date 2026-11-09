@@ -33,7 +33,7 @@ function ms(v) {
   return Number.isNaN(t) ? null : t;
 }
 
-export default async () => {
+export default async (req) => {
   const token = process.env.GHL_SANDBOX_TOKEN;
   const loc = process.env.GHL_SANDBOX_LOCATION_ID;
   if (!token || !loc) {
@@ -109,6 +109,19 @@ export default async () => {
       status: t.status || ''
     }));
   });
+
+  // Temporary: shows raw replies from the social statistics endpoints while we wire them up (read-only).
+  if (new URL(req.url).searchParams.get('debug') === 'social') {
+    const acc = await ghl('/social-media-posting/' + loc + '/accounts', {}, '2021-07-28', token).catch(e => ({ error: String(e) }));
+    const ids = ((acc.results && acc.results.accounts) || []).map(a => a.profileId).filter(Boolean);
+    const tries = [];
+    for (const [path, params] of [['/social-media-posting/statistics', { locationId: loc }], ['/social-media-posting/' + loc + '/statistics', {}]]) {
+      const url = new URL(API + path); Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+      const r = await fetch(url, { method: 'POST', headers: { Authorization: 'Bearer ' + token, Version: '2021-07-28', Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ profileIds: ids }) });
+      tries.push({ path, status: r.status, body: (await r.text()).slice(0, 1500) });
+    }
+    return Response.json({ ids, tries });
+  }
 
   await safe('social', async () => {
     const r = await ghl('/social-media-posting/' + loc + '/accounts', {}, '2021-07-28', token);
