@@ -1,90 +1,94 @@
 <!-- Meridian welcome email, sent after payment. Paste into a Custom HTML / Code block in the email builder,
-     replacing every existing block. No account login is included: clients use the Meridian dashboard. -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#FFFFFF;margin:0;padding:0;">
+     replacing every existing block. Set that section's padding to 0 so the footer sits flush. No account login is included. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#FFFFFF;margin:0;padding:0;border-collapse:collapse;">
+
+  <!-- Wordmark -->
   <tr>
-    <td align="center" style="padding:0;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#FFFFFF;">
+    <td align="center" style="padding:48px 40px 8px 40px;">
+      <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:26px;letter-spacing:6px;color:#22322C;font-weight:400;">MERIDIAN</div>
+      <div style="font-family:Inter,Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:#4A7570;padding-top:8px;">BY PIXEL PRIMED</div>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" style="padding:24px 40px 0 40px;">
+      <div style="width:48px;height:1px;background:#5F8F88;line-height:1px;font-size:1px;">&nbsp;</div>
+    </td>
+  </tr>
 
-        <!-- Wordmark -->
-        <tr>
-          <td align="center" style="padding:44px 40px 8px 40px;">
-            <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:26px;letter-spacing:6px;color:#22322C;font-weight:400;">MERIDIAN</div>
-            <div style="font-family:Inter,Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:#4A7570;padding-top:8px;">BY PIXEL PRIMED</div>
-          </td>
-        </tr>
-        <tr>
-          <td align="center" style="padding:24px 40px 0 40px;">
-            <div style="width:48px;height:1px;background:#5F8F88;line-height:1px;font-size:1px;">&nbsp;</div>
-          </td>
-        </tr>
+  <!-- Heading and intro -->
+  <tr>
+    <td style="padding:36px 48px 0 48px;">
+      <h1 style="margin:0;font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:30px;line-height:1.25;font-weight:400;color:#22322C;">Welcome to Meridian</h1>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:24px 48px 0 48px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#22322C;">
+      <p style="margin:0 0 16px 0;">Hi {{user.first_name}},</p>
+      <p style="margin:0 0 16px 0;">Welcome to Meridian by Pixel Primed. We're delighted to have you joining us.</p>
+      <p style="margin:0 0 16px 0;">We're looking forward to getting to know your business and helping you create more meaningful connections with your guests, from their first interaction through to their next visit.</p>
+      <p style="margin:0 0 16px 0;">Over the coming days, we'll work with you to bring everything together, making sure Meridian is tailored to your business, your goals and the experience you want to create for your guests.</p>
+      <p style="margin:0;">Here's what happens next.</p>
+    </td>
+  </tr>
 
-        <!-- Heading -->
+  <!-- Step one -->
+  <tr>
+    <td style="padding:32px 48px 0 48px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0EA;">
         <tr>
-          <td style="padding:36px 48px 8px 48px;">
-            <div style="font-family:Inter,Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:12px;">WELCOME</div>
-            <h1 style="margin:0;font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:30px;line-height:1.25;font-weight:400;color:#22322C;">Your account is ready</h1>
-          </td>
-        </tr>
-
-        <!-- Intro -->
-        <tr>
-          <td style="padding:20px 48px 8px 48px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#22322C;">
-            <p style="margin:0 0 16px 0;">Hi {{user.first_name}},</p>
-            <p style="margin:0 0 16px 0;">Thank you for joining Meridian. Over the coming days we set everything up around your business. You approve each step before anything reaches your guests.</p>
-          </td>
-        </tr>
-
-        <!-- Step one -->
-        <tr>
-          <td style="padding:16px 48px 0 48px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0EA;">
+          <td style="padding:30px 30px 32px 30px;font-family:Inter,Arial,Helvetica,sans-serif;">
+            <div style="font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:10px;">STEP ONE</div>
+            <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:21px;line-height:1.3;color:#22322C;padding-bottom:12px;">Let's get to know your business</div>
+            <div style="font-size:14px;line-height:1.7;color:#22322C;padding-bottom:12px;">To get started, we'd love to learn a little more about your business and what you're looking to achieve.</div>
+            <div style="font-size:14px;line-height:1.7;color:#22322C;padding-bottom:24px;">We've put together a short questionnaire that takes less than 10 minutes to complete. We'll use your answers to shape your strategy, guest journeys and Meridian dashboard, with a few details already filled in from your website where possible.</div>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="padding:28px 28px 30px 28px;font-family:Inter,Arial,Helvetica,sans-serif;">
-                  <div style="font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:10px;">STEP ONE</div>
-                  <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:21px;line-height:1.3;color:#22322C;padding-bottom:10px;">Tell us about your business</div>
-                  <div style="font-size:14px;line-height:1.7;color:#22322C;padding-bottom:22px;">To get started we need a few details about your business. It takes less than 10 minutes. Your answers set up your goals, your guest journeys and your dashboard. We pre-fill what we can from your website.</div>
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="background:#5F8F88;">
-                        <a href="https://meridian.pixelprimed.com/onboard/" style="display:inline-block;padding:14px 28px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:14px;letter-spacing:1px;color:#FFFFFF;text-decoration:none;">Start your onboarding</a>
-                      </td>
-                    </tr>
-                  </table>
+                <td style="background:#5F8F88;">
+                  <a href="https://meridian.pixelprimed.com/onboard/" style="display:inline-block;padding:14px 28px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:14px;letter-spacing:1px;color:#FFFFFF;text-decoration:none;">Tell us about your business</a>
                 </td>
               </tr>
             </table>
           </td>
         </tr>
-
-        <!-- Steps two and three -->
-        <tr>
-          <td style="padding:28px 48px 0 48px;font-family:Inter,Arial,Helvetica,sans-serif;">
-            <div style="font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:8px;">STEP TWO</div>
-            <div style="font-size:15px;line-height:1.6;color:#22322C;padding-bottom:4px;">We set up your account</div>
-            <div style="font-size:14px;line-height:1.7;color:#5C6660;padding-bottom:24px;">Our team configures your bookings, messages and dashboard around your answers, then walks you through it on a short call.</div>
-            <div style="font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:8px;">STEP THREE</div>
-            <div style="font-size:15px;line-height:1.6;color:#22322C;padding-bottom:4px;">You approve, then we go live</div>
-            <div style="font-size:14px;line-height:1.7;color:#5C6660;">Nothing is sent to your guests until you are happy with it.</div>
-          </td>
-        </tr>
-
-        <!-- Sign-off -->
-        <tr>
-          <td style="padding:32px 48px 44px 48px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#22322C;">
-            <p style="margin:0;">Warm regards,</p>
-            <p style="margin:0;">Jemima and the Pixel Primed team</p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="background:#E9E1D5;padding:24px 40px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#22322C;">
-            Meridian by Pixel Primed<br>
-            <a href="mailto:contact@pixelprimed.com" style="color:#4A7570;text-decoration:none;">contact@pixelprimed.com</a>
-          </td>
-        </tr>
-
       </table>
     </td>
   </tr>
+
+  <!-- Step two -->
+  <tr>
+    <td style="padding:32px 48px 0 48px;font-family:Inter,Arial,Helvetica,sans-serif;">
+      <div style="font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:8px;">STEP TWO</div>
+      <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:19px;line-height:1.35;color:#22322C;padding-bottom:10px;">We'll take care of the setup</div>
+      <div style="font-size:14px;line-height:1.7;color:#22322C;padding-bottom:12px;">Once we've received your details, our team will get to work bringing everything together, from your guest journeys and communications to your reporting dashboard.</div>
+      <div style="font-size:14px;line-height:1.7;color:#22322C;">We'll then arrange a time to walk you through everything and make sure it all feels right for your business.</div>
+    </td>
+  </tr>
+
+  <!-- Step three -->
+  <tr>
+    <td style="padding:28px 48px 0 48px;font-family:Inter,Arial,Helvetica,sans-serif;">
+      <div style="font-size:11px;letter-spacing:3px;color:#4A7570;padding-bottom:8px;">STEP THREE</div>
+      <div style="font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:19px;line-height:1.35;color:#22322C;padding-bottom:10px;">Bringing Meridian to life</div>
+      <div style="font-size:14px;line-height:1.7;color:#22322C;padding-bottom:12px;">Before anything goes live, you'll have the opportunity to review everything with us.</div>
+      <div style="font-size:14px;line-height:1.7;color:#22322C;">Once you're happy, we'll be ready to launch and start building stronger guest relationships together.</div>
+    </td>
+  </tr>
+
+  <!-- Sign-off -->
+  <tr>
+    <td style="padding:36px 48px 48px 48px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:#22322C;">
+      <p style="margin:0 0 16px 0;">If you have any questions along the way, we're always here to help.</p>
+      <p style="margin:0 0 16px 0;">We're looking forward to having you on board.</p>
+      <p style="margin:0;">The Pixel Primed Meridian Team</p>
+    </td>
+  </tr>
+
+  <!-- Footer: same cream as the step box, full width -->
+  <tr>
+    <td align="center" style="background:#F5F0EA;padding:28px 40px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#22322C;">
+      Meridian by Pixel Primed<br>
+      <a href="mailto:contact@pixelprimed.com" style="color:#4A7570;text-decoration:none;">contact@pixelprimed.com</a>
+    </td>
+  </tr>
+
 </table>
