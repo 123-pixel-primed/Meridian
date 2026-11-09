@@ -30,6 +30,7 @@ async function requestsContact(store, token, loc) {
   return id;
 }
 
+let assigneeIssue = null;
 // The GHL user who receives approval tasks. Set TASK_ASSIGNEE_EMAIL in Netlify to choose someone else.
 async function assignee(store, token, loc) {
   const saved = await store.get('_assignee', { type: 'json' });
@@ -41,7 +42,8 @@ async function assignee(store, token, loc) {
     let u = null;
     for (const w of wanted) { u = users.find(x => String(x.email || '').toLowerCase() === w); if (u) break; }
     if (u) { await store.setJSON('_assignee', { id: u.id, email: u.email }); return u.id; }
-  } catch (e) {}
+    assigneeIssue = 'No GHL user found with ' + wanted.join(' or ') + ' (' + users.length + ' users in this account)';
+  } catch (e) { assigneeIssue = String(e.message || e); }
   return null;
 }
 
@@ -102,5 +104,5 @@ export default async (req) => {
       for (const r of recs) if (r.taskId && done.has(r.taskId) && r.status !== 'done') { r.status = 'done'; await store.setJSON(r.key, r); }
     } catch (e) {}
   }
-  return Response.json({ approvals: recs }, { headers: { 'Cache-Control': 'no-store' } });
+  return Response.json({ approvals: recs, assigneeIssue }, { headers: { 'Cache-Control': 'no-store' } });
 };
