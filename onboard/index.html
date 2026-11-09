@@ -48,6 +48,9 @@
   .err{color:var(--warn);font-size:13px;margin-top:14px;min-height:1em}
   .uploads{display:flex;flex-direction:column;gap:8px}
   .hidden{display:none!important}
+  .lookup{display:block;font-size:12.5px;color:var(--teal-dk);margin-top:8px;min-height:1em}
+  .prefilled{border-color:var(--teal)!important;background:#F7F9F8!important}
+  .pf-note{display:block;font-size:11.5px;color:var(--teal-dk);margin-top:5px}
   .plan-chip{display:inline-block;font-size:12.5px;color:var(--teal-dk);border:1px solid var(--teal);border-radius:999px;padding:5px 12px;margin:-6px 0 22px}
   .sub-h{grid-column:1/-1;font-family:var(--serif);font-size:19px;font-weight:500;margin:14px 0 -4px}
   .done{text-align:center;padding:40px 0}
@@ -82,11 +85,11 @@
       <p class="why">The basics, plus how you would like Meridian to run.</p>
       <div class="fields">
         <div class="field full plan-pick hidden"><label for="plan_pick">Your Meridian plan <span class="req">*</span></label><select id="plan_pick"><option value="">Choose</option><option value="core|monthly">Core, billed monthly</option><option value="core|yearly">Core, billed yearly</option><option value="growth|monthly">Growth, billed monthly</option><option value="growth|yearly">Growth, billed yearly</option><option value="scale|monthly">Scale, billed monthly</option><option value="scale|yearly">Scale, billed yearly</option></select></div>
+        <div class="field full"><label for="website">Your website</label><span class="hint">Start here. We read your site and fill in what we can, so you only check and add the rest.</span><input type="text" id="website" name="website" placeholder="yourbusiness.com" inputmode="url" autocomplete="url"><span class="lookup" id="lookup" aria-live="polite"></span></div>
         <div class="field"><label for="business_name">Business name <span class="req">*</span></label><input type="text" id="business_name" name="business_name" required></div>
         <div class="field"><label for="owner_name">Your first name <span class="req">*</span></label><input type="text" id="owner_name" name="owner_name" required></div>
         <div class="field"><label for="email">Business email <span class="req">*</span></label><input type="email" id="email" name="email" required></div>
         <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="phone"></div>
-        <div class="field"><label for="website">Website</label><input type="url" id="website" name="website" placeholder="https://"></div>
         <div class="field"><label for="city">City <span class="req">*</span></label><input type="text" id="city" name="city" required></div>
         <div class="field"><label for="country">Country</label><select id="country" name="country"><option>Australia</option><option>New Zealand</option><option>Indonesia</option><option>Singapore</option><option>United States</option><option>Other</option></select></div>
         <div class="field"><label for="locations">Number of locations <span class="req">*</span></label><select id="locations" name="locations" required><option value="">Choose</option><option>1</option><option>2 to 10</option><option>11 or more</option></select></div>
@@ -405,6 +408,66 @@
         });
       });
   }
+
+
+  // Pre-fill from the client's website. Only empty fields are filled and each one is marked so they can check it.
+  var FILL = { business_name: 'business_name', phone: 'phone', city: 'city', country: 'country', business_type: 'business_type',
+    instagram: 'instagram', facebook: 'facebook', linkedin: 'linkedin', ga4: 'ga4', pixels: 'pixels', site_platform: 'site_platform',
+    booking_platform: 'booking_platform', booking_url: 'booking_url', colour_primary: 'colour_primary', description: 'different' };
+  var FREE_MAIL = /@(gmail|googlemail|outlook|hotmail|live|yahoo|icloud|me|bigpond|proton|protonmail|aol)\./i;
+  var lastLookup = '';
+  function mark(el) {
+    el.classList.add('prefilled');
+    if (!el.parentNode.querySelector('.pf-note')) { var n = document.createElement('span'); n.className = 'pf-note'; n.textContent = 'Filled from your website. Please check.'; el.parentNode.appendChild(n); }
+    el.addEventListener('input', function () { el.classList.remove('prefilled'); var n = el.parentNode.querySelector('.pf-note'); if (n) n.remove(); }, { once: true });
+    el.addEventListener('change', function () { el.classList.remove('prefilled'); var n = el.parentNode.querySelector('.pf-note'); if (n) n.remove(); }, { once: true });
+  }
+  function fillField(id, value) {
+    var el = document.getElementById(id); if (!el || !value) return false;
+    if (el.tagName === 'SELECT') {
+      if (el.value && el.selectedIndex > 0 && id !== 'country') return false;
+      var opt = Array.prototype.find.call(el.options, function (o) { return o.text.toLowerCase() === String(value).toLowerCase() || o.value.toLowerCase() === String(value).toLowerCase(); });
+      if (!opt) return false;
+      if (id === 'country' && el.dataset.touched) return false;
+      el.value = opt.value;
+    } else {
+      if (el.value.trim()) return false;
+      el.value = value;
+    }
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    mark(el); return true;
+  }
+  function lookup(site) {
+    site = String(site || '').trim();
+    if (!site || site === lastLookup || !/\./.test(site)) return;
+    lastLookup = site;
+    var status = document.getElementById('lookup');
+    status.textContent = 'Reading your website';
+    fetch('/.netlify/functions/site-lookup?url=' + encodeURIComponent(site))
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res.error) { status.textContent = res.error; return; }
+        var f = res.found || {}, n = 0;
+        if (f.website) { var w = document.getElementById('website'); if (!/^https?:/i.test(w.value)) w.value = f.website; }
+        Object.keys(FILL).forEach(function (k) { if (fillField(FILL[k], f[k])) n++; });
+        if (f.booking_platform) {
+          var keep = form.querySelector('input[name="booking_choice"][value="Keep current system"]');
+          if (keep && !form.querySelector('input[name="booking_choice"]:checked')) { keep.checked = true; keep.dispatchEvent(new Event('change', { bubbles: true })); }
+        }
+        if (f.contact_email && !document.getElementById('email').value) { if (fillField('email', f.contact_email)) n++; }
+        status.textContent = n ? 'We filled in ' + n + ' answer' + (n === 1 ? '' : 's') + ' from your website, marked in green. Please check them as you go.' : 'We could not find much on your website, so please fill in the details below.';
+      })
+      .catch(function () { status.textContent = 'We could not read your website just now. You can fill in the details yourself.'; });
+  }
+  document.getElementById('country').addEventListener('change', function (e) { if (e.isTrusted) this.dataset.touched = '1'; });
+  var siteEl = document.getElementById('website');
+  siteEl.addEventListener('blur', function () { lookup(siteEl.value); });
+  siteEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); lookup(siteEl.value); } });
+  // A business email on its own domain points to the website.
+  document.getElementById('email').addEventListener('blur', function () {
+    var v = this.value.trim(), m = v.match(/@([a-z0-9.-]+\.[a-z]{2,})$/i);
+    if (m && !FREE_MAIL.test(v) && !siteEl.value.trim()) { siteEl.value = m[1]; lookup(m[1]); }
+  });
 
   show(0);
 })();

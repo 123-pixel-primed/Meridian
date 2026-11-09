@@ -24,7 +24,7 @@ const TONES = {
   'Luxurious and exclusive': {
     key: 'luxe',
     summary: 'Calm, unhurried and quietly confident. Fewer words, chosen carefully. Never pushy and never discount-led.',
-    do: ['Short sentences with space around them', 'Talk about time, detail and care rather than price', 'Invite rather than ask, and let people come to you'],
+    do: ['Short sentences with space around them', 'Talk about time, detail and care rather than price', 'Invite rather than ask and let people come to you'],
     avoid: ['Discounts, deals and countdowns', 'Exclamation marks and emojis', 'Words like cheap, bargain or hurry'],
     greet: 'Hi', close: 'With warm regards,',
     hook: 'I wanted to introduce {biz}, a {type} in {city}, to a few people nearby.',
@@ -60,11 +60,11 @@ const TONES = {
     hook: 'I am reaching out to a small number of people in {city}, as we have opened appointments for new clients.',
     detail: 'Every plan starts with an assessment, so treatment is based on what your skin or body needs rather than a set menu.',
     scarcity: 'We have limited new client appointments this month and wanted to let you know while they are available.',
-    first: 'Your first appointment starts with a consultation and assessment. We explain what we recommend, why, and what results to expect over time, before any treatment begins.',
+    first: 'Your first appointment starts with a consultation and assessment. We explain what we recommend and why, plus the results to expect over time, before any treatment begins.',
     last: 'This is my last email on this. If you would like to book a consultation later, our booking page is always available.',
     welcome: ['Your first visit to {biz}', 'Thank you for choosing {biz}. Here is what your first appointment involves and how to prepare.'],
     ig: ['Thank you for following. We are a {type} in {city} and every treatment starts with an assessment. If you have questions about what might suit you, feel free to ask.', 'We have a few new client appointments this month. {offerCap} is where most people start.', 'I noticed you visited our booking page. If you have questions about which treatment suits you, I can help.'],
-    li: ['Hi [First name], we are both in {city}. I run {biz}, and we work with local teams on health and recovery. It would be good to connect.', 'Thank you for connecting. We offer on-site and in-clinic sessions for teams focused on recovery and wellbeing. I can send an outline if it is relevant.']
+    li: ['Hi [First name], we are both in {city}. I run {biz} and we work with local teams on health and recovery. It would be good to connect.', 'Thank you for connecting. We offer on-site and in-clinic sessions for teams focused on recovery and wellbeing. I can send an outline if it is relevant.']
   },
   'Energetic and active': {
     key: 'active',
