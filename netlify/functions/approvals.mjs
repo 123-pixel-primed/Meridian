@@ -30,6 +30,21 @@ async function requestsContact(store, token, loc) {
   return id;
 }
 
+// The GHL user who receives approval tasks. Set TASK_ASSIGNEE_EMAIL in Netlify to choose someone else.
+async function assignee(store, token, loc) {
+  const saved = await store.get('_assignee', { type: 'json' });
+  if (saved && saved.id) return saved.id;
+  try {
+    const r = await ghl('/users/?locationId=' + loc, token);
+    const users = r.users || [];
+    const wanted = [process.env.TASK_ASSIGNEE_EMAIL, 'contact@pixelprimed.com', 'jemimarmiller@gmail.com'].filter(Boolean).map(e => e.toLowerCase());
+    let u = null;
+    for (const w of wanted) { u = users.find(x => String(x.email || '').toLowerCase() === w); if (u) break; }
+    if (u) { await store.setJSON('_assignee', { id: u.id, email: u.email }); return u.id; }
+  } catch (e) {}
+  return null;
+}
+
 async function makeTask(store, token, loc, rec) {
   if (!token || !loc) return;
   try {
@@ -38,10 +53,11 @@ async function makeTask(store, token, loc, rec) {
     const t = await ghl('/contacts/' + cid + '/tasks', token, { method: 'POST', body: {
       title: 'Approved: ' + rec.title,
       body: (rec.detail ? '<p>' + rec.detail + '.</p>' : '') + '<p>Approved on the Meridian dashboard (' + rec.page + ' page). Mark this task complete when it is done and the dashboard will show it as Done.</p>',
-      dueDate: due, completed: false
+      dueDate: due, completed: false, assignedTo: (await assignee(store, token, loc)) || undefined
     } });
     rec.taskId = (t.task && (t.task.id || t.task._id)) || null;
     rec.contactId = cid;
+    rec.assigned = !!(t.task && t.task.assignedTo);
     rec.status = rec.taskId ? 'in_progress' : 'approved';
     rec.note = null;
   } catch (e) { rec.note = 'Saved. The task could not be created yet: ' + String(e.message || e); }
@@ -68,10 +84,17 @@ export default async (req) => {
 
   // GET: list approvals and refresh status from GHL tasks.
   const { blobs } = await store.list();
-  const recs = (await Promise.all(blobs.filter(b => b.key !== '_contact').map(b => store.get(b.key, { type: 'json' })))).filter(Boolean);
+  const recs = (await Promise.all(blobs.filter(b => !b.key.startsWith('_')).map(b => store.get(b.key, { type: 'json' })))).filter(Boolean);
   // Approvals saved before tasks could be created get their task now (a few per visit, to stay within GHL limits).
   for (const r of recs.filter(x => !x.taskId).slice(0, 3)) { await makeTask(store, token, loc, r); await store.setJSON(r.key, r); }
   const contact = await store.get('_contact', { type: 'json' });
+  // Tasks created before an assignee was available get assigned now.
+  if (token && contact && contact.id) {
+    const uid = await assignee(store, token, loc);
+    for (const r of recs.filter(x => x.taskId && !x.assigned && x.status !== 'done' && uid).slice(0, 3)) {
+      try { await ghl('/contacts/' + contact.id + '/tasks/' + r.taskId, token, { method: 'PUT', body: { assignedTo: uid } }); r.assigned = true; await store.setJSON(r.key, r); } catch (e) {}
+    }
+  }
   if (token && contact && contact.id && recs.some(r => r.taskId && r.status !== 'done')) {
     try {
       const t = await ghl('/contacts/' + contact.id + '/tasks', token);
