@@ -81,6 +81,7 @@
       <legend>About your business</legend>
       <p class="why">The basics, plus how you would like Meridian to run.</p>
       <div class="fields">
+        <div class="field full plan-pick hidden"><label for="plan_pick">Your Meridian plan <span class="req">*</span></label><select id="plan_pick"><option value="">Choose</option><option value="core|monthly">Core, billed monthly</option><option value="core|yearly">Core, billed yearly</option><option value="growth|monthly">Growth, billed monthly</option><option value="growth|yearly">Growth, billed yearly</option><option value="scale|monthly">Scale, billed monthly</option><option value="scale|yearly">Scale, billed yearly</option></select></div>
         <div class="field"><label for="business_name">Business name <span class="req">*</span></label><input type="text" id="business_name" name="business_name" required></div>
         <div class="field"><label for="owner_name">Your first name <span class="req">*</span></label><input type="text" id="owner_name" name="owner_name" required></div>
         <div class="field"><label for="email">Business email <span class="req">*</span></label><input type="email" id="email" name="email" required></div>
@@ -337,9 +338,20 @@
   var qs = new URLSearchParams(location.search);
   var PLANS = { core: 'Core', growth: 'Growth', scale: 'Scale' };
   var plan = PLANS[qs.get('plan')] ? qs.get('plan') : '', billing = qs.get('billing') === 'yearly' ? 'yearly' : 'monthly';
-  document.getElementById('plan').value = plan || 'growth';
+  document.getElementById('plan').value = plan;
   document.getElementById('billing').value = billing;
   if (plan) { var chip = document.getElementById('plan-chip'); chip.textContent = PLANS[plan] + ' plan, billed ' + billing; chip.classList.remove('hidden'); }
+  else {
+    // Arrived from the welcome email, so ask which plan they bought.
+    var pick = document.getElementById('plan_pick');
+    document.querySelector('.plan-pick').classList.remove('hidden');
+    pick.required = true;
+    pick.addEventListener('change', function () {
+      var v = pick.value.split('|');
+      document.getElementById('plan').value = v[0] || '';
+      document.getElementById('billing').value = v[1] || 'monthly';
+    });
+  }
   if (qs.get('email')) document.getElementById('email').value = qs.get('email');
 
   function answers() {
