@@ -422,7 +422,8 @@
     var url = speedSite(), key = 'meridian-speed:' + url, cached = null;
     try { cached = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
     if (cached && Date.now() - cached.t < 86400000) { el.innerHTML = speedHtml(cached.r); return; }
-    fetch('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?category=performance&strategy=mobile&url=' + encodeURIComponent(url))
+    fetch('/.netlify/functions/speed-key').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+      .then(function (k) { return fetch('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?category=performance&strategy=mobile&url=' + encodeURIComponent(url) + (k && k.key ? '&key=' + encodeURIComponent(k.key) : '')); })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (j) {
         var a = j.lighthouseResult.audits, sec = function (ms) { return (Math.round(ms / 100) / 10) + ' s'; };
