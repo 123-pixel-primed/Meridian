@@ -7,11 +7,14 @@
 const API = 'https://services.leadconnectorhq.com';
 const DAY = 86400000;
 
-async function ghl(path, params, version, token) {
+async function ghl(path, params, version, token, body) {
   const url = new URL(API + path);
   Object.entries(params || {}).forEach(([k, v]) => url.searchParams.set(k, v));
+  // POST is only used for read-style queries (social statistics); nothing is created or changed.
   const res = await fetch(url, {
-    headers: { Authorization: 'Bearer ' + token, Version: version, Accept: 'application/json' }
+    method: body ? 'POST' : 'GET',
+    headers: Object.assign({ Authorization: 'Bearer ' + token, Version: version, Accept: 'application/json' }, body ? { 'Content-Type': 'application/json' } : {}),
+    body: body ? JSON.stringify(body) : undefined
   });
   if (!res.ok) {
     let msg = '';
@@ -36,7 +39,7 @@ export default async () => {
   }
 
   const errors = [];
-  const out = { connected: true, fetchedAt: new Date().toISOString(), location: null, calendars: [], events: [], contacts: [], conversations: [], transactions: [], errors };
+  const out = { connected: true, fetchedAt: new Date().toISOString(), location: null, calendars: [], events: [], contacts: [], conversations: [], transactions: [], social: { accounts: [], stats: null }, errors };
   const safe = async (label, fn) => { try { await fn(); } catch (e) { errors.push(label + ': ' + e.message); } };
 
   await safe('location', async () => {
@@ -103,6 +106,17 @@ export default async () => {
       live: t.liveMode !== false,
       status: t.status || ''
     }));
+  });
+
+  await safe('social', async () => {
+    const r = await ghl('/social-media-posting/' + loc + '/accounts', {}, '2021-07-28', token);
+    const accts = (r.results && r.results.accounts) || [];
+    out.social.accounts = accts.map(a => ({ platform: a.platform, name: a.name, profileId: a.profileId, type: a.type, expired: !!a.isExpired }));
+    const ids = accts.map(a => a.profileId).filter(Boolean);
+    if (ids.length) {
+      const st = await ghl('/social-media-posting/statistics', { locationId: loc }, '2021-07-28', token, { profileIds: ids });
+      out.social.stats = st.results || st;
+    }
   });
 
   return Response.json(out, { headers: { 'Cache-Control': 'private, max-age=60' } });
