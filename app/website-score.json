@@ -1,0 +1,23 @@
+{
+  "site": "pixelprimed.com",
+  "checked": "2026-11-09",
+  "method": "AI visibility check adapted from geo-seo-claude (MIT), run on the home, services, Growth Audit and one article page. Page speed and booking path checks are not included yet.",
+  "score": 46,
+  "delta": "First check, 9 November",
+  "parts": [
+    { "l": "Quotable answers on your pages", "v": 41 },
+    { "l": "Mentioned on other trusted sites", "v": 20 },
+    { "l": "Expertise and trust shown", "v": 60 },
+    { "l": "Technical basics for AI", "v": 80 },
+    { "l": "Business details AI can read", "v": 35 },
+    { "l": "Ready for each AI assistant", "v": 45 }
+  ],
+  "fixes": [
+    { "t": "Open each main section with a 40 to 60 word answer", "i": "AI assistants quote short, direct answers. None of the sections checked are that length yet" },
+    { "t": "Add service and FAQ details in the page code for Our Services and Growth Audit", "i": "Lets ChatGPT and Google read your services and answers directly" },
+    { "t": "Earn mentions on industry sites, directories and podcasts", "i": "No third-party mentions of Pixel Primed were found. This is the strongest signal AI assistants use" },
+    { "t": "Tidy your llms.txt file", "i": "It starts with a hidden character and shows stray backslashes, which can confuse AI readers" },
+    { "t": "Add an author profile for Jemima to every article", "i": "Shows who is behind the advice, which AI assistants weigh heavily" }
+  ],
+  "history": { "labels": ["Nov"], "values": [46] }
+}

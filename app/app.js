@@ -386,10 +386,10 @@
   V.website = function () {
     var w = D.website;
     return head('Website', 'How easily guests and AI assistants can find and book you. Checked monthly.') +
-      '<section class="panel"><div class="hero"><div class="ring-big">' + ring(w.score / 100, 236, 3, TEAL, 'Website score ' + w.score) + '<div class="in"><span class="val">' + w.score + '</span><span class="of">out of 100</span><span class="pct">+6 since last month</span></div></div>' +
+      '<section class="panel"><div class="hero"><div class="ring-big">' + ring(w.score / 100, 236, 3, TEAL, 'Website score ' + w.score) + '<div class="in"><span class="val">' + w.score + '</span><span class="of">out of 100</span><span class="pct">' + esc(w.delta || '+6 since last month') + '</span></div></div>' +
       '<div style="width:100%;max-width:560px">' + bars(w.parts, null, false, 100) + '</div></div></section>' +
       '<div style="height:20px"></div><div class="grid g2">' +
-        panel('Score over time', 'Last 6 months', line(w.history.labels, w.history.values, null, { min: 40, aria: 'Website score rising from 54 to 72', h: 220 })) +
+        panel('Score over time', w.history.values.length > 1 ? 'Last ' + w.history.values.length + ' months' : 'Checked monthly', w.history.values.length > 1 ? line(w.history.labels, w.history.values, null, { min: 0, aria: 'Website score over time', h: 220 }) : '<p class="meta">This is the first check. The trend line starts after next month’s check.</p>') +
         panel('Top fixes this month', 'We can make these changes for you', '<ul class="list">' + w.fixes.map(function (f) {
           return '<li><span class="dot gold"></span><div class="grow"><div>' + esc(f.t) + '</div><div class="meta">' + esc(f.i) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
         }).join('') + '</ul>') +

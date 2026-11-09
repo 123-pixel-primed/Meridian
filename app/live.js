@@ -118,8 +118,17 @@
         localSub: 'Your biggest single city'
       };
     }
-    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' : '') + '. Other panels show sample content until they are connected.';
+    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits and the website score' : '') + '. Other panels show sample content until they are connected.';
     if (S.errors && S.errors.length) D.liveNote += ' Some data could not be read: ' + S.errors.join('; ') + '.';
+  }
+
+  // Latest Website score check, saved as a file by the monthly audit.
+  function loadScore() {
+    return fetch('website-score.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (W) {
+      if (!W) return;
+      D.website = { score: W.score, delta: W.delta, parts: W.parts, fixes: W.fixes, history: W.history, live: true, checked: W.checked };
+      D.stats.forEach(function (s) { if (/Website score/.test(s.l)) { s.n = String(W.score); s.d = W.delta; } });
+    }).catch(function () {});
   }
 
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
@@ -131,5 +140,6 @@
       else D.liveNote = (S && S.reason ? S.reason + ' ' : '') + 'Showing sample content for now.';
     })
     .catch(function () { D.liveNote = 'The sandbox could not be reached. Showing sample content for now.'; })
+    .then(loadScore)
     .then(boot);
 })();
