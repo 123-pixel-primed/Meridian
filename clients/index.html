@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clients · Meridian</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../app/app.css">
+<style>
+  body{background:#F5F0EA}
+  .top{background:#fff;border-bottom:1px solid #E9E1D5;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px}
+  .top a{color:#4A7570;font-size:13px;text-decoration:none}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 24px 80px}
+  h1{font-family:var(--serif);font-weight:400;font-size:32px;margin:0 0 6px;color:#22322C}
+  .sub{color:#5C6660;font-size:14px;margin:0 0 28px}
+  .c{background:#fff;border:1px solid #E9E1D5;margin-bottom:16px}
+  .c summary{list-style:none;cursor:pointer;padding:20px 24px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+  .c summary::-webkit-details-marker{display:none}
+  .c .n{font-family:var(--serif);font-size:20px;color:#22322C}
+  .c .m{font-size:13px;color:#5C6660}
+  .c .tag{font-size:11.5px;letter-spacing:.06em;border:1px solid #5F8F88;color:#4A7570;padding:3px 9px;border-radius:999px}
+  .c .ask{font-size:11.5px;letter-spacing:.06em;background:#F5F0EA;color:#22322C;padding:3px 9px;border-radius:999px}
+  .body{padding:0 24px 24px;border-top:1px solid #E9E1D5}
+  .eyebrow{font-size:11px;letter-spacing:.22em;color:#4A7570;margin:20px 0 10px}
+  .missing{display:flex;flex-wrap:wrap;gap:6px}
+  .missing span{font-size:12.5px;background:#F5F0EA;padding:5px 10px;color:#22322C}
+  dl{display:grid;grid-template-columns:200px 1fr;gap:8px 18px;margin:0;font-size:13.5px}
+  dt{color:#5C6660}
+  dd{margin:0;color:#22322C;white-space:pre-wrap;word-break:break-word}
+  .links{margin-top:18px;display:flex;gap:18px;font-size:13px}
+  .links a{color:#4A7570}
+  .empty{color:#5C6660}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Meridian</span></div><a href="/app/">Sandbox dashboard</a></header>
+<main class="wrap">
+  <h1>Clients</h1>
+  <p class="sub">Every onboarding submission, newest first. Blank answers are listed as questions for the setup call.</p>
+  <div id="list"><p class="empty">Loading</p></div>
+</main>
+<script>
+(function () {
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function val(v) { return Array.isArray(v) ? v.join(', ') : v; }
+  fetch('/.netlify/functions/onboard?list=1', { cache: 'no-store' })
+    .then(function (r) { if (r.status === 401) { location.replace('/login/'); throw 0; } return r.json(); })
+    .then(function (res) {
+      var list = res.clients || [];
+      if (!list.length) { document.getElementById('list').innerHTML = '<p class="empty">No onboarding submissions yet.</p>'; return; }
+      document.getElementById('list').innerHTML = list.map(function (c, i) {
+        var a = c.answers || {}, when = new Date(c.createdAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+        var plan = (a.plan ? a.plan[0].toUpperCase() + a.plan.slice(1) : 'No plan') + (a.billing ? ', ' + a.billing : '');
+        var rows = Object.keys(c.labels).filter(function (k) { var v = a[k]; return v != null && String(val(v)).trim(); })
+          .map(function (k) { return '<dt>' + esc(c.labels[k]) + '</dt><dd>' + esc(val(a[k])) + '</dd>'; }).join('');
+        return '<details class="c"' + (i === 0 ? ' open' : '') + '><summary><span class="n">' + esc(a.business_name) + '</span><span class="m">' + esc(a.city || '') + ' · ' + esc(when) + '</span><span class="tag">' + esc(plan) + '</span>' +
+          (c.missing.length ? '<span class="ask">' + c.missing.length + ' to ask</span>' : '') + '</summary><div class="body">' +
+          (c.missing.length ? '<div class="eyebrow">TO ASK ON THE SETUP CALL</div><div class="missing">' + c.missing.map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') +
+          '<div class="eyebrow">THEIR ANSWERS</div><dl>' + rows + '</dl>' +
+          '<div class="links"><a href="/app/?client=' + encodeURIComponent(c.id) + '">Open their dashboard</a>' + (a.email ? '<a href="mailto:' + esc(a.email) + '">Email them</a>' : '') + '<span class="m">' + c.files.length + ' upload' + (c.files.length === 1 ? '' : 's') + '</span></div>' +
+          (c.taskIssue ? '<p class="m" style="margin-top:12px">Setup task note: ' + esc(c.taskIssue) + '</p>' : '') + '</div></details>';
+      }).join('');
+    })
+    .catch(function (e) { if (e !== 0) document.getElementById('list').innerHTML = '<p class="empty">The client list could not be loaded.</p>'; });
+})();
+</script>
+</body>
+</html>

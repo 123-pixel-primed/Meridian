@@ -11,6 +11,23 @@ import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mj
 const FILE_FIELDS = ['logo', 'style_guide', 'brand_image_1', 'brand_image_2', 'brand_image_3', 'brand_image_4', 'brand_image_5'];
 const MAX_FILE = 4 * 1024 * 1024;
 
+// Answers worth having before the setup call. Anything blank here shows as "to ask" on the Clients page.
+const KEY_FIELDS = {
+  business_name: 'Business name', owner_name: 'First name', email: 'Email', phone: 'Phone', website: 'Website', city: 'City',
+  business_type: 'Business type', locations: 'Locations', management: 'How Meridian is run', revenue_goal: 'Revenue goal',
+  current_revenue: 'Current revenue', new_guest_goal: 'New guests a month', avg_visit: 'Average spend', rebook_goal: 'Rebooking goal',
+  ad_budget: 'Ad budget', priorities: 'Priorities', offers: 'What they offer', booking_choice: 'Booking choice',
+  booking_platform: 'Current booking system', hero_offer: 'Signature offer', different: 'What makes them different',
+  ideal_guest: 'Ideal guest', tone: 'Tone of voice', voice_words: 'Brand in their words', words_love: 'Words they love',
+  words_avoid: 'Words to avoid', voice_sample: 'Writing sample', signoff: 'Sign-off', imagery_style: 'Imagery style',
+  imagery_people: 'People in imagery', colour_primary: 'Brand colour', gbp: 'Google Business Profile', instagram: 'Instagram',
+  facebook: 'Facebook', site_platform: 'Website platform', ga4: 'Google Analytics ID', search_console: 'Search Console',
+  meta_ads: 'Meta ads account', google_ads: 'Google Ads account', email_provider: 'Email provider'
+};
+function missing(a) {
+  return Object.keys(KEY_FIELDS).filter(k => { const v = a[k]; return v == null || (Array.isArray(v) ? !v.length : !String(v).trim()); }).map(k => KEY_FIELDS[k]);
+}
+
 function slug(s) { return String(s || 'client').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'client'; }
 function validId(id) { return /^[a-z0-9-]{3,60}$/.test(id || ''); }
 
@@ -46,6 +63,19 @@ export default async (req) => {
   const id = url.searchParams.get('id'), file = url.searchParams.get('file');
   const clients = getStore({ name: 'clients', consistency: 'strong' });
   const files = getStore({ name: 'client-files', consistency: 'strong' });
+
+  if (req.method === 'GET' && url.searchParams.get('list')) {
+    // Pixel Primed staff: every onboarding submission, newest first.
+    const sess = readSession(req);
+    if (!sess || !sess.admin) return unauthorised();
+    const { blobs } = await clients.list();
+    const recs = (await Promise.all(blobs.map(b => clients.get(b.key, { type: 'json' })))).filter(Boolean);
+    recs.sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
+    return Response.json({ clients: recs.map(r => ({
+      id: r.id, createdAt: r.createdAt, files: r.files || [], taskIssue: r.taskIssue || null,
+      answers: r.answers, missing: missing(r.answers || {}), labels: KEY_FIELDS
+    })) }, { headers: { 'Cache-Control': 'no-store' } });
+  }
 
   if (req.method === 'GET') {
     if (!validId(id)) return Response.json({ error: 'Missing client' }, { status: 400 });

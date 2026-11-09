@@ -47,7 +47,7 @@ export default async (req) => {
     const rec = t && await tokens.get(t, { type: 'json' });
     if (t) await tokens.delete(t);
     if (!rec || rec.exp < Date.now()) return Response.redirect(site + '/login/?expired=1', 302);
-    const dest = rec.cid ? '/app/?client=' + encodeURIComponent(rec.cid) : '/app/';
+    const dest = rec.admin ? '/clients/' : rec.cid ? '/app/?client=' + encodeURIComponent(rec.cid) : '/app/';
     return new Response(null, { status: 302, headers: { Location: dest, 'Set-Cookie': makeCookie(rec), 'Cache-Control': 'no-store' } });
   }
 

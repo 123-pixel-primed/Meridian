@@ -3458,7 +3458,7 @@ var MERIDIAN_CHECKOUT = {
   scale:  { monthly: 'https://buy.stripe.com/eVq28s5KZ9ft2XV67h2Fa0s', yearly: 'https://buy.stripe.com/8x29AUgpD2R5fKH7bl2Fa0t' }
 };
 // Checkout is switched off until each plan has its snapshot and the after-payment redirect is set in Stripe.
-var CHECKOUT_LIVE = false;
+var CHECKOUT_LIVE = true;
 function planHref(plan) {
   var billing = document.querySelector('.pricing-inner.billing-yearly') ? 'yearly' : 'monthly';
   var url = CHECKOUT_LIVE && (MERIDIAN_CHECKOUT[plan] || {})[billing];
