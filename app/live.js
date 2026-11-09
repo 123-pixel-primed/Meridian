@@ -28,6 +28,7 @@
   }
 
   function apply(S) {
+    D.live = true; // connected client view: approvals are saved for real
     var cal = { services: { id: 'services', name: 'Treatment', type: 'service', seats: 1 } }; S.calendars.forEach(function (c) { cal[c.id] = c; });
     var isClass = function (e) { var c = cal[e.calendarId]; return c && /class/i.test(c.type); };
     var ok = S.events.filter(function (e) { return !/cancel|invalid|noshow/i.test(e.status) && e.start; });

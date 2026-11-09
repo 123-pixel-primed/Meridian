@@ -510,9 +510,35 @@
       if (!locked && lk) lk.remove();
     });
     var pl = $('#plan-name'); if (pl) pl.textContent = TIER_NAMES[tier()];
+    markApprovals();
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', render);
+
+  /* ---------- approvals ---------- */
+  // Each Approve button is identified by its page and the item's title, so the saved state survives reloads.
+  var APPROVALS = {};
+  function approvalItem(b) {
+    var box = b.closest('li, tr') || b.parentNode;
+    var tEl = box.querySelector('.grow > div:first-child, td strong, strong') || box;
+    var title = (tEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+    var mEl = box.querySelector('.grow .meta, .meta');
+    var page = (location.hash || '#overview').slice(1);
+    return { key: page + ':' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 120), title: title, detail: mEl ? mEl.textContent.replace(/\s+/g, ' ').trim() : '', page: page };
+  }
+  function markApprovals() {
+    document.querySelectorAll('[data-act="approve"]').forEach(function (b) {
+      var rec = APPROVALS[approvalItem(b).key]; if (!rec) return;
+      b.disabled = true; b.className = 'btn done';
+      b.textContent = rec.status === 'done' ? 'Done' : rec.status === 'in_progress' ? 'In progress' : 'Approved';
+      b.title = 'Approved ' + new Date(rec.approvedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) + (rec.note ? '. ' + rec.note : '');
+    });
+  }
+  function loadApprovals() {
+    if (!D.live) return;
+    fetch('/.netlify/functions/approvals', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : { approvals: [] }; })
+      .then(function (j) { (j.approvals || []).forEach(function (a) { APPROVALS[a.key] = a; }); markApprovals(); }).catch(function () {});
+  }
 
   /* ---------- actions ---------- */
   var toastTimer;
@@ -539,7 +565,15 @@
     if (em) { document.querySelectorAll('[data-em]').forEach(function (x) { x.setAttribute('aria-selected', x === em); }); document.getElementById('em-view').innerHTML = emView(+em.getAttribute('data-em')); return; }
     var b = e.target.closest('[data-act]'); if (!b) return;
     var act = b.getAttribute('data-act');
-    if (act === 'approve') { b.textContent = 'Approved'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Approved. In the demo nothing is sent.' : 'Approved'); }
+    if (act === 'approve') {
+      b.textContent = 'Approved'; b.className = 'btn done'; b.disabled = true;
+      if (!D.live) { toast('Approved. In the demo nothing is sent.'); return; }
+      var it = approvalItem(b);
+      fetch('/.netlify/functions/approvals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(it) })
+        .then(function (r) { return r.json(); })
+        .then(function (rec) { APPROVALS[rec.key] = rec; markApprovals(); toast(rec.taskId ? 'Approved. Pixel Primed has been sent a task.' : 'Approved and saved'); })
+        .catch(function () { toast('Approved here, but it could not be saved. Please try again.'); b.textContent = 'Approve'; b.className = 'btn'; b.disabled = false; });
+    }
     else if (act === 'interest') { b.textContent = 'Interest sent'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Interest sent. In the demo nothing is sent.' : 'Interest sent'); }
     else if (act === 'switch') { var on = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', on); toast(on ? 'Channel switched on' : 'Channel paused'); }
     else if (act === 'edit') { toast('Editing opens here in the full version'); }
@@ -602,4 +636,5 @@
   }
 
   render();
+  loadApprovals();
 })();
