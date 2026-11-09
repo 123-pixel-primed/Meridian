@@ -415,7 +415,7 @@
       tile(r.lcp, 'Main content appears in', 'Under 2.5 seconds is good') +
       tile(r.tbt, 'Time the page is busy', 'Under 0.2 seconds is good') +
       tile(r.cls, 'Layout movement while loading', 'Under 0.1 is good') +
-      '</div>' + (parseFloat(r.lcp) > 2.5 ? '<p class="live-note" style="margin:16px 0 0;padding:12px 16px">Recommended: on a phone the main content takes ' + esc(r.lcp) + ' to appear. The large image at the top of the page is the most likely cause. Compressing it and loading it first should bring this down sharply.</p>' : '') +
+      '</div>' + (parseFloat(r.lcp) > 2.5 ? '<p class="live-note" style="margin:16px 0 0;padding:12px 16px">Recommended: on a phone the main content takes ' + esc(r.lcp) + ' to appear.' + (r.slow ? ' The slowest item is “' + esc(String(r.slow).slice(0, 90)) + '”. Making that load faster, for example by compressing it, gives the biggest gain.' : ' Compressing the largest images near the top of the page usually gives the biggest gain.') + '</p>' : '') +
       '<p class="meta" style="margin-top:10px">Tested ' + esc(r.when) + ' on a simulated phone. Checked ' + esc(r.url) + '.</p>';
   }
   function runSpeed() {
@@ -430,7 +430,7 @@
         var a = j.lighthouseResult.audits, sec = function (ms) { return (Math.round(ms / 100) / 10) + ' s'; };
         var r = { url: url.replace(/^https:\/\//, '').replace(/\/$/, ''), score: Math.round(j.lighthouseResult.categories.performance.score * 100),
           lcp: sec(a['largest-contentful-paint'].numericValue), tbt: sec(a['total-blocking-time'].numericValue),
-          cls: (Math.round(a['cumulative-layout-shift'].numericValue * 100) / 100).toString(), when: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) };
+          cls: (Math.round(a['cumulative-layout-shift'].numericValue * 100) / 100).toString(), slow: (function () { try { var d = a['largest-contentful-paint-element'].details, it = d.items[0]; var n = (it.items ? it.items[0] : it).node; return n.nodeLabel || n.snippet || ''; } catch (e) { return ''; } })(), when: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) };
         try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), r: r })); } catch (e) {}
         var now = document.getElementById('speed'); if (now) now.innerHTML = speedHtml(r);
       })
