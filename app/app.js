@@ -393,8 +393,47 @@
         panel('Top fixes this month', 'We can make these changes for you', '<ul class="list">' + w.fixes.map(function (f) {
           return '<li><span class="dot gold"></span><div class="grow"><div>' + esc(f.t) + '</div><div class="meta">' + esc(f.i) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
         }).join('') + '</ul>') +
-      '</div><div style="height:20px"></div>' + searchBlock() + visitsBlock();
+      '</div><div style="height:20px"></div>' + speedBlock() + searchBlock() + visitsBlock();
   };
+  // Page speed: asks Google PageSpeed Insights from the browser (mobile). Takes about 20 seconds,
+  // so the panel fills in after the page loads. The result is kept for a day in this browser.
+  function speedSite() {
+    var s = D.searchTerms && D.searchTerms.site;
+    if (s) return 'https://' + String(s).replace(/^sc-domain:/, '').replace(/^https?:\/\//, '').replace(/\/$/, '') + '/';
+    return D.venue.website || null;
+  }
+  function speedBlock() {
+    if (!speedSite()) return '';
+    setTimeout(runSpeed, 50);
+    return '<h2 class="sec">Page speed on a phone</h2><div id="speed">' + panel('Checking ' + esc(speedSite().replace(/^https:\/\//, '').replace(/\/$/, '')), 'Google’s page speed test', '<p class="meta">Running the test now. This takes about 20 seconds.</p>') + '</div><div style="height:20px"></div>';
+  }
+  function speedHtml(r) {
+    var tile = function (n, l, d) { return '<section class="panel stat"><span class="n">' + n + '</span><span class="l">' + esc(l) + '</span><span class="delta">' + esc(d) + '</span></section>'; };
+    var verdict = r.score >= 90 ? 'Fast' : r.score >= 50 ? 'Could be faster' : 'Slow on phones';
+    return '<div class="stats-row">' +
+      tile(r.score, 'Speed score out of 100', verdict) +
+      tile(r.lcp, 'Main content appears in', 'Under 2.5 seconds is good') +
+      tile(r.tbt, 'Time the page is busy', 'Under 0.2 seconds is good') +
+      tile(r.cls, 'Layout movement while loading', 'Under 0.1 is good') +
+      '</div><p class="meta" style="margin-top:10px">Tested ' + esc(r.when) + ' on a simulated phone. Checked ' + esc(r.url) + '.</p>';
+  }
+  function runSpeed() {
+    var el = document.getElementById('speed'); if (!el) return;
+    var url = speedSite(), key = 'meridian-speed:' + url, cached = null;
+    try { cached = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+    if (cached && Date.now() - cached.t < 86400000) { el.innerHTML = speedHtml(cached.r); return; }
+    fetch('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?category=performance&strategy=mobile&url=' + encodeURIComponent(url))
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (j) {
+        var a = j.lighthouseResult.audits, sec = function (ms) { return (Math.round(ms / 100) / 10) + ' s'; };
+        var r = { url: url.replace(/^https:\/\//, '').replace(/\/$/, ''), score: Math.round(j.lighthouseResult.categories.performance.score * 100),
+          lcp: sec(a['largest-contentful-paint'].numericValue), tbt: sec(a['total-blocking-time'].numericValue),
+          cls: (Math.round(a['cumulative-layout-shift'].numericValue * 100) / 100).toString(), when: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) };
+        try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), r: r })); } catch (e) {}
+        var now = document.getElementById('speed'); if (now) now.innerHTML = speedHtml(r);
+      })
+      .catch(function () { var now = document.getElementById('speed'); if (now) now.innerHTML = '<p class="meta">Google’s speed test is busy right now. It will try again next time you open this page.</p>'; });
+  }
   function socialBlock() {
     var S = D.socialLive; if (!S) return '';
     return '<h2 class="sec" style="margin-top:0">Social this week</h2><p class="meta" style="margin:-6px 0 14px">' + esc(S.accounts.join(', ')) + '. Figures build up from the day an account is connected.</p>' +
