@@ -415,7 +415,8 @@
       tile(r.lcp, 'Main content appears in', 'Under 2.5 seconds is good') +
       tile(r.tbt, 'Time the page is busy', 'Under 0.2 seconds is good') +
       tile(r.cls, 'Layout movement while loading', 'Under 0.1 is good') +
-      '</div><p class="meta" style="margin-top:10px">Tested ' + esc(r.when) + ' on a simulated phone. Checked ' + esc(r.url) + '.</p>';
+      '</div>' + (parseFloat(r.lcp) > 2.5 ? '<p class="live-note" style="margin:16px 0 0;padding:12px 16px">Recommended: on a phone the main content takes ' + esc(r.lcp) + ' to appear. The large image at the top of the page is the most likely cause. Compressing it and loading it first should bring this down sharply.</p>' : '') +
+      '<p class="meta" style="margin-top:10px">Tested ' + esc(r.when) + ' on a simulated phone. Checked ' + esc(r.url) + '.</p>';
   }
   function runSpeed() {
     var el = document.getElementById('speed'); if (!el) return;
