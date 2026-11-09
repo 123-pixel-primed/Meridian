@@ -144,7 +144,7 @@
     return fetch('website-score.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (W) {
       if (!W) return;
       D.website = { score: W.score, delta: W.delta, parts: W.parts, fixes: W.fixes, history: W.history, live: true, checked: W.checked };
-      D.stats.forEach(function (s) { if (/Website score/.test(s.l)) { s.n = String(W.score); s.d = W.delta; } });
+      D.stats.forEach(function (s) { if (/Website score/.test(s.l)) { s.n = String(W.score); s.d = W.delta; } if (/Google rating/.test(s.l)) { s.d = 'Sample until Google reviews connect'; } });
     }).catch(function () {});
   }
 

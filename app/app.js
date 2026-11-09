@@ -51,7 +51,7 @@
   function columns(labels, a, b, opts) {
     opts = opts || {};
     var W = 480, H = 230, L = 36, R = 8, T = 12, B = 30;
-    var hi = Math.max.apply(null, a.concat(b)) * 1.12 || 4;
+    var hi = Math.max.apply(null, a.concat(b)) * 1.12 || 4; if (hi < 4) hi = 4;
     var slot = (W - L - R) / labels.length, bw = Math.min(18, slot / 3.2);
     var y = function (v) { return T + (1 - v / hi) * (H - T - B); };
     var grid = [0, hi / 2, hi].map(function (t) {
@@ -70,7 +70,7 @@
   function cols1(labels, values, opts) {
     opts = opts || {};
     var W = 480, H = opts.h || 200, L = 12, R = 12, T = 22, B = 30;
-    var hi = Math.max.apply(null, values) * 1.15 || 4;
+    var hi = Math.max.apply(null, values) * 1.15 || 4; if (hi < 4) hi = 4;
     var slot = (W - L - R) / labels.length, bw = Math.min(34, slot * 0.5);
     var y = function (v) { return T + (1 - v / hi) * (H - T - B); };
     return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(opts.aria || 'Column chart') + '">' +
