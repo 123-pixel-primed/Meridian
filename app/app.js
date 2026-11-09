@@ -352,7 +352,7 @@
 
   V.content = function () {
     var a = D.aiSearch;
-    return head('Content', 'Written for you every week. Nothing is published until you approve it.') +
+    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + socialBlock() +
       '<div class="grid g-hero">' +
         panel('Found by AI assistants', 'When guests ask an AI assistant for a recommendation', '<div class="mini-stats" style="margin-bottom:18px">' + a.stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:26px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
           '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>') +
@@ -395,6 +395,11 @@
         }).join('') + '</ul>') +
       '</div><div style="height:20px"></div>' + searchBlock() + visitsBlock();
   };
+  function socialBlock() {
+    var S = D.socialLive; if (!S) return '';
+    return '<h2 class="sec" style="margin-top:0">Social this week</h2><p class="meta" style="margin:-6px 0 14px">' + esc(S.accounts.join(', ')) + '. Figures build up from the day an account is connected.</p>' +
+      '<div class="stats-row">' + S.stats.map(function (x) { return '<section class="panel stat"><span class="n">' + x.n + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>';
+  }
   function searchBlock() {
     var G = D.searchTerms;
     if (!G) return '';

@@ -119,7 +119,23 @@
       };
     }
     if (S.search && S.search.connected) D.searchTerms = S.search;
-    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' + (S.search && S.search.connected ? ', Google searches' : '') + ' and the website score' : '') + '. Other panels show sample content until they are connected.';
+    if (S.social && S.social.accounts && S.social.accounts.length && S.social.stats) {
+      var st = S.social.stats, bd = st.breakdowns || {}, tot = st.totals || {};
+      var eng = (bd.engagement && bd.engagement.instagram) || {};
+      var pct = function (c) { var n = Number(c); return isFinite(n) && c !== undefined ? (n >= 0 ? '+' : '') + Math.round(n) + '% on the week before' : 'Last 7 days'; };
+      D.socialLive = {
+        accounts: S.social.accounts.map(function (a) { return a.platform.charAt(0).toUpperCase() + a.platform.slice(1) + ' @' + a.name; }),
+        stats: [
+          { n: tot.posts || 0, l: 'Posts', d: pct(bd.posts && bd.posts.totalChange) },
+          { n: (bd.reach && bd.reach.total) || 0, l: 'People reached', d: pct(bd.reach && bd.reach.totalChange) },
+          { n: tot.impressions || 0, l: 'Times seen', d: pct(bd.impressions && bd.impressions.totalChange) },
+          { n: (tot.likes || 0) + (tot.comments || 0), l: 'Likes and comments', d: pct(eng.change) }
+        ],
+        likes: (st.postPerformance && st.postPerformance.likes) || [],
+        days: st.dayRange || []
+      };
+    }
+    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' + (S.search && S.search.connected ? ', Google searches' : '') + (S.social && S.social.stats ? ', Instagram' : '') + ' and the website score' : '') + '. Other panels show sample content until they are connected.';
     if (S.errors && S.errors.length) D.liveNote += ' Some data could not be read: ' + S.errors.join('; ') + '.';
   }
 
