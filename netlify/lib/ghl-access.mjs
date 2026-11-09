@@ -8,6 +8,29 @@ import { getStore } from '@netlify/blobs';
 
 const API = 'https://services.leadconnectorhq.com';
 
+// The Meridian Marketplace app's agency token, refreshed when it is close to expiring.
+export async function appToken() {
+  const store = getStore({ name: 'ghl-app', consistency: 'strong' });
+  const a = await store.get('agency', { type: 'json' });
+  if (!a) return null;
+  if (a.exp > Date.now() + 120000) return a;
+  const res = await fetch(API + '/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+    body: new URLSearchParams({ client_id: process.env.GHL_APP_CLIENT_ID || '', client_secret: process.env.GHL_APP_CLIENT_SECRET || '', grant_type: 'refresh_token', refresh_token: a.refresh, user_type: 'Company' }).toString()
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j.access_token) { a.error = 'Refresh failed (' + res.status + ')'; await store.setJSON('agency', a); return null; }
+  const next = Object.assign(a, { access: j.access_token, refresh: j.refresh_token || a.refresh, exp: Date.now() + (Number(j.expires_in) || 86000) * 1000, error: null });
+  await store.setJSON('agency', next);
+  return next;
+}
+
+export async function appStatus() {
+  const a = await getStore({ name: 'ghl-app', consistency: 'strong' }).get('agency', { type: 'json' });
+  return a ? { connected: !a.error, connectedAt: a.connectedAt, error: a.error || null } : { connected: false };
+}
+
 export function sandboxLocation() { return process.env.GHL_SANDBOX_LOCATION_ID; }
 
 // The agency (company) ID, from GHL_COMPANY_ID or read once from the sandbox account.
@@ -30,6 +53,24 @@ export async function tokenFor(locationId) {
   const store = getStore({ name: 'loc-tokens', consistency: 'strong' });
   const cached = await store.get(locationId, { type: 'json' });
   if (cached && cached.token && (!cached.exp || cached.exp > Date.now() + 60000)) return cached.token;
+
+  // Preferred: the Meridian Marketplace app installed on the agency.
+  const app = await appToken();
+  if (app) {
+    const company = app.companyId || await companyId();
+    const r = await fetch(API + '/oauth/locationToken', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + app.access, Version: '2021-07-28', Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ companyId: company, locationId }).toString()
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.access_token) {
+      await store.setJSON(locationId, { token: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000, via: 'app' });
+      return j.access_token;
+    }
+    if (!(cached && cached.pit)) throw new Error('The Meridian app is not installed on this account yet (' + r.status + ')');
+    return cached.token;
+  }
 
   const agency = process.env.GHL_AGENCY_TOKEN, company = agency ? await companyId() : null;
   if (agency && company) {

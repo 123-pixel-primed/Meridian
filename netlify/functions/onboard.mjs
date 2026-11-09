@@ -7,7 +7,7 @@ import { getStore } from '@netlify/blobs';
 import { buildProfile } from '../lib/profile.mjs';
 import { ghl, assignee } from '../lib/ghl.mjs';
 import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mjs';
-import { listLocations, savePit } from '../lib/ghl-access.mjs';
+import { listLocations, savePit, appStatus } from '../lib/ghl-access.mjs';
 
 const FILE_FIELDS = ['logo', 'style_guide', 'brand_image_1', 'brand_image_2', 'brand_image_3', 'brand_image_4', 'brand_image_5'];
 const MAX_FILE = 4 * 1024 * 1024;
@@ -69,8 +69,9 @@ export default async (req) => {
   if (req.method === 'GET' && url.searchParams.get('locations')) {
     const sess = readSession(req);
     if (!sess || !sess.admin) return unauthorised();
-    try { return Response.json({ locations: await listLocations() }, { headers: { 'Cache-Control': 'no-store' } }); }
-    catch (e) { return Response.json({ locations: [], error: String(e.message || e) }, { headers: { 'Cache-Control': 'no-store' } }); }
+    const app = await appStatus();
+    try { return Response.json({ locations: await listLocations(), app }, { headers: { 'Cache-Control': 'no-store' } }); }
+    catch (e) { return Response.json({ locations: [], app, error: String(e.message || e) }, { headers: { 'Cache-Control': 'no-store' } }); }
   }
   // Staff: link a client to their account, optionally with a sub-account Private Integration token.
   if (req.method === 'POST' && url.searchParams.get('link')) {

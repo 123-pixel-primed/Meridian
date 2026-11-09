@@ -44,6 +44,7 @@
 <main class="wrap">
   <h1>Clients</h1>
   <p class="sub">Every onboarding submission, newest first. Blank answers are listed as questions for the setup call.</p>
+  <p class="sub" id="app-status"></p>
   <div id="list"><p class="empty">Loading</p></div>
 </main>
 <script>
@@ -69,7 +70,8 @@
       .then(function (r) { return r.json(); })
       .then(function (j) { res.textContent = j.ok ? 'Saved' : (j.error || 'Not saved'); box.querySelector('.pit').value = ''; });
   });
-  fetch('/.netlify/functions/onboard?locations=1', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { LOCS = j.locations || []; LOC_ERR = j.error || ''; }).catch(function () {}).then(function () { return load(); });
+  fetch('/.netlify/functions/onboard?locations=1', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { LOCS = j.locations || []; LOC_ERR = j.error || ''; var st = document.getElementById('app-status'), q = location.search;
+    st.textContent = (j.app && j.app.connected) ? 'Meridian app: connected. Client accounts open automatically.' : /app=failed/.test(q) ? 'Meridian app: the connection did not complete. Try the install link again.' : /app=keys/.test(q) ? 'Meridian app: add the Client ID and Secret to Netlify, then install again.' : 'Meridian app: not connected yet.'; }).catch(function () {}).then(function () { return load(); });
   function load() { return fetch('/.netlify/functions/onboard?list=1', { cache: 'no-store' })
     .then(function (r) { if (r.status === 401) { location.replace('/login/'); throw 0; } return r.json(); })
     .then(function (res) {
