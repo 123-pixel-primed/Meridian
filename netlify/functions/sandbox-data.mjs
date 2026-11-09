@@ -78,12 +78,12 @@ export default async () => {
 
   // Treatments booked through GHL Services (v2) live in their own bookings list, not on calendars.
   await safe('service bookings', async () => {
-    let r = null, lastErr = null;
-    for (const v of ['v3', '2021-04-15']) {
-      try { r = await ghl('/calendars/services/bookings', { locationId: loc, startTime: String(start), endTime: String(end) }, v, token); break; } catch (e) { lastErr = e; }
-    }
-    if (!r) throw lastErr;
-    (r.bookings || []).filter(b => !b.deleted).forEach(b => out.events.push({
+    // GHL allows at most 31 days per request, so ask in 30-day windows.
+    const windows = [];
+    for (let a = start; a < end; a += 30 * DAY) windows.push([a, Math.min(a + 30 * DAY, end)]);
+    const pages = await Promise.all(windows.map(([a, b]) => ghl('/calendars/services/bookings', { locationId: loc, startTime: String(a), endTime: String(b) }, 'v3', token)));
+    const seen = new Set();
+    pages.flatMap(r => r.bookings || []).filter(b => !b.deleted && !seen.has(b.bookingId) && seen.add(b.bookingId)).forEach(b => out.events.push({
       id: b.bookingId,
       calendarId: 'services',
       title: b.title || 'Treatment',
