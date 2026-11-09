@@ -399,7 +399,7 @@
     var v = D.webVisits;
     return '<h2 class="sec">Website visits</h2><div class="stats-row">' + v.stats.map(function (x) { return '<section class="panel stat"><span class="n">' + x.n + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>' +
       '<div class="grid g3">' + panel('Most visited pages', D.period, bars(v.pages)) + panel('Where visitors came from', D.period, bars(v.sources)) +
-      panel('Who visits', D.period, '<div class="minis">' + mini(v.mobile / 100, v.mobile + '%', 'On a phone', 'Make booking easy on mobile') + mini(v.local / 100, v.local + '%', 'Gold Coast based', 'Within 30 minutes of you') + '</div>') + '</div>';
+      panel('Who visits', D.period, '<div class="minis">' + mini(v.mobile / 100, v.mobile + '%', 'On a phone', 'Make booking easy on mobile') + mini(v.local / 100, v.local + '%', v.localLabel || 'Gold Coast based', v.localSub || 'Within 30 minutes of you') + '</div>') + '</div>';
   }
 
   V.partners = function () {

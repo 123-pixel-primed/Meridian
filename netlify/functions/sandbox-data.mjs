@@ -4,6 +4,8 @@
 //   GHL_SANDBOX_LOCATION_ID  The sub-account's location ID
 // Read-only: this function never creates, changes or sends anything in GHL.
 
+import { readGA } from '../lib/ga.mjs';
+
 const API = 'https://services.leadconnectorhq.com';
 const DAY = 86400000;
 
@@ -118,6 +120,8 @@ export default async () => {
       out.social.stats = st.results || st;
     }
   });
+
+  await safe('website', async () => { out.web = await readGA(); });
 
   return Response.json(out, { headers: { 'Cache-Control': 'private, max-age=60' } });
 };

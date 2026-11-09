@@ -99,7 +99,26 @@
       return { name: c.name, channel: channel(c.type), time: when(c.date), status: c.unread > 0 || c.inbound ? 'Needs a reply' : 'Answered', text: c.text || '(no text)', draft: '' };
     });
 
-    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + '. Other panels show sample content until they are connected.';
+    if (S.web) {
+      var W = S.web, n = W.now, b = W.before;
+      var ch = function (a, c) { if (!c) return 'First month connected'; var d = Math.round(100 * (a - c) / c); return (d >= 0 ? '+' : '') + d + '% on last month'; };
+      var secs = Math.round(n[2]);
+      D.webVisits = {
+        stats: [
+          { n: Math.round(n[0]).toLocaleString('en-AU'), l: 'Visits', d: ch(n[0], b[0]) },
+          { n: Math.round(n[1]).toLocaleString('en-AU'), l: 'People', d: ch(n[1], b[1]) },
+          { n: Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0'), l: 'Average time on site', d: 'Last 30 days' },
+          { n: Math.round(n[3] * 100) + '%', l: 'Visits where people engaged', d: 'Read, scrolled or clicked' }
+        ],
+        pages: W.pages.length ? W.pages : [{ l: 'No visits yet', v: 0 }],
+        sources: W.sources.length ? W.sources : [{ l: 'No visits yet', v: 0 }],
+        mobile: W.mobile,
+        local: W.topCity ? W.topCity.share : 0,
+        localLabel: W.topCity ? 'From ' + W.topCity.name : 'Top city',
+        localSub: 'Your biggest single city'
+      };
+    }
+    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' : '') + '. Other panels show sample content until they are connected.';
     if (S.errors && S.errors.length) D.liveNote += ' Some data could not be read: ' + S.errors.join('; ') + '.';
   }
 
