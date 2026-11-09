@@ -10,6 +10,20 @@ const API = 'https://services.leadconnectorhq.com';
 
 export function sandboxLocation() { return process.env.GHL_SANDBOX_LOCATION_ID; }
 
+// The agency (company) ID, from GHL_COMPANY_ID or read once from the sandbox account.
+let companyCache = null;
+export async function companyId() {
+  if (process.env.GHL_COMPANY_ID) return process.env.GHL_COMPANY_ID;
+  if (companyCache) return companyCache;
+  const res = await fetch(API + '/locations/' + process.env.GHL_SANDBOX_LOCATION_ID, {
+    headers: { Authorization: 'Bearer ' + process.env.GHL_SANDBOX_TOKEN, Version: '2021-07-28', Accept: 'application/json' }
+  });
+  if (!res.ok) return null;
+  const j = await res.json();
+  companyCache = (j.location || j).companyId || null;
+  return companyCache;
+}
+
 export async function tokenFor(locationId) {
   if (!locationId) throw new Error('No account linked yet');
   if (locationId === process.env.GHL_SANDBOX_LOCATION_ID) return process.env.GHL_SANDBOX_TOKEN;
@@ -17,7 +31,7 @@ export async function tokenFor(locationId) {
   const cached = await store.get(locationId, { type: 'json' });
   if (cached && cached.token && (!cached.exp || cached.exp > Date.now() + 60000)) return cached.token;
 
-  const agency = process.env.GHL_AGENCY_TOKEN, company = process.env.GHL_COMPANY_ID;
+  const agency = process.env.GHL_AGENCY_TOKEN, company = agency ? await companyId() : null;
   if (agency && company) {
     const res = await fetch(API + '/oauth/locationToken', {
       method: 'POST',
@@ -45,8 +59,10 @@ export async function savePit(locationId, token) {
 
 // Agency view: list sub-accounts so a client can be matched to their account.
 export async function listLocations() {
-  const agency = process.env.GHL_AGENCY_TOKEN, company = process.env.GHL_COMPANY_ID;
-  if (!agency || !company) throw new Error('Agency connection not set up');
+  const agency = process.env.GHL_AGENCY_TOKEN;
+  if (!agency) throw new Error('Agency connection not set up');
+  const company = await companyId();
+  if (!company) throw new Error('Could not find the agency ID');
   const res = await fetch(API + '/locations/search?limit=100&companyId=' + encodeURIComponent(company), {
     headers: { Authorization: 'Bearer ' + agency, Version: '2021-07-28', Accept: 'application/json' }
   });
