@@ -13,11 +13,17 @@ async function ghl(path, params, version, token, body) {
   const url = new URL(API + path);
   Object.entries(params || {}).forEach(([k, v]) => url.searchParams.set(k, v));
   // POST is only used for read-style queries (social statistics); nothing is created or changed.
-  const res = await fetch(url, {
-    method: body ? 'POST' : 'GET',
-    headers: Object.assign({ Authorization: 'Bearer ' + token, Version: version, Accept: 'application/json' }, body ? { 'Content-Type': 'application/json' } : {}),
-    body: body ? JSON.stringify(body) : undefined
-  });
+  // GHL limits how many requests an app can make in a short window. On "too many requests", wait and retry.
+  let res;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(url, {
+      method: body ? 'POST' : 'GET',
+      headers: Object.assign({ Authorization: 'Bearer ' + token, Version: version, Accept: 'application/json' }, body ? { 'Content-Type': 'application/json' } : {}),
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (res.status !== 429) break;
+    await new Promise(r => setTimeout(r, 1200 * (attempt + 1)));
+  }
   if (!res.ok) {
     let msg = '';
     try { const b = await res.json(); msg = String(b.message || b.error || '').slice(0, 160); } catch (e) {}
@@ -143,5 +149,6 @@ export default async () => {
   await safe('website', async () => { out.web = await readGA(); });
   await safe('search', async () => { out.search = await readGSC(); });
 
-  return Response.json(out, { headers: { 'Cache-Control': 'private, max-age=60' } });
+  // Cache at Netlify's edge for 2 minutes so page loads share one set of GHL requests.
+  return Response.json(out, { headers: { 'Cache-Control': 'public, max-age=0, must-revalidate', 'Netlify-CDN-Cache-Control': 'public, durable, s-maxage=120, stale-while-revalidate=600' } });
 };
