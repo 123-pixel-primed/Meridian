@@ -212,7 +212,7 @@
         <div class="field"><label for="colour_primary">Main brand colour</label><input type="text" id="colour_primary" name="colour_primary" placeholder="For example #5F8F88"></div>
         <div class="field"><label for="colour_accent">Accent colour</label><input type="text" id="colour_accent" name="colour_accent"></div>
         <div class="field"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
-        <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, if you have one</span><input type="file" id="style_guide" name="style_guide" accept=".pdf"></div>
+        <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, Word, PowerPoint or an image, up to 5MB</span><input type="file" id="style_guide" name="style_guide" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx"></div>
         <div class="field full"><span class="q">Brand photos</span><span class="hint">Up to 5 photos of your space and treatments. Put your favourite first, it becomes the header image in your dashboard.</span><div class="uploads"><input type="file" id="brand_image_1" name="brand_image_1" accept=".jpg,.jpeg,.png" aria-label="Brand photo 1"><input type="file" id="brand_image_2" name="brand_image_2" accept=".jpg,.jpeg,.png" aria-label="Brand photo 2"><input type="file" id="brand_image_3" name="brand_image_3" accept=".jpg,.jpeg,.png" aria-label="Brand photo 3"><input type="file" id="brand_image_4" name="brand_image_4" accept=".jpg,.jpeg,.png" aria-label="Brand photo 4"><input type="file" id="brand_image_5" name="brand_image_5" accept=".jpg,.jpeg,.png" aria-label="Brand photo 5"></div></div>
         <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Photos are resized automatically. Logos and style guides can be up to 4 MB each. Anything larger can be shared on your onboarding call.</p>
       </div>
@@ -292,7 +292,7 @@
     bars.forEach(function (b, k) { b.classList.toggle('on', k <= n); });
     document.getElementById('step-label').textContent = 'Step ' + (n + 1) + ' of ' + sets.length + ', ' + sets[n].getAttribute('data-title');
     back.style.visibility = n === 0 ? 'hidden' : 'visible';
-    next.textContent = n === sets.length - 1 ? 'Submit and start setup' : 'Continue';
+    next.textContent = n === sets.length - 1 ? (EDIT ? 'Save changes' : 'Submit and start setup') : 'Continue';
     err.textContent = '';
     window.scrollTo(0, 0);
   }
@@ -357,6 +357,33 @@
   }
   if (qs.get('email')) document.getElementById('email').value = qs.get('email');
 
+  // Edit mode: a signed-in client updates their answers. Everything is filled from what they gave us before.
+  var EDIT = null;
+  if (qs.get('edit')) {
+    document.querySelector('#intro h1').textContent = 'Update your business details';
+    document.querySelector('#intro .lead').textContent = 'Change anything below, then save. Your voice, imagery, colours and drafts update straight away. Leave a file empty to keep the one you sent before.';
+    fetch('/.netlify/functions/auth?me=1', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (me) {
+      var cid = me && me.cid ? me.cid : qs.get('client');
+      if (!me || !me.email || !cid) { location.replace('/login/'); throw 0; }
+      return fetch('/.netlify/functions/onboard?id=' + encodeURIComponent(cid), { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); });
+    }).then(function (C) {
+      EDIT = C.id; var A = C.answers || {};
+      Object.keys(A).forEach(function (k) {
+        var v = A[k], els = form.querySelectorAll('[name="' + k + '"]');
+        Array.prototype.forEach.call(els, function (el) {
+          if (el.type === 'file') return;
+          if (el.type === 'checkbox' || el.type === 'radio') el.checked = [].concat(v).indexOf(el.value) >= 0;
+          else el.value = Array.isArray(v) ? v.join(', ') : v;
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+      var em = document.getElementById('email'); em.readOnly = true;
+      document.querySelector('.plan-pick').classList.add('hidden'); document.getElementById('plan_pick').required = false;
+      Array.prototype.forEach.call(form.querySelectorAll('input[type=file]'), function (f) { f.required = false; });
+      show(i);
+    }).catch(function () {});
+  }
+
   function answers() {
     var o = {};
     new FormData(form).forEach(function (v, k) {
@@ -386,7 +413,8 @@
 
   function send() {
     var api = '/.netlify/functions/onboard';
-    return fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(answers()) })
+    var url = EDIT ? api + '?id=' + encodeURIComponent(EDIT) + '&update=1' : api;
+    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(answers()) })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (res) {
         var id = res.id, failed = [];
@@ -400,6 +428,7 @@
               .catch(function () { failed.push(f.files[0].name); });
           });
         }, Promise.resolve()).then(function () {
+          if (EDIT) { location.href = '/app/?client=' + encodeURIComponent(id) + '#content'; return; }
           document.getElementById('dash-link').href = '/app/?client=' + encodeURIComponent(id);
           if (failed.length) document.getElementById('upload-warn').textContent = 'These files did not upload: ' + failed.join(', ') + '. Send them to contact@pixelprimed.com and we will add them.';
           form.classList.add('hidden'); document.getElementById('intro').classList.add('hidden');

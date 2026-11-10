@@ -10,7 +10,8 @@ import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mj
 import { listLocations, savePit, appStatus } from '../lib/ghl-access.mjs';
 
 const FILE_FIELDS = ['logo', 'style_guide', 'brand_image_1', 'brand_image_2', 'brand_image_3', 'brand_image_4', 'brand_image_5'];
-const MAX_FILE = 4 * 1024 * 1024;
+const MAX_FILE = 5 * 1024 * 1024;
+const FILE_TYPES = /^(image\/(png|jpeg|svg\+xml|webp)|application\/pdf|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation))$/;
 
 // Answers worth having before the setup call. Anything blank here shows as "to ask" on the Clients page.
 const KEY_FIELDS = {
@@ -114,7 +115,7 @@ export default async (req) => {
     }
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
-    return Response.json({ id: rec.id, createdAt: rec.createdAt, files: rec.files || [], profile: rec.profile }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ id: rec.id, createdAt: rec.createdAt, files: rec.files || [], profile: rec.profile, answers: rec.answers || {} }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
@@ -126,13 +127,28 @@ export default async (req) => {
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
     const type = req.headers.get('content-type') || 'application/octet-stream';
-    if (!/^(image\/(png|jpeg|svg\+xml)|application\/pdf)$/.test(type)) return Response.json({ error: 'File type not allowed' }, { status: 400 });
+    if (!FILE_TYPES.test(type)) return Response.json({ error: 'File type not allowed' }, { status: 400 });
     const buf = await req.arrayBuffer();
     if (buf.byteLength > MAX_FILE) return Response.json({ error: 'File too large' }, { status: 413 });
     await files.set(id + '/' + file, buf, { metadata: { type } });
     rec.files = Array.from(new Set((rec.files || []).concat(file)));
     await clients.setJSON(id, rec);
     return Response.json({ ok: true });
+  }
+
+  // A client updating their business details later. Their sign-in email and plan stay as they are.
+  if (url.searchParams.get('update')) {
+    if (!validId(id)) return Response.json({ error: 'Missing client' }, { status: 400 });
+    if (!canSee(readSession(req), id)) return unauthorised();
+    const rec = await clients.get(id, { type: 'json' });
+    if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
+    let b = {}; try { b = await req.json(); } catch (e) {}
+    const keep = { email: (rec.answers || {}).email, plan: (rec.answers || {}).plan, billing: (rec.answers || {}).billing };
+    rec.answers = Object.assign({}, rec.answers || {}, b, keep);
+    rec.profile = buildProfile(rec.answers);
+    rec.updatedAt = new Date().toISOString();
+    await clients.setJSON(id, rec);
+    return Response.json({ ok: true, id });
   }
 
   // Answers.

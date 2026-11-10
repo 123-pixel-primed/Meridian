@@ -7,7 +7,7 @@
 import { readGA, readGSC } from '../lib/ga.mjs';
 import { readSession, unauthorised, canSee } from '../lib/session.mjs';
 import { getStore } from '@netlify/blobs';
-import { tokenFor } from '../lib/ghl-access.mjs';
+import { tokenFor, listLocations } from '../lib/ghl-access.mjs';
 
 const API = 'https://services.leadconnectorhq.com';
 const DAY = 86400000;
@@ -95,7 +95,17 @@ export default async (req) => {
   if (cid && !canSee(sess, cid)) return unauthorised();
   let loc = process.env.GHL_SANDBOX_LOCATION_ID, token = process.env.GHL_SANDBOX_TOKEN, isSandbox = true;
   if (cid) {
-    const rec = await getStore({ name: 'clients', consistency: 'strong' }).get(cid, { type: 'json' });
+    const cstore = getStore({ name: 'clients', consistency: 'strong' });
+    const rec = await cstore.get(cid, { type: 'json' });
+    // Not linked yet: find their account by email (or business name) and remember it.
+    if (rec && !rec.locationId) {
+      try {
+        const a = rec.answers || {}, em = String(a.email || '').trim().toLowerCase(), nm = String(a.business_name || '').trim().toLowerCase();
+        const locs = await listLocations();
+        const m = locs.find(l => em && l.email === em) || locs.find(l => nm && String(l.name || '').trim().toLowerCase() === nm && l.id !== process.env.GHL_SANDBOX_LOCATION_ID);
+        if (m) { rec.locationId = m.id; await cstore.setJSON(cid, rec); }
+      } catch (e) {}
+    }
     if (!rec || !rec.locationId) return Response.json({ connected: false, reason: 'Your account is being connected.' }, { headers: { 'Cache-Control': 'no-store' } });
     loc = rec.locationId; isSandbox = loc === process.env.GHL_SANDBOX_LOCATION_ID;
     try { token = await tokenFor(loc); } catch (e) { return Response.json({ connected: false, reason: 'Your account is being connected.', detail: sess.admin ? String(e.message || e) : undefined }, { headers: { 'Cache-Control': 'no-store' } }); }
