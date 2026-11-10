@@ -36,6 +36,22 @@ export default async (req) => {
   let b = {}; try { b = await req.json(); } catch (e) {}
   const cid = String(b.client || '').replace(/[^a-z0-9-]/g, '').slice(0, 80);
   if (cid ? !canSee(sess, cid) : !sess.admin) return unauthorised();
+
+  // A client asked for a change to one message: write the new version for them to check.
+  if (b.rewrite) {
+    if (!key) return Response.json({ error: 'not set up' }, { status: 503 });
+    const text = String(b.rewrite.text || '').slice(0, 4000), ask = String(b.rewrite.request || '').slice(0, 1000);
+    let voice = {};
+    if (cid) { const rec = await getStore({ name: 'clients', consistency: 'strong' }).get(cid, { type: 'json' }); if (rec && rec.profile && rec.profile.voice) voice = { summary: rec.profile.voice.summary, love: rec.profile.voice.love, avoid: rec.profile.voice.avoidWords, signoff: rec.profile.voice.signoff }; }
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: 'You edit marketing messages for small wellness and hospitality businesses. ' + RULES + ' Reply with the revised message only.',
+          messages: [{ role: 'user', content: 'Their voice: ' + JSON.stringify(voice) + '\n\nCurrent message:\n' + text + '\n\nWhat they want changed:\n' + ask + '\n\nRewrite the message with that change. Keep everything else that works.' }] }) });
+      const j = await r.json();
+      if (!r.ok) return Response.json({ error: (j.error && j.error.message) || 'failed' }, { status: 502 });
+      return Response.json({ text: clean((j.content || []).map(c => c.text || '').join('')) });
+    } catch (e) { return Response.json({ error: String(e.message || e) }, { status: 502 }); }
+  }
   const items = (Array.isArray(b.items) ? b.items : []).slice(0, 6).map(x => ({
     key: String(x.key || '').slice(0, 60), area: String(x.area || '').slice(0, 60), title: String(x.title || '').slice(0, 120),
     why: String(x.why || '').slice(0, 300), change: String(x.change || '').slice(0, 400)

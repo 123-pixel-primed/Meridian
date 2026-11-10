@@ -108,8 +108,8 @@
   var TIER_NAMES = { core: 'Core', growth: 'Growth', scale: 'Scale' };
   var TIER_SCREENS = {
     core: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit'],
-    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'optimise', 'guests', 'content', 'website', 'partners'],
-    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'optimise', 'guests', 'content', 'website', 'partners', 'ads']
+    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners'],
+    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners', 'ads']
   };
   var UPGRADE = {
     optimise: ['Growth', 'Your marketing, improved every month', ['New guest journeys suggested from your results', 'A/B tests on the messages you already send', 'Every change approved by you first']],
@@ -283,11 +283,12 @@
         ['Email', 'Instagram', 'LinkedIn'].map(function (c, k) { return '<button class="tab" role="tab" aria-selected="' + (k === 0) + '" data-ch="' + k + '">' + c + '</button>'; }).join('') +
         '</div><div id="ch-view">' + chView(0) + '</div>') +
       '<div style="height:20px"></div><div class="grid g2">' +
-        panel('Channels', 'Pause any channel at any time', '<ul class="list">' + o.channels.map(function (c) {
-          return '<li><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + esc(c.d) + '</div></div><button class="switch" role="switch" aria-checked="' + c.on + '" aria-label="' + esc(c.l) + '" data-act="switch"><span></span></button></li>';
+        panel('Channels', 'Pause any channel at any time', '<ul class="list">' + o.channels.map(function (c, ci) {
+          return '<li data-chan="' + ci + '"><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + esc(c.d) + '</div></div><button class="switch" role="switch" aria-checked="' + c.on + '" aria-label="' + esc(c.l) + '" data-act="switch"><span></span></button></li>';
         }).join('') + '</ul>') +
-        panel('Instagram follow-backs', 'Local businesses and people who share your guests', funnel(o.follows)) +
+        allowancePanel() +
       '</div><div style="height:20px"></div><div class="grid g2">' +
+        panel('Instagram follow-backs', 'Local businesses and people who share your guests', funnel(o.follows)) +
         panel('Going out next week', o.next.length + o.nextMore + ' messages', '<ul class="list">' + o.next.map(function (r) {
           return '<li><span class="dot"></span><div class="grow"><div>' + esc(r.n) + '</div><div class="meta">' + esc(r.w) + ', ' + esc(r.m) + '</div></div><span class="tag">' + esc(r.c) + '</span><button class="btn ghost" data-act="edit">Edit</button></li>';
         }).join('') + '<li><div class="grow meta">And ' + o.nextMore + ' more</div></li></ul>') +
@@ -296,6 +297,22 @@
         }).join('') + '</ul>') +
       '</div>';
   };
+  // How many new people Meridian contacts each month, and how that is shared between channels.
+  var ALLOWANCE = { core: 0, growth: 400, scale: 800 }, LINKEDIN_WEEK = 50;
+  function allowancePanel() {
+    var total = ALLOWANCE[tier()] || 0, on = (D.outreach.channels || []).filter(function (c) { return c.on; });
+    if (!total || !on.length) return panel('Your monthly outreach', '', '<p class="meta">Switch on a channel to start reaching new people.</p>');
+    var rates = {}; ((D.insights && D.insights.channels) || []).forEach(function (c) { rates[c.l] = c.rate; });
+    var weights = on.map(function (c) { return Math.max(1, rates[c.l] || 0); }), sum = weights.reduce(function (a, b) { return a + b; }, 0);
+    var split = on.map(function (c, k) { var n = Math.round(total * weights[k] / sum); if (c.k === 'linkedin' || c.l === 'LinkedIn') n = Math.min(n, LINKEDIN_WEEK * 4); return { l: c.l, n: n }; });
+    return panel('Your monthly outreach', total + ' new people a month across your channels', '<ul class="list">' + split.map(function (x) { return '<li><div class="grow"><div>' + esc(x.l) + '</div></div><div style="font-weight:600">' + x.n + '</div></li>'; }).join('') + '</ul>' +
+      '<p class="meta" style="margin-top:12px">Each month more goes to the channel getting the most replies. Anyone who does not reply gets up to two follow-ups, which do not count towards the total, and nobody is contacted again once they reply or say no. LinkedIn stays within ' + LINKEDIN_WEEK + ' new people a week. Every email carries an unsubscribe link.</p>');
+  }
+  function saveAnswers(body) {
+    var id = new URLSearchParams(location.search).get('client');
+    if (!D.live || !id) return Promise.resolve();
+    return fetch('/.netlify/functions/onboard?id=' + encodeURIComponent(id) + '&update=1', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { if (!r.ok) throw 0; });
+  }
   function chView(k) {
     var o = D.outreach;
     if (k === 0) {
@@ -572,9 +589,9 @@
         document.querySelectorAll('.ai-ver').forEach(function (el) { el.innerHTML = wordingHtml(el.getAttribute('data-k')); });
       }).catch(function () {});
   }
-  V.optimise = function () {
+  function optimiseBlock() {
     var list = OPT = suggestions();
-    return head('Optimise', 'This month’s suggestions, drawn from your own results. Nothing changes until you approve it.') +
+    return '<div style="height:20px"></div><div class="page-head" style="margin-top:12px"><div><h1 style="font-size:28px">What we’d change</h1><p>This month’s suggestions, drawn from the numbers above. Nothing changes until you approve it.</p></div></div>' +
       list.map(function (x) {
         return '<section class="panel opt" style="margin-bottom:16px"><div class="email-when">' + esc(x.area.toUpperCase()) + '</div>' +
           '<div class="em-subj" style="font-family:var(--serif);font-size:20px;margin:4px 0 10px">' + esc(x.title) + '</div>' +
@@ -583,7 +600,7 @@
           '<p class="meta" style="margin-bottom:14px"><b>How we will know:</b> ' + esc(x.test) + '</p>' + '<div class="ai-ver" data-k="' + esc(x.key) + '">' + wordingHtml(x.key) + '</div>' + approveBtns() + '</section>';
       }).join('') +
       '<p class="meta">Approved changes are made by the Pixel Primed team, and test results appear here as they come in.</p>';
-  };
+  }
 
   V.partners = function () {
     return head('Partners', 'Businesses on Meridian whose guests are a natural fit for yours. Never competitors.') +
@@ -610,13 +627,14 @@
         panel('Who your new guests are', 'By age and suburb, last 90 days', '<h3 class="mini-h">Age</h3>' + bars(I.ages, function (v) { return v + '%'; }, false, 50) + '<h3 class="mini-h" style="margin-top:20px">Suburb</h3>' + bars(I.places, function (v) { return v + '%'; }, false, 50) + '<p class="best">' + esc(I.bestFit) + '</p>') +
         panel('Words that get replies', 'Open rate compared with your 41% average', '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Wording</th><th>Opened</th><th>Change</th></tr></thead><tbody>' + I.words.map(function (w) { return '<tr><td>' + esc(w.l) + '</td><td>' + w.open + '%</td><td class="' + (w.lift < 0 ? 'neg' : 'pos') + '">' + (w.lift > 0 ? '+' : '') + w.lift + '%</td></tr>'; }).join('') + '</tbody></table></div><p class="meta" style="margin-top:12px">' + esc(I.wordsNote) + '</p>') +
       '</div><div style="height:20px"></div>' +
-      panel('Which channels work best', 'Share of people reached who became interested', bars(I.channels.map(function (c) { return { l: c.l, v: c.rate }; }), function (v) { return v + '%'; }, false, 12) + '<ul class="list" style="margin-top:18px">' + I.channels.map(function (c) { return '<li><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + c.reached + ' reached, ' + c.warm + ' interested. ' + esc(c.note) + '</div></div></li>'; }).join('') + '</ul>');
+      panel('Which channels work best', 'Share of people reached who became interested', bars(I.channels.map(function (c) { return { l: c.l, v: c.rate }; }), function (v) { return v + '%'; }, false, 12) + '<ul class="list" style="margin-top:18px">' + I.channels.map(function (c) { return '<li><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + c.reached + ' reached, ' + c.warm + ' interested. ' + esc(c.note) + '</div></div></li>'; }).join('') + '</ul>') + optimiseBlock();
   };
 
   /* ---------- routing ---------- */
   var routes = ['overview', 'messages', 'insights', 'audit', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
   function render() {
     var r = (location.hash || '#overview').slice(1);
+    if (r === 'optimise') r = 'insights';
     if (routes.indexOf(r) < 0) r = 'overview';
     $('#page').innerHTML = has(r) ? V[r]() : upgradeView(r);
     document.querySelectorAll('.nav a').forEach(function (a) {
@@ -631,7 +649,7 @@
     });
     var pl = $('#plan-name'); if (pl) pl.textContent = TIER_NAMES[tier()];
     markApprovals();
-    if (r === 'optimise' && has(r)) loadWording();
+    if (r === 'insights' && has('plan')) loadWording();
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', render);
@@ -709,7 +727,33 @@
         .catch(function () { toast('Approved here, but it could not be saved. Please try again.'); b.textContent = 'Approve'; b.className = 'btn'; b.disabled = false; });
     }
     else if (act === 'interest') { b.textContent = 'Interest sent'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Interest sent. In the demo nothing is sent.' : 'Interest sent'); }
-    else if (act === 'switch') { var on = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', on); toast(on ? 'Channel switched on' : 'Channel paused'); }
+    else if (act === 'switch') {
+      var li = b.closest('[data-chan]'), C = li ? D.outreach.channels[+li.getAttribute('data-chan')] : null;
+      var on = b.getAttribute('aria-checked') !== 'true';
+      var finish = function () {
+        if (C) C.on = on;
+        if (C && C.k) { var o2 = {}; o2['channel_' + C.k] = on ? 'on' : 'off'; saveAnswers(o2).catch(function () {}); }
+        render(); toast(on ? 'Channel switched on' : 'Channel paused');
+      };
+      if (on && C && C.needs && !(D.answers || {})[C.needs]) {
+        if (li.querySelector('.ask')) return;
+        var ask = document.createElement('div'); ask.className = 'ask'; ask.style.cssText = 'flex-basis:100%;margin-top:10px';
+        ask.innerHTML = '<label class="meta">' + esc(C.ask) + '</label><div style="display:flex;gap:8px;margin-top:6px"><input type="text" style="flex:1;font:inherit;padding:10px 12px;border:1px solid var(--border,#E9E1D5);border-radius:8px"><button class="btn" data-ask="save">Connect</button></div><div class="meta" style="margin-top:6px">Our team connects it for you, usually within a working day.</div>';
+        li.style.flexWrap = 'wrap'; li.appendChild(ask); ask.querySelector('input').focus();
+        ask.addEventListener('click', function (ev) {
+          if (!ev.target.closest('[data-ask]')) return; ev.stopPropagation();
+          var v = ask.querySelector('input').value.trim(); if (!v) return;
+          var body = {}; body[C.needs] = v; body['channel_' + C.k] = 'on';
+          saveAnswers(body).then(function () {
+            D.answers = D.answers || {}; D.answers[C.needs] = v; C.d = 'Connecting ' + v;
+            if (D.live) fetch('/.netlify/functions/approvals' + clientQS(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'connect:' + C.k, title: 'Connect ' + C.l + ': ' + v, detail: 'Switched on from the Outreach page', page: 'guests' }) }).catch(function () {});
+            ask.remove(); finish();
+          }).catch(function () { toast('That could not be saved. Please try again.'); });
+        });
+        return;
+      }
+      finish();
+    }
     else if (act === 'edit') {
       var label = b.textContent.trim();
       if (/change goals/i.test(label)) { goalsForm(); return; }
@@ -728,6 +772,21 @@
         ev.stopPropagation();
         if (w.getAttribute('data-edit') === 'cancel') { wrap.remove(); t.el.style.display = ''; return; }
         var text = wrap.querySelector('textarea').value.trim(); if (!text) return;
+        // A request is rewritten for them straight away, so they can check it and save it themselves.
+        if (asks && D.live && !wrap.dataset.rewritten) {
+          w.disabled = true; w.textContent = 'Writing a new version';
+          fetch('/.netlify/functions/wording', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client: new URLSearchParams(location.search).get('client') || '', rewrite: { text: orig, request: text } }) })
+            .then(function (r) { return r.ok ? r.json() : {}; })
+            .then(function (j) {
+              w.disabled = false;
+              if (!j.text) { wrap.dataset.rewritten = 'fallback'; w.textContent = 'Send request to our team'; return; }
+              wrap.dataset.rewritten = '1'; asks = false;
+              wrap.querySelector('textarea').value = j.text;
+              var hint = wrap.querySelector('.meta'); if (hint) hint.textContent = 'Here is a new version with your change. Edit anything, then save.';
+              w.textContent = 'Save this version';
+            }).catch(function () { w.disabled = false; wrap.dataset.rewritten = 'fallback'; w.textContent = 'Send request to our team'; });
+          return;
+        }
         var it = approvalItem(b); it.key = editKey(b); it.kind = 'edit'; it.text = asks ? 'Request: ' + text + '\n\nCurrent wording:\n' + orig : text;
         w.disabled = true; w.textContent = 'Saving';
         if (!D.live) { wrap.remove(); t.el.style.display = ''; toast('Saved. In the demo nothing is sent.'); return; }

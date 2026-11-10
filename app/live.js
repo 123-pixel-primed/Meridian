@@ -205,6 +205,13 @@
       if (!C || !C.profile) { D.liveNote = (D.liveNote ? D.liveNote + ' ' : '') + 'That client profile could not be found.'; return; }
       var P = C.profile, f = C.files || [];
       D.client = { id: C.id, files: f };
+      D.answers = C.answers || {};
+      var Aw = D.answers, onOff = function (k, has) { return Aw['channel_' + k] ? Aw['channel_' + k] === 'on' : has; };
+      D.outreach.channels = [
+        { k: 'email', l: 'Email', d: 'To people who match your best guests', on: onOff('email', true) },
+        { k: 'instagram', l: 'Instagram messages', d: Aw.instagram ? 'From ' + Aw.instagram : 'Needs your Instagram account', on: onOff('instagram', !!Aw.instagram), needs: 'instagram', ask: 'Your Instagram handle or profile link' },
+        { k: 'linkedin', l: 'LinkedIn', d: Aw.linkedin ? 'From ' + Aw.linkedin : 'Needs your LinkedIn profile', on: onOff('linkedin', !!Aw.linkedin), needs: 'linkedin', ask: 'Your LinkedIn profile link' }
+      ];
       D.venue.name = P.venue.name; D.venue.place = P.venue.place;
       if (P.venue.owner) D.venue.owner = P.venue.owner;
       if (P.venue.website) D.venue.website = P.venue.website;
