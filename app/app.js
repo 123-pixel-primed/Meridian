@@ -97,7 +97,8 @@
     return '<section class="panel ' + (cls || '') + '"><div class="panel-head"><h2>' + esc(title) + '</h2>' + (link ? '<a href="' + link[1] + '">' + esc(link[0]) + '</a>' : '') + '</div>' + (sub ? '<p class="sub">' + esc(sub) + '</p>' : '<div style="height:16px"></div>') + body + '</section>';
   }
   function head(title, sub, right) {
-    return '<div class="page-head"><div><h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>' + (right || '') + '</div>';
+    var asOf = D.asOf ? '<p class="meta" style="margin-top:4px">' + new Date(D.asOf).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ', figures for the last 30 days</p>' : '';
+    return '<div class="page-head"><div><h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + asOf + '</div>' + (right || '') + '</div>';
   }
   function approveBtns() {
     return '<div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="approve">Approve</button></div>';
@@ -233,7 +234,9 @@
     }).join('');
     return head('Plan and goals', D.plan.goal + '.', '<button class="btn ghost" data-act="edit">Change goals</button>') +
       '<div class="grid g3">' +
-        panel('Monthly ad budget', 'Recommended to reach your goal', '<div class="stat"><span class="n">' + money(spend) + '</span><span class="l">across 3 paid channels</span></div>') +
+        (tier() === 'scale'
+          ? panel('Monthly ad budget', 'From your onboarding answers', '<div class="stat"><span class="n">' + money(spend) + '</span><span class="l">across ' + c.filter(function (r) { return r.budget; }).length + ' paid channels</span></div>')
+          : panel('Visits needed', 'To reach your goal this month', '<div class="stat"><span class="n">' + (D.plan.visitsNeeded != null ? D.plan.visitsNeeded : c.reduce(function (s, r) { return s + r.expected; }, 0)) + '</span><span class="l">' + (D.plan.avg ? 'at ' + money(D.plan.avg) + ' a visit' : 'visits') + '</span></div>')) +
         panel('Expected new guests', 'From the plan this month', '<div class="stat"><span class="n">' + c.slice(1).reduce(function (s, r) { return s + r.expected; }, 0) + '</span><span class="l">first visits</span></div>') +
         panel('On track', 'Channels meeting their target', '<div class="stat"><span class="n">' + c.filter(function (r) { return r.actual >= r.expected; }).length + ' of ' + c.length + '</span><span class="l">channels</span></div>') +
       '</div><div style="height:20px"></div>' +

@@ -76,6 +76,7 @@
     var bySrc = {}; paid.forEach(function (t) { bySrc[t.source] = (bySrc[t.source] || 0) + t.amount; });
     D.revenueBySource = Object.keys(bySrc).map(function (k) { return { l: k, v: bySrc[k] }; }).sort(function (a, b) { return b.v - a.v; });
     // Booking source tracking: revenue by the channel that first brought each guest.
+    D.asOf = S.fetchedAt || new Date().toISOString();
     if (S.attribution && S.attribution.channels.length) {
       D.attribution = S.attribution;
       var byCh = S.attribution.channels.filter(function (c) { return c.revenue > 0; });
@@ -171,6 +172,30 @@
   }
 
 
+  // The channel plan, worked out from the client's own goals. Paid channels and an ad budget are Scale only.
+  function buildPlan(g, plan) {
+    var avg = g.avgVisit || 150, target = g.revenue || 0, now = g.current || (D.goals.revenue.actual || 0);
+    var visits = Math.max(0, Math.ceil(Math.max(0, target - now) / avg));
+    var newG = g.newGuests || Math.max(1, Math.round(visits * 0.4));
+    var ret = Math.max(0, visits - newG);
+    var A = {}; ((D.attribution && D.attribution.channels) || []).forEach(function (c) { A[c.l] = c; });
+    var got = function (l) { return A[l] ? A[l].guests || 0 : 0; };
+    var share = function (n, p) { return Math.max(1, Math.round(n * p)); };
+    var ch = [
+      { l: 'Returning guest journeys', budget: 0, expected: Math.max(1, ret), actual: A['Returning guests'] ? A['Returning guests'].bookings : 0 },
+      { l: 'Instagram', budget: 0, expected: share(newG, plan === 'scale' ? 0.2 : 0.35), actual: got('Instagram and Facebook') },
+      { l: 'Meridian outreach', budget: 0, expected: share(newG, plan === 'scale' ? 0.15 : 0.3), actual: got('Meridian outreach') },
+      { l: 'Google search', budget: 0, expected: share(newG, plan === 'scale' ? 0.1 : 0.2), actual: got('Google search') },
+      { l: 'Partner referrals', budget: 0, expected: share(newG, plan === 'scale' ? 0.05 : 0.15), actual: got('Partner referrals') }
+    ];
+    if (plan === 'scale') {
+      var budget = parseInt(String(g.adBudget || '').replace(/[^0-9]/g, ''), 10) || 0;
+      ch.push({ l: 'Google ads', budget: Math.round(budget * 0.5), expected: share(newG, 0.25), actual: got('Google ads') });
+      ch.push({ l: 'Paid social', budget: budget - Math.round(budget * 0.5), expected: share(newG, 0.25), actual: got('Paid social') });
+    }
+    D.plan.channels = ch; D.plan.visitsNeeded = visits; D.plan.avg = avg; D.plan.fromGoals = true;
+  }
+
   // A client who has finished onboarding: their answers set the brand, plan, goals, voice and imagery.
   function loadClient() {
     var id = new URLSearchParams(location.search).get('client');
@@ -188,6 +213,7 @@
       D.tier = P.plan;
       var g = P.goals || {};
       if (g.revenue) { D.goals.revenue.target = g.revenue; if (D.plan) D.plan.goal = 'Reach ' + '$' + Number(g.revenue).toLocaleString('en-AU') + ' a month in revenue'; }
+      buildPlan(g, P.plan);
       if (g.newGuests) D.goals.newGuests.target = g.newGuests;
       if (g.rebookRate) D.goals.rebookRate.target = g.rebookRate;
       if (P.outreach) {
