@@ -107,10 +107,11 @@
   var TIER_NAMES = { core: 'Core', growth: 'Growth', scale: 'Scale' };
   var TIER_SCREENS = {
     core: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit'],
-    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners'],
-    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners', 'ads']
+    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'optimise', 'guests', 'content', 'website', 'partners'],
+    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'optimise', 'guests', 'content', 'website', 'partners', 'ads']
   };
   var UPGRADE = {
+    optimise: ['Growth', 'Your marketing, improved every month', ['New guest journeys suggested from your results', 'A/B tests on the messages you already send', 'Every change approved by you first']],
     plan: ['Growth', 'A marketing plan built from your goals', ['Set a revenue goal and see the channels and budget to reach it', 'Progress tracked against your goal every week', 'One clear recommendation each Monday']],
     guests: ['Growth', 'New guests, found and messaged for you', ['Personal messages to new guests and local businesses', 'Corporate wellness and partner referrals', 'See every first visit and where it came from']],
     content: ['Growth', 'Content written for you every week', ['Social posts, emails and articles in your voice', 'Approve or edit before anything is published', 'Imagery created in your brand style on Scale']],
@@ -121,7 +122,7 @@
   function tier() { return D.tier || 'core'; }
   function has(screen) { return TIER_SCREENS[tier()].indexOf(screen) >= 0; }
   function upgradeView(r) {
-    var u = UPGRADE[r], title = { plan: 'Plan and goals', guests: 'New guests', content: 'Content', website: 'Website', partners: 'Partners', ads: 'Ads' }[r];
+    var u = UPGRADE[r], title = { optimise: 'Optimise', plan: 'Plan and goals', guests: 'New guests', content: 'Content', website: 'Website', partners: 'Partners', ads: 'Ads' }[r];
     return head(title, 'Available on the ' + u[0] + ' plan.') +
       '<section class="panel upgrade"><div class="up-mark" aria-hidden="true"></div><h2 class="up-title">' + esc(u[1]) + '</h2><ul class="up-list">' + u[2].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
       '<div class="actions"><a class="btn" href="' + (D.sample ? '../book-a-demo/' : 'mailto:contact@pixelprimed.com?subject=Upgrade%20to%20' + u[0]) + '" style="text-decoration:none">Talk to us about ' + u[0] + '</a></div></section>';
@@ -394,10 +395,24 @@
       }).join('') + '</div>';
   };
 
+
+  // Every booking traced to its source: the channel that first brought each guest.
+  function traceBlock() {
+    var A = D.attribution; if (!A) return '';
+    var rows = A.channels.map(function (c) {
+      return '<tr><td><strong>' + esc(c.l) + '</strong></td><td>' + (c.guests || '') + '</td><td>' + c.bookings + '</td><td>' + (c.revenue ? money(c.revenue) : '') + '</td></tr>';
+    }).join('');
+    var note = A.traced + '% of bookings traced to a channel.' + (A.traced < 100 ? ' Untraced bookings were made before tracking started or without a tracked link.' : '') +
+      (A.testPayments ? ' Revenue includes test payments.' : '');
+    return panel('Where every booking came from', 'Live. A guest\'s first booking counts for the channel that brought them; later visits count as returning guests.',
+      '<table class="tbl"><thead><tr><th>Channel</th><th>New guests</th><th>Bookings</th><th>Revenue</th></tr></thead><tbody>' + rows + '</tbody></table><p class="meta" style="margin-top:12px">' + esc(note) + '</p>') +
+      '<div style="height:20px"></div>';
+  }
+
   V.ads = function () {
     var c = D.ads.channels;
     var spend = c.reduce(function (s, r) { return s + r.spend; }, 0), rev = c.reduce(function (s, r) { return s + r.rev; }, 0);
-    return head('Ads', 'What your ad budget returned. Ad spend is charged to your own account.') +
+    return head('Ads', 'What your ad budget returned. Ad spend is charged to your own account.') + traceBlock() +
       '<div class="grid g3">' +
         panel('Spent', D.period, '<div class="stat"><span class="n">' + money(spend) + '</span></div>') +
         panel('Revenue from ads', D.period, '<div class="stat"><span class="n">' + money(rev) + '</span></div>') +
@@ -490,6 +505,68 @@
       panel('Who visits', D.period, '<div class="minis">' + mini(v.mobile / 100, v.mobile + '%', 'On a phone', 'Make booking easy on mobile') + mini(v.local / 100, v.local + '%', v.localLabel || 'Gold Coast based', v.localSub || 'Within 30 minutes of you') + '</div>') + '</div>';
   }
 
+
+  // Monthly optimisation review: suggestions drawn from the client's own results.
+  // Each one names the evidence, the change and how it will be tested, and goes to the team when approved.
+  function suggestions() {
+    var out = [], g = D.goals || {}, A = D.attribution;
+    var rb = g.rebookRate || {}, ng = g.newGuests || {}, rev = g.revenue || {};
+    if (rb.target && rb.actual != null && rb.actual < rb.target) out.push({
+      area: 'Returning guests', title: 'Test a sooner rebooking message',
+      why: rb.actual + '% of guests rebook against your goal of ' + rb.target + '%.',
+      change: 'Your rebooking email goes 21 days after a visit. We would send half your guests the same email at 14 days instead.',
+      test: 'A/B test for 6 weeks. The winner is whichever brings more second visits within 30 days.'
+    });
+    if (A && A.channels) {
+      var ret = A.channels.find(function (c) { return c.l === 'Returning guests'; });
+      var firsts = A.channels.filter(function (c) { return c.l !== 'Returning guests'; }).reduce(function (n, c) { return n + c.guests; }, 0);
+      if (firsts && (!ret || ret.bookings < firsts / 2)) out.push({
+        area: 'Guest journeys', title: 'Add a second-visit journey',
+        why: firsts + ' new guests booked recently and fewer than half have come back yet.',
+        change: 'A new journey two days after a first visit: a thank-you, what to book next and a reason to return within the month.',
+        test: 'Runs for every first-time guest. Measured on second visits within 45 days, compared with the last 3 months.'
+      });
+      var paidCh = A.channels.filter(function (c) { return c.l !== 'Returning guests' && c.l !== 'Not recorded' && c.guests; }).sort(function (a, b) { return b.revenue / b.guests - a.revenue / a.guests; });
+      if (paidCh.length > 1) out.push({
+        area: 'Channels', title: 'Lean into ' + paidCh[0].l,
+        why: 'Guests who found you through ' + paidCh[0].l + ' spend the most on their first visit (' + money(Math.round(paidCh[0].revenue / paidCh[0].guests)) + ' each).',
+        change: 'Shift more of next month’s content and outreach towards ' + paidCh[0].l + '.',
+        test: 'Compared month on month on new guests and first-visit spend.'
+      });
+      if (A.traced < 70) out.push({
+        area: 'Tracking', title: 'Trace more bookings to their source',
+        why: 'Only ' + A.traced + '% of bookings can be traced to the channel that brought them.',
+        change: 'Tracked booking links in your social profiles, emails and Google listing.',
+        test: 'Aim for 80% of bookings traced within a month.'
+      });
+    }
+    if (ng.target && ng.actual != null && ng.actual < ng.target) out.push({
+      area: 'New guests', title: 'Test a new first-message opening',
+      why: ng.actual + ' new guests this month against your goal of ' + ng.target + '.',
+      change: 'Half of new-guest messages lead with your signature offer, half with what makes you different.',
+      test: 'A/B test until each version has reached 100 people. The winner is the one with more bookings.'
+    });
+    out.push({
+      area: 'Wording', title: 'Test the welcome email subject line',
+      why: 'The first email a new guest opens sets how many read the rest.',
+      change: 'Keep "Before your first visit" for half your guests and try a version written around your signature offer for the other half.',
+      test: 'A/B test for 4 weeks on opens and first visits kept.'
+    });
+    return out.slice(0, 5);
+  }
+  V.optimise = function () {
+    var list = suggestions();
+    return head('Optimise', 'This month’s suggestions, drawn from your own results. Nothing changes until you approve it.') +
+      list.map(function (x) {
+        return '<section class="panel opt" style="margin-bottom:16px"><div class="email-when">' + esc(x.area.toUpperCase()) + '</div>' +
+          '<div class="em-subj" style="font-family:var(--serif);font-size:20px;margin:4px 0 10px">' + esc(x.title) + '</div>' +
+          '<p class="meta" style="margin-bottom:8px"><b>What we saw:</b> ' + esc(x.why) + '</p>' +
+          '<p class="meta grow" style="margin-bottom:8px"><b>What we would change:</b> ' + esc(x.change) + '</p>' +
+          '<p class="meta" style="margin-bottom:14px"><b>How we will know:</b> ' + esc(x.test) + '</p>' + approveBtns() + '</section>';
+      }).join('') +
+      '<p class="meta">Approved changes are made by the Pixel Primed team, and test results appear here as they come in.</p>';
+  };
+
   V.partners = function () {
     return head('Partners', 'Businesses on Meridian whose guests are a natural fit for yours. Never competitors.') +
       D.partners.map(function (p, k) {
@@ -544,10 +621,10 @@
   // Each Approve button is identified by its page and the item's title, so the saved state survives reloads.
   var APPROVALS = {};
   function approvalItem(b) {
-    var box = b.closest('.em, li, tr') || b.parentNode;
+    var box = b.closest('.em, .opt, li, tr') || b.parentNode;
     var tEl = box.querySelector('.em-subj') || box.querySelector('.grow > div:first-child, td strong, strong') || box;
     var title = (tEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160);
-    var mEl = box.querySelector('.grow .meta, .meta');
+    var mEl = box.querySelector('.meta.grow, .grow .meta, .meta');
     var page = (location.hash || '#overview').slice(1);
     return { key: page + ':' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 120), title: title, detail: mEl ? mEl.textContent.replace(/\s+/g, ' ').trim() : '', page: page };
   }

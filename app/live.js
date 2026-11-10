@@ -75,6 +75,12 @@
     var revenue = paid.reduce(function (s, t) { return s + t.amount; }, 0);
     var bySrc = {}; paid.forEach(function (t) { bySrc[t.source] = (bySrc[t.source] || 0) + t.amount; });
     D.revenueBySource = Object.keys(bySrc).map(function (k) { return { l: k, v: bySrc[k] }; }).sort(function (a, b) { return b.v - a.v; });
+    // Booking source tracking: revenue by the channel that first brought each guest.
+    if (S.attribution && S.attribution.channels.length) {
+      D.attribution = S.attribution;
+      var byCh = S.attribution.channels.filter(function (c) { return c.revenue > 0; });
+      if (byCh.length) D.revenueBySource = byCh.map(function (c) { return { l: c.l, v: c.revenue }; });
+    }
     var testOnly = paid.length && paid.every(function (t) { return !t.live; });
 
     // New guests

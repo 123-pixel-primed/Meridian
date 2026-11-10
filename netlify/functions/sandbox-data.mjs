@@ -42,6 +42,50 @@ function ms(v) {
   return Number.isNaN(t) ? null : t;
 }
 
+// Where did each guest first come from? GHL records the first touch on the contact
+// (attributionSource or the first entry in attributions), with the contact's source as a fallback.
+function channelOf(c) {
+  const first = c.attributionSource || (Array.isArray(c.attributions) && (c.attributions.find(a => a.isFirst) || c.attributions[0])) || {};
+  const bits = [first.sessionSource, first.utmSource, first.utmMedium, first.medium, first.referrer, first.url, first.utmCampaign, c.source]
+    .filter(Boolean).join(' ').toLowerCase();
+  if (!bits.trim()) return 'Not recorded';
+  if (/chatgpt|openai|perplexity|gemini|copilot|claude|bard/.test(bits)) return 'AI assistants';
+  if (/(cpc|ppc|paid|ads?\b|adwords|gclid|fbclid|meta ads|facebook ads)/.test(bits)) return /google|gclid|adwords/.test(bits) ? 'Google ads' : 'Paid social';
+  if (/instagram|facebook|\bfb\b|\big\b|social/.test(bits)) return 'Instagram and Facebook';
+  if (/google|bing|organic|search/.test(bits)) return 'Google search';
+  if (/email|newsletter|klaviyo|mailchimp/.test(bits)) return 'Email';
+  if (/sms|text message/.test(bits)) return 'Text messages';
+  if (/referr|partner|voucher|gift/.test(bits)) return /voucher|gift/.test(bits) ? 'Gift vouchers' : 'Partner referrals';
+  if (/outreach|prospect|linkedin/.test(bits)) return 'Meridian outreach';
+  if (/booking|widget|calendar|form|website|direct/.test(bits)) return 'Website and direct';
+  return 'Other';
+}
+
+// A guest's first booking and first payment count for the channel that brought them;
+// anything after that counts as a returning guest.
+function attribute(contacts, events, transactions) {
+  const ch = new Map(contacts.map(c => [c.id, c.channel]));
+  const rows = {};
+  const row = l => rows[l] || (rows[l] = { l, guests: 0, bookings: 0, revenue: 0 });
+  const seenB = new Set(), seenP = new Set(), guests = new Set();
+  events.filter(e => e.contactId && !/cancel|noshow|no_show|invalid/i.test(e.status)).sort((a, b) => a.start - b.start).forEach(e => {
+    const first = !seenB.has(e.contactId); seenB.add(e.contactId);
+    const r = row(first ? (ch.get(e.contactId) || 'Not recorded') : 'Returning guests');
+    r.bookings++;
+    if (first && !guests.has(e.contactId)) { guests.add(e.contactId); r.guests++; }
+  });
+  // Test-mode payments count only when there are no live ones (the sandbox), so real accounts never mix them in.
+  const anyLive = transactions.some(t => t.live);
+  transactions.filter(t => (t.live || !anyLive) && !/fail|refund|void/i.test(t.status)).sort((a, b) => a.date - b.date).forEach(t => {
+    const first = t.contactId && !seenP.has(t.contactId); if (t.contactId) seenP.add(t.contactId);
+    row(!t.contactId ? 'Not recorded' : first ? (ch.get(t.contactId) || 'Not recorded') : 'Returning guests').revenue += t.amount;
+  });
+  const list = Object.values(rows).sort((a, b) => b.revenue - a.revenue || b.bookings - a.bookings);
+  const known = list.filter(r => r.l !== 'Not recorded').reduce((n, r) => n + r.bookings, 0);
+  const total = list.reduce((n, r) => n + r.bookings, 0);
+  return { channels: list, traced: total ? Math.round(known / total * 100) : 0, testPayments: !anyLive && transactions.length > 0 };
+}
+
 export default async (req) => {
   // Staff can read the sandbox or any client; a client can only read their own account.
   const sess = readSession(req);
@@ -121,7 +165,8 @@ export default async (req) => {
       id: c.id,
       name: [c.firstName, c.lastName].filter(Boolean).join(' ') || c.contactName || c.email || 'Guest',
       added: ms(c.dateAdded),
-      source: c.source || ''
+      source: c.source || '',
+      channel: channelOf(c)
     }));
   });
 
@@ -141,6 +186,7 @@ export default async (req) => {
     const r = await ghl('/payments/transactions', { altId: loc, altType: 'location', locationId: loc, limit: '100' }, '2021-07-28', token);
     out.transactions = (r.data || r.transactions || []).map(t => ({
       amount: Number(t.amount) || 0,
+      contactId: t.contactId || (t.contactSnapshot && t.contactSnapshot.id) || null,
       currency: t.currency || 'AUD',
       date: ms(t.createdAt),
       source: t.entitySourceName || t.entitySourceType || 'Booking',
@@ -148,6 +194,8 @@ export default async (req) => {
       status: t.status || ''
     }));
   });
+
+  out.attribution = attribute(out.contacts, out.events, out.transactions);
 
   await safe('social', async () => {
     const r = await ghl('/social-media-posting/' + loc + '/accounts', {}, '2021-07-28', token);
