@@ -26,3 +26,10 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
     Referrer-Policy = "no-referrer"
+
+# The Marketplace app's redirect URL (the app store refuses URLs that name the platform).
+[[redirects]]
+  from = "/connect/callback"
+  to = "/.netlify/functions/ghl-oauth"
+  status = 200
+  query = { code = ":code" }

@@ -17,7 +17,7 @@ export default async (req) => {
   const res = await fetch(API + '/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
-    body: new URLSearchParams({ client_id: id, client_secret: secret, grant_type: 'authorization_code', code, user_type: 'Company', redirect_uri: site + '/.netlify/functions/ghl-oauth' }).toString()
+    body: new URLSearchParams({ client_id: id, client_secret: secret, grant_type: 'authorization_code', code, user_type: 'Company', redirect_uri: site + '/connect/callback' }).toString()
   });
   const j = await res.json().catch(() => ({}));
   if (!res.ok || !j.access_token) {
