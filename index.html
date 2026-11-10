@@ -2392,7 +2392,19 @@ body { color: var(--heading); }
 .opp2-num { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; color: var(--teal-text); margin: 0 0 6px; }
 .opp2-title { font-family: var(--serif); font-size: clamp(22px, 2.2vw, 27px); font-weight: 400; line-height: 1.25; color: var(--heading); margin: 0 0 8px; }
 .opp2-text { font-size: 16px; font-weight: 300; color: var(--body); line-height: 1.7; margin: 0; }
+.opp2-how { padding: 56px 0 0; margin-top: 48px; border-top: 1px solid var(--border); }
+.opp2-how-title { font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1.3; color: var(--heading); margin: 0 0 12px; max-width: 640px; }
+.opp2-how-sub { font-size: 16px; line-height: 1.7; color: var(--body, #4A4A4A); max-width: 640px; margin: 0 0 36px; }
+.opp2-steps { list-style: none; padding: 0; margin: 0 0 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.opp2-steps li { border-top: 1px solid var(--teal); padding-top: 18px; }
+.opp2-step-n { font-size: 12px; letter-spacing: 0.14em; color: #4A7570; }
+.opp2-steps h4 { font-family: var(--serif); font-weight: 400; font-size: 20px; color: var(--heading); margin: 10px 0 8px; }
+.opp2-steps p { font-size: 15px; line-height: 1.65; margin: 0; }
+@media (max-width: 760px) { .opp2-how { padding-top: 40px; margin-top: 36px; } .opp2-how-title { font-size: 24px; } .opp2-steps { grid-template-columns: 1fr; gap: 24px; } }
 .opp2-close { padding: 40px 0 0; display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap; }
+.pricing-support { max-width: 640px; margin: 48px auto 20px; text-align: center; }
+.pricing-support-title { font-family: var(--serif); font-weight: 400; font-size: 26px; color: var(--heading); margin: 0 0 14px; }
+.pricing-support p { font-size: 16px; line-height: 1.7; margin: 0 0 10px; }
 .opp2-close-text { font-family: var(--serif); font-size: 22px; line-height: 1.4; color: var(--heading); max-width: 380px; margin: 0; }
 @media (max-width: 900px) {
   .opp2-inner { grid-template-columns: 1fr; gap: 48px; }
@@ -2670,7 +2682,7 @@ footer { background: var(--tile); border-top: 0; }
   <div class="hero-grid">
 
     <div class="hero-box hero-text-col">
-      <p class="hero-eyebrow">Turn guest relationships into compounding revenue.</p>
+      <p class="hero-eyebrow">Intelligent technology. Specialist expertise. Connected growth.</p>
       <h1 class="hero-headline">The business growth platform for wellness and hospitality.</h1>
       <p class="hero-sub">One system that finds new guests, keeps the ones you have and turns them into advocates.</p>
       <div class="hero-actions">
@@ -2835,8 +2847,14 @@ hcUpdate();
             <p class="opp2-text">Outreach, guest messages, reviews and reporting working together in one place.</p>
           </div>
         </div>
-        <div class="opp2-close reveal">
-          <p class="opp2-close-text">Meridian brings all five together, in one system built around your business.</p>
+        <div class="opp2-how reveal">
+          <h3 class="opp2-how-title">Connected technology. Clear insights. Continuous growth.</h3>
+          <p class="opp2-how-sub">Meridian brings your guest data, marketing and growth opportunities together, making sophisticated lifecycle marketing more accessible and easier to manage.</p>
+          <ol class="opp2-steps">
+            <li><span class="opp2-step-n">01</span><h4>Connect your business</h4><p>We bring your customer data, booking platforms and marketing channels together to create one connected view of your guests.</p></li>
+            <li><span class="opp2-step-n">02</span><h4>Turn intelligence into action</h4><p>Meridian identifies opportunities across acquisition, retention and loyalty, helping you reach the right guests with the right message at the right time.</p></li>
+            <li><span class="opp2-step-n">03</span><h4>Grow with confidence</h4><p>See what's working, understand where to focus next and benefit from ongoing optimisation, supported by the Pixel Primed team.</p></li>
+          </ol>
           <a class="btn-primary" href="#ai-intelligence">See how it works</a>
         </div>
     </div>
@@ -2888,7 +2906,7 @@ hcUpdate();
         </div>
         <div class="mi-col-title">Retain</div>
         <div class="mi-col-tag" style="color:#5F8F88;">BRING BACK MORE OF YOUR BEST GUESTS</div>
-        <p class="mi-col-desc">AI predicts rebooking windows and lapsing risk, then automatically sends the right message at the right moment.</p>
+        <p class="mi-col-desc">AI predicts rebooking windows and lapsing risk, then automatically sends the right approved message at the right moment.</p>
         <div class="mi-widget">
           <div class="mi-widget-label">Rebooking window closes in 11 days</div>
           <div class="mi-widget-num" style="color:#5F8F88;">84</div>
@@ -3025,7 +3043,7 @@ hcUpdate();
       <div class="dot-accent"></div>
       <p class="section-eyebrow">The platform</p>
       <h2 class="section-title">Every number that matters,<br><span style="color:var(--teal);">in one place.</span></h2>
-      <p class="section-body">You can see how many new customers you're getting, how many keep coming back, and how your reviews are doing, all in one place. No spreadsheets. No jumping between five different apps to find a number.</p>
+      <p class="section-body">You can see how many new customers you're getting, how many keep coming back and how your reviews are doing, all in one place. No spreadsheets. No jumping between five different apps to find a number.</p>
 
       <p style="margin-top:30px;"><a class="btn-ghost" href="#pricing">See the plans and pricing</a></p>
     </div>
@@ -3062,7 +3080,7 @@ hcUpdate();
           </div>
           <div>
             <div class="dashboard-ai-popup-title">Meridian AI</div>
-            <div class="dashboard-ai-popup-sub">Support and insights, 24/7</div>
+            <div class="dashboard-ai-popup-sub">Insights, any time</div>
           </div>
         </div>
         <div class="dashboard-ai-popup-body">
@@ -3171,8 +3189,9 @@ hcUpdate();
   <div class="pricing-inner">
     <div class="pricing-header reveal">
       <p class="section-eyebrow">Pricing</p>
-      <h2 class="section-title" style="max-width:620px;margin:0 auto 10px;">Everything above. One monthly plan.</h2>
-      <p class="pricing-sub">No tools to buy separately and no integrations to manage yourself. Meridian arrives connected, configured around your business and live within the hour, turning guest data, AI-driven insight and every customer interaction into opportunities for sustainable growth.</p>
+      <h2 class="section-title" style="max-width:620px;margin:0 auto 10px;">One connected platform, tailored to your business.</h2>
+      <p class="pricing-sub">Meridian brings your marketing technology, guest data and growth opportunities together, with specialist support to help you get started and continue improving.</p>
+      <p class="pricing-sub">No disconnected tools to navigate. No unnecessary complexity. Just a clearer, more connected approach to growth.</p>
     </div>
     <div class="pricing-included-strip reveal">
       <div class="pricing-included-item">
@@ -3181,7 +3200,7 @@ hcUpdate();
       </div>
       <div class="pricing-included-item">
         <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 4.5V8l2.6 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Live within the hour
+        Supported by specialists
       </div>
       <div class="pricing-included-item">
         <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L14 5.2 8 8.4 2 5.2 8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 8.2l6 3.2 6-3.2M2 11.2l6 3.2 6-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3241,13 +3260,13 @@ hcUpdate();
         <a class="pricing-cta pricing-cta-solid" href="/onboard/?plan=growth&billing=monthly" data-plan="growth">Start with Growth</a>
         <div class="pricing-divider"></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div>Everything in Core, plus:</div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">A marketing plan built from your goals</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Set your revenue goal and Meridian recommends the channels and budget to reach it, then adjusts every week from your results.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">A marketing plan built from your goals</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Set your growth objectives and Meridian helps identify the channels, opportunities and investment needed to reach them, with ongoing insights and optimisation to keep your strategy moving forward.</div></div></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">We find and message new guests for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Personal messages to new guests and local businesses, written in your voice.</div></div></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Corporate wellness and partnerships</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Reach local businesses for team bookings and partner with nearby brands who share your ideal guest.</div></div></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Content written for you</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Social posts, emails and articles drafted every week for you to approve.</div></div></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Found on Google and AI assistants</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">A monthly website score with the fixes that help guests find you when they search or ask an AI assistant.</div></div></div>
         <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Your Growth Blueprint, every month</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Your Blueprint updates each month, so you can see what improved and where the next opportunities are.</div></div></div>
-        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Your next step, every week</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">One clear recommendation each week, based on what is working for your business.</div></div></div>
+        <div class="pricing-feature"><div class="pricing-feature-dot"></div><div class="pricing-feature-body"><button class="pricing-feature-toggle" onclick="togglePricingFeature(this)"><span class="pricing-feature-name">Continuous improvement, informed by your results</span><span class="pricing-feature-plus">+</span></button><div class="pricing-feature-desc">Meridian helps identify opportunities to refine your guest journeys, strengthen communications and improve marketing performance as your business grows.</div></div></div>
       </div>
       <div class="pricing-card reveal">
         <div class="pricing-tier-label">Tier 3</div>
@@ -3265,7 +3284,12 @@ hcUpdate();
       </div>
     </div>
     <p class="pricing-note reveal">No setup fee · 3-month minimum · Cancel with 30 days notice</p>
-    <p class="pricing-note reveal">Every plan can be run by you or run for you by our team. Prices are per location.</p>
+    <div class="pricing-support reveal">
+      <h3 class="pricing-support-title">Your growth, supported from day one.</h3>
+      <p>Meridian combines intelligent technology with hands-on specialist support. From connecting your systems to building guest journeys and identifying new growth opportunities, our team helps you get the most from the platform.</p>
+      <p>You stay connected to your business and its performance, while we take care of the complexity behind the scenes.</p>
+    </div>
+    <p class="pricing-note reveal">Prices are per location.</p>
     </div>
   </div>
 </section>
@@ -3287,7 +3311,7 @@ hcUpdate();
           <span class="faq-plus">+</span>
         </button>
         <div class="faq-a-wrap">
-          <p class="faq-a">Meridian connects natively to every major booking and scheduling platform used by wellness and hospitality businesses. Your CSM confirms compatibility on your onboarding call.</p>
+          <p class="faq-a">Meridian connects with the booking and scheduling platforms most used by wellness and hospitality businesses. Our team confirms compatibility with your existing booking platform and recommends the most suitable connection for your business.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -3314,7 +3338,7 @@ hcUpdate();
           <span class="faq-plus">+</span>
         </button>
         <div class="faq-a-wrap">
-          <p class="faq-a">Easier than it sounds, and you do not do it yourself. Your contacts and unsubscribes move across automatically once connected. The part that takes real work is rebuilding your automated sequences, which is exactly what we do for you as part of onboarding, not something you are left to figure out. Your existing list history and sending reputation carry over, nothing starts from zero.</p>
+          <p class="faq-a">Our team manages the move for you. Your contacts and unsubscribes come across once your platform is connected. We then rebuild your automated guest journeys as part of onboarding, so there is nothing for you to work out. Your list history comes with you. If your business is new and you are starting without a list, we set up your guest journeys from day one so every guest is welcomed from their first booking.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -3323,7 +3347,16 @@ hcUpdate();
           <span class="faq-plus">+</span>
         </button>
         <div class="faq-a-wrap">
-          <p class="faq-a">The onboarding form takes approximately 8 minutes to complete. Meridian configures your system automatically from your answers. Your retention email account, lists, segments, brand library and outreach sequences are all set up within the hour. The onboarding call covers DNS records, any booking platform connections and a walkthrough of your live dashboard.</p>
+          <p class="faq-a">Getting started begins with a short onboarding process to understand your business, goals and existing systems. Our team then manages the configuration and connections needed to bring Meridian to life. Timing depends on your existing platforms and the integrations required.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q-btn" onclick="toggleFaq(this)">
+          <span>Do I need technical or AI experience to use Meridian?</span>
+          <span class="faq-plus">+</span>
+        </button>
+        <div class="faq-a-wrap">
+          <p class="faq-a">Not at all. Meridian is designed to make sophisticated marketing technology more accessible. Our team helps connect your systems, configure your guest journeys and guide your ongoing growth strategy. You benefit from intelligent technology without needing to become an expert in the tools behind it.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -3350,7 +3383,7 @@ hcUpdate();
           <span class="faq-plus">+</span>
         </button>
         <div class="faq-a-wrap">
-          <p class="faq-a">Yes. Most guests move between your website, your booking platform and your online shop before and after a visit. During onboarding we map how your guests move between all three, connect your booking platform and shop so each guest has one record, and use that full picture to time every message, whether that is a rebooking invitation, a product follow-up after a treatment or an offer for an upcoming visit. Your onboarding call confirms exactly which of your platforms connect. You can see an <a href="#journey" style="color:var(--teal-text);">example guest journey</a> above.</p>
+          <p class="faq-a">Yes. Most guests move between your website, your booking platform and your online shop before and after a visit. During onboarding we map how your guests move between all three, connect your booking platform and shop so each guest has one record and use that full picture to time every message, whether that is a rebooking invitation, a product follow-up after a treatment or an offer for an upcoming visit. Your onboarding call confirms exactly which of your platforms connect. You can see an <a href="#journey" style="color:var(--teal-text);">example guest journey</a> above.</p>
         </div>
       </div>
       <div class="faq-item">
@@ -3372,7 +3405,7 @@ hcUpdate();
     <div class="dot-accent dot-center"></div>
     <p class="section-eyebrow">Meridian by Pixel Primed</p>
     <h2 class="final-cta-title reveal">Your next stage of growth starts here.</h2>
-    <p class="final-cta-body reveal">Meridian is configured around your business and ready to begin working within the hour. Over your first three months, we'll support you in building stronger guest relationships, creating new revenue opportunities and establishing a system designed to compound over time.</p>
+    <p class="final-cta-body reveal">Our team configures Meridian around your business. Over your first three months, we'll support you in building stronger guest relationships, creating new revenue opportunities and establishing a system designed to compound over time.</p>
     <div class="cta-actions reveal">
       <a class='btn-primary' href='/book-a-demo/'>Book a demo</a>
       <a href="mailto:contact@pixelprimed.com" class="btn-secondary">Talk to our team</a>
@@ -3467,7 +3500,7 @@ var MERIDIAN_CHECKOUT = {
   growth: { monthly: 'https://buy.stripe.com/4gM00kgpD0IXcyveDN2Fa0q', yearly: 'https://buy.stripe.com/5kQ6oIddrfDRburfHR2Fa0r' },
   scale:  { monthly: 'https://buy.stripe.com/eVq28s5KZ9ft2XV67h2Fa0s', yearly: 'https://buy.stripe.com/8x29AUgpD2R5fKH7bl2Fa0t' }
 };
-// Checkout is switched off until each plan has its snapshot and the after-payment redirect is set in Stripe.
+// Checkout is live: each plan button opens its payment page for the chosen billing period.
 var CHECKOUT_LIVE = true;
 function planHref(plan) {
   var billing = document.querySelector('.pricing-inner.billing-yearly') ? 'yearly' : 'monthly';
