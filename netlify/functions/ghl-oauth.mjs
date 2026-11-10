@@ -1,7 +1,7 @@
 // Connects the Meridian Marketplace app to the Pixel Primed agency, once.
 // GHL sends the agency here after "Install" with ?code=..., which is exchanged for an agency token.
 // That token can then open any sub-account where the app is installed (see ../lib/ghl-access.mjs).
-// Needs Netlify environment variables GHL_APP_CLIENT_ID and GHL_APP_CLIENT_SECRET.
+// Needs Netlify environment variables GHL_APP_CLIENT_ID and GHL_APP_CLIENT_SECRET. Changing these needs a fresh deploy.
 import { getStore } from '@netlify/blobs';
 
 const API = 'https://services.leadconnectorhq.com';
