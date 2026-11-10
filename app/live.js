@@ -187,7 +187,7 @@
       if (f.indexOf('logo') >= 0) D.venue.logo = api + '&file=logo';
       D.tier = P.plan;
       var g = P.goals || {};
-      if (g.revenue) D.goals.revenue.target = g.revenue;
+      if (g.revenue) { D.goals.revenue.target = g.revenue; if (D.plan) D.plan.goal = 'Reach ' + '$' + Number(g.revenue).toLocaleString('en-AU') + ' a month in revenue'; }
       if (g.newGuests) D.goals.newGuests.target = g.newGuests;
       if (g.rebookRate) D.goals.rebookRate.target = g.rebookRate;
       if (P.outreach) {

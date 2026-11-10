@@ -311,7 +311,7 @@
   function emView(i) {
     var e = D.outreach.email[i], ok = e.status === 'Approved';
     return '<div class="em"><div class="em-meta"><div class="email-when">' + esc(e.when) + '</div><div class="em-subj">' + esc(e.s) + '</div><span class="tag ' + (ok ? 'on' : 'warn') + '">' + esc(e.status) + '</span>' + (e.r ? '<div class="meta" style="margin-top:10px">' + esc(e.r) + '</div>' : '') + '</div>' +
-      '<div class="em-body">' + esc(e.b).replace(/\n/g, '<br>') + '<div class="actions" style="margin-top:18px">' + (ok ? '<button class="btn ghost" data-act="edit">Edit</button>' : '<button class="btn ghost" data-act="edit">Request a change</button><button class="btn" data-act="approve">Approve</button>') + '</div></div></div>';
+      '<div class="em-body"><div class="em-text">' + esc(e.b).replace(/\n/g, '<br>') + '</div><div class="actions" style="margin-top:18px">' + (ok ? '<button class="btn ghost" data-act="edit">Edit</button>' : '<button class="btn ghost" data-act="edit">Request a change</button><button class="btn" data-act="approve">Approve</button>') + '</div></div></div>';
   }
 
   V.returning = function () {
@@ -638,13 +638,26 @@
   var APPROVALS = {};
   function approvalItem(b) {
     var box = b.closest('.em, .opt, li, tr') || b.parentNode;
-    var tEl = box.querySelector('.em-subj') || box.querySelector('.grow > div:first-child, td strong, strong') || box;
+    var tEl = box.querySelector('.em-subj') || box.querySelector('.grow > div:first-child, td strong, strong') || box.querySelector('.email-when') || box;
     var title = (tEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160);
     var mEl = box.querySelector('.meta.grow, .grow .meta, .meta');
     var page = (location.hash || '#overview').slice(1);
     return { key: page + ':' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 120), title: title, detail: mEl ? mEl.textContent.replace(/\s+/g, ' ').trim() : '', page: page };
   }
+  var EDITS = {};
+  function clientQS() { var c = new URLSearchParams(location.search).get('client'); return c ? '?client=' + encodeURIComponent(c) : ''; }
+  // The text an Edit button changes: an email body, a reply draft or a message.
+  function editTarget(b) {
+    var box = b.closest('.em, .opt, li, tr, .draft') || b.parentNode;
+    return { box: box, el: box.querySelector('.em-text') || box.querySelector('textarea') || box.querySelector('p') };
+  }
+  function editKey(b) { return 'edit:' + approvalItem(b).key; }
   function markApprovals() {
+    document.querySelectorAll('[data-act="edit"]').forEach(function (b) {
+      var rec = EDITS[editKey(b)], t = editTarget(b); if (!rec || !t.el) return;
+      if (t.el.tagName === 'TEXTAREA') t.el.value = rec.text; else t.el.innerHTML = esc(rec.text).replace(/\n/g, '<br>');
+      if (!t.box.querySelector('.edit-note')) { var n = document.createElement('div'); n.className = 'meta edit-note'; n.style.margin = '8px 0'; n.textContent = rec.status === 'done' ? 'Your changes are live.' : 'Your changes are saved. Pixel Primed is updating it.'; t.el.parentNode.insertBefore(n, t.el.nextSibling); }
+    });
     document.querySelectorAll('[data-act="approve"]').forEach(function (b) {
       var rec = APPROVALS[approvalItem(b).key]; if (!rec) return;
       b.disabled = true; b.className = 'btn done';
@@ -654,8 +667,8 @@
   }
   function loadApprovals() {
     if (!D.live) return;
-    fetch('/.netlify/functions/approvals', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : { approvals: [] }; })
-      .then(function (j) { (j.approvals || []).forEach(function (a) { APPROVALS[a.key] = a; }); markApprovals(); }).catch(function () {});
+    fetch('/.netlify/functions/approvals' + clientQS(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : { approvals: [] }; })
+      .then(function (j) { (j.approvals || []).forEach(function (a) { if (a.kind === 'edit') EDITS[a.key] = a; else APPROVALS[a.key] = a; }); markApprovals(); }).catch(function () {});
   }
 
   /* ---------- actions ---------- */
@@ -687,16 +700,74 @@
       b.textContent = 'Approved'; b.className = 'btn done'; b.disabled = true;
       if (!D.live) { toast('Approved. In the demo nothing is sent.'); return; }
       var it = approvalItem(b);
-      fetch('/.netlify/functions/approvals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(it) })
+      fetch('/.netlify/functions/approvals' + clientQS(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(it) })
         .then(function (r) { return r.json(); })
         .then(function (rec) { APPROVALS[rec.key] = rec; markApprovals(); toast(rec.taskId ? 'Approved. Pixel Primed has been sent a task.' : 'Approved and saved'); })
         .catch(function () { toast('Approved here, but it could not be saved. Please try again.'); b.textContent = 'Approve'; b.className = 'btn'; b.disabled = false; });
     }
     else if (act === 'interest') { b.textContent = 'Interest sent'; b.className = 'btn done'; b.disabled = true; toast(D.sample ? 'Interest sent. In the demo nothing is sent.' : 'Interest sent'); }
     else if (act === 'switch') { var on = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', on); toast(on ? 'Channel switched on' : 'Channel paused'); }
-    else if (act === 'edit') { toast('Editing opens here in the full version'); }
+    else if (act === 'edit') {
+      var label = b.textContent.trim();
+      if (/change goals/i.test(label)) { goalsForm(); return; }
+      if (/download/i.test(label)) { window.print(); return; }
+      var t = editTarget(b); if (!t.el || t.box.querySelector('.editing')) return;
+      var asks = /request/i.test(label);
+      var orig = t.el.tagName === 'TEXTAREA' ? t.el.value : t.el.innerText;
+      var wrap = document.createElement('div'); wrap.className = 'editing';
+      wrap.innerHTML = '<textarea class="edit-box" rows="8" style="width:100%;font:inherit;padding:12px;border:1px solid var(--border,#E9E1D5);border-radius:8px;background:#fff">' + esc(asks ? '' : orig) + '</textarea>' +
+        (asks ? '<div class="meta" style="margin:6px 0 0">Tell us what you would like changed.</div>' : '') +
+        '<div class="actions" style="margin-top:10px"><button class="btn ghost" data-edit="cancel">Cancel</button><button class="btn" data-edit="save">' + (asks ? 'Send request' : 'Save changes') + '</button></div>';
+      t.el.style.display = 'none'; t.el.parentNode.insertBefore(wrap, t.el.nextSibling);
+      wrap.querySelector('textarea').focus();
+      wrap.addEventListener('click', function (ev) {
+        var w = ev.target.closest('[data-edit]'); if (!w) return;
+        ev.stopPropagation();
+        if (w.getAttribute('data-edit') === 'cancel') { wrap.remove(); t.el.style.display = ''; return; }
+        var text = wrap.querySelector('textarea').value.trim(); if (!text) return;
+        var it = approvalItem(b); it.key = editKey(b); it.kind = 'edit'; it.text = asks ? 'Request: ' + text + '\n\nCurrent wording:\n' + orig : text;
+        w.disabled = true; w.textContent = 'Saving';
+        if (!D.live) { wrap.remove(); t.el.style.display = ''; toast('Saved. In the demo nothing is sent.'); return; }
+        fetch('/.netlify/functions/approvals' + clientQS(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(it) })
+          .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+          .then(function (rec) {
+            wrap.remove(); t.el.style.display = '';
+            if (!asks) { EDITS[rec.key] = rec; markApprovals(); }
+            toast(asks ? 'Request sent to Pixel Primed' : 'Saved. Pixel Primed has been sent the new wording.');
+          })
+          .catch(function () { w.disabled = false; w.textContent = 'Try again'; toast('That could not be saved. Please try again.'); });
+      });
+    }
     else if (act === 'later') { var p = b.closest('.rec, .panel, li'); if (p) p.style.opacity = '.45'; toast('Saved for later'); }
   });
+
+  // Change goals: saved to the client's profile, so every page uses the new targets.
+  function goalsForm() {
+    if (document.getElementById('goals-form')) return;
+    var g = D.goals || {}, id = new URLSearchParams(location.search).get('client');
+    var f = document.createElement('div'); f.id = 'goals-form'; f.className = 'panel';
+    f.style.cssText = 'position:fixed;inset:0;margin:auto;max-width:440px;height:max-content;z-index:60;box-shadow:0 20px 60px rgba(34,50,44,.18)';
+    var row = function (k, l, v, unit) { return '<label style="display:block;margin:0 0 14px"><span class="meta">' + l + '</span><div style="display:flex;align-items:center;gap:8px;margin-top:6px">' + (unit === '$' ? '<span>$</span>' : '') + '<input name="' + k + '" type="number" min="0" value="' + (v || '') + '" style="flex:1;font:inherit;padding:10px 12px;border:1px solid var(--border,#E9E1D5);border-radius:8px">' + (unit === '%' ? '<span>%</span>' : '') + '</div></label>'; };
+    f.innerHTML = '<div style="font-family:var(--serif);font-size:22px;margin-bottom:16px">Change your goals</div>' +
+      row('revenue_goal', 'Monthly revenue goal', g.revenue && g.revenue.target, '$') +
+      row('new_guest_goal', 'New guests each month', g.newGuests && g.newGuests.target) +
+      row('rebook_goal', 'Guests who rebook', g.rebookRate && g.rebookRate.target, '%') +
+      '<div class="actions"><button class="btn ghost" data-g="cancel">Cancel</button><button class="btn" data-g="save">Save goals</button></div>';
+    document.body.appendChild(f);
+    f.addEventListener('click', function (ev) {
+      var w = ev.target.closest('[data-g]'); if (!w) return; ev.stopPropagation();
+      if (w.getAttribute('data-g') === 'cancel') { f.remove(); return; }
+      var body = {}; Array.prototype.forEach.call(f.querySelectorAll('input'), function (i) { if (i.value) body[i.name] = i.value; });
+      if (!D.live || !id) {
+        if (body.revenue_goal) g.revenue.target = +body.revenue_goal; if (body.new_guest_goal) g.newGuests.target = +body.new_guest_goal; if (body.rebook_goal) g.rebookRate.target = +body.rebook_goal;
+        f.remove(); render(); toast(D.live ? 'Goals updated' : 'Goals updated. In the demo nothing is saved.'); return;
+      }
+      w.disabled = true; w.textContent = 'Saving';
+      fetch('/.netlify/functions/onboard?id=' + encodeURIComponent(id) + '&update=1', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { if (!r.ok) throw 0; location.reload(); })
+        .catch(function () { w.disabled = false; w.textContent = 'Try again'; toast('Your goals could not be saved. Please try again.'); });
+    });
+  }
 
   /* ---------- start ---------- */
   if (D.liveNote) { var ln = document.createElement('div'); ln.className = 'live-note'; ln.setAttribute('role', 'status'); ln.textContent = D.liveNote; var pg = $('#page'); pg.parentNode.insertBefore(ln, pg); }
