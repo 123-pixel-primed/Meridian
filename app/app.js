@@ -552,17 +552,32 @@
       change: 'Keep "Before your first visit" for half your guests and try a version written around your signature offer for the other half.',
       test: 'A/B test for 4 weeks on opens and first visits kept.'
     });
-    return out.slice(0, 5);
+    return out.slice(0, 5).map(function (x) { x.key = x.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50); return x; });
+  }
+  var OPT = [], WORDING = {};
+  function wordingHtml(k) {
+    var v = WORDING[k]; if (!v) return '';
+    return '<div style="background:var(--linen,#F5F0EA);border-radius:10px;padding:14px 16px;margin:0 0 14px"><div class="email-when">' + esc(v.label.toUpperCase()) + '</div><div style="white-space:pre-line;margin-top:6px">' + esc(v.text) + '</div></div>';
+  }
+  function loadWording() {
+    var need = OPT.filter(function (x) { return !WORDING[x.key]; });
+    if (!need.length || !D.live) return;
+    var cid = new URLSearchParams(location.search).get('client') || '';
+    fetch('/.netlify/functions/wording', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client: cid, items: need }) })
+      .then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) {
+        var v = j.versions || {}; Object.keys(v).forEach(function (k) { WORDING[k] = v[k]; });
+        document.querySelectorAll('.ai-ver').forEach(function (el) { el.innerHTML = wordingHtml(el.getAttribute('data-k')); });
+      }).catch(function () {});
   }
   V.optimise = function () {
-    var list = suggestions();
+    var list = OPT = suggestions();
     return head('Optimise', 'This month’s suggestions, drawn from your own results. Nothing changes until you approve it.') +
       list.map(function (x) {
         return '<section class="panel opt" style="margin-bottom:16px"><div class="email-when">' + esc(x.area.toUpperCase()) + '</div>' +
           '<div class="em-subj" style="font-family:var(--serif);font-size:20px;margin:4px 0 10px">' + esc(x.title) + '</div>' +
           '<p class="meta" style="margin-bottom:8px"><b>What we saw:</b> ' + esc(x.why) + '</p>' +
           '<p class="meta grow" style="margin-bottom:8px"><b>What we would change:</b> ' + esc(x.change) + '</p>' +
-          '<p class="meta" style="margin-bottom:14px"><b>How we will know:</b> ' + esc(x.test) + '</p>' + approveBtns() + '</section>';
+          '<p class="meta" style="margin-bottom:14px"><b>How we will know:</b> ' + esc(x.test) + '</p>' + '<div class="ai-ver" data-k="' + esc(x.key) + '">' + wordingHtml(x.key) + '</div>' + approveBtns() + '</section>';
       }).join('') +
       '<p class="meta">Approved changes are made by the Pixel Primed team, and test results appear here as they come in.</p>';
   };
@@ -613,6 +628,7 @@
     });
     var pl = $('#plan-name'); if (pl) pl.textContent = TIER_NAMES[tier()];
     markApprovals();
+    if (r === 'optimise' && has(r)) loadWording();
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', render);
