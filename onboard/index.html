@@ -429,6 +429,7 @@
           });
         }, Promise.resolve()).then(function () {
           if (EDIT) { location.href = '/app/?client=' + encodeURIComponent(id) + '#content'; return; }
+          fetch('/.netlify/functions/blueprint?client=' + encodeURIComponent(id), { method: 'POST', credentials: 'same-origin' }).catch(function () {});
           document.getElementById('dash-link').href = '/app/?client=' + encodeURIComponent(id);
           if (failed.length) document.getElementById('upload-warn').textContent = 'These files did not upload: ' + failed.join(', ') + '. Send them to contact@pixelprimed.com and we will add them.';
           form.classList.add('hidden'); document.getElementById('intro').classList.add('hidden');

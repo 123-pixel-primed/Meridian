@@ -235,6 +235,31 @@
     }).catch(function () {});
   }
 
+  // The Growth Blueprint, written by Claude from the client's answers, website, speed test and account.
+  function loadBlueprint() {
+    var id = new URLSearchParams(location.search).get('client'); if (!id) return;
+    var api = '/.netlify/functions/blueprint?client=' + encodeURIComponent(id);
+    var start = function () { D.blueprintStatus = 'writing'; return fetch(api, { method: 'POST', credentials: 'same-origin' }).catch(function () {}); };
+    return fetch(api, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (B) {
+      if (!B) return;
+      if (B.status === 'none' || (B.status === 'failed' && !B.current)) return start();
+      if (B.status === 'writing' && !B.current) { D.blueprintStatus = 'writing'; return; }
+      if (!B.current) return;
+      var cur = B.current, base = B.baseline || cur, bmap = {};
+      (base.sections || []).forEach(function (x) { bmap[x.l] = x.score; });
+      D.audit = {
+        joined: new Date(base.date).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }),
+        baseline: base.score, now: cur.score, updated: cur.date,
+        sections: (cur.sections || []).map(function (x) { return { l: x.l, base: bmap[x.l] != null ? bmap[x.l] : x.score, now: x.score, why: x.why }; }),
+        next: (cur.opportunities || []).map(function (o) { return { t: o.t, i: o.i + (o.area ? ' (' + o.area + ')' : '') }; })
+      };
+      D.blueprint = cur; D.blueprintStatus = B.status;
+      if (cur.telling && cur.telling.length && D.insights) D.insights.telling = cur.telling;
+      // Growth and Scale get a fresh Blueprint every month.
+      if ((D.tier === 'growth' || D.tier === 'scale') && B.status !== 'writing' && Date.now() - new Date(cur.date).getTime() > 30 * 86400000) start();
+    }).catch(function () {});
+  }
+
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
 
   // Everyone signs in first. Pixel Primed staff see the sandbox; a client sees only their own dashboard.
@@ -257,7 +282,7 @@
             else D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.';
           })
           .catch(function () { D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.'; })
-          .then(loadClient).then(boot);
+          .then(deriveInsights).then(loadClient).then(loadBlueprint).then(boot);
       }
       // Staff viewing a client see that client's own account; otherwise the sandbox.
       var dataUrl = '/.netlify/functions/sandbox-data' + (qs.get('client') ? '?client=' + encodeURIComponent(qs.get('client')) : '');
@@ -271,6 +296,7 @@
         .then(loadScore)
         .then(deriveInsights)
         .then(loadClient)
+        .then(loadBlueprint)
         .then(boot);
     })
     .catch(toLogin);

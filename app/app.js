@@ -210,6 +210,10 @@
   }
 
   V.audit = function () {
+    if (D.blueprintStatus === 'writing' && !D.blueprint) {
+      setTimeout(function () { if ((location.hash || '') === '#audit') location.reload(); }, 45000);
+      return head('Growth Blueprint', 'Your Blueprint is being written now.') + panel('What is happening', 'Usually ready within five minutes', '<p style="max-width:62ch">Meridian is reading your website, running a speed test on mobile and checking your account, then scoring nine areas of your business and writing your plan for the next three months. This page refreshes on its own when it is ready.</p>');
+    }
     var a = D.audit, monthly = has('plan');
     var rows = a.sections.map(function (x) {
       var v = monthly ? x.now : x.base;
@@ -222,8 +226,22 @@
       '<div style="height:20px"></div>' +
       panel('Biggest opportunities now', 'Ranked by likely effect on bookings', '<ul class="list">' + a.next.map(function (f) {
         return '<li><span class="dot gold"></span><div class="grow"><div>' + esc(f.t) + '</div><div class="meta">' + esc(f.i) + '</div></div><button class="btn" data-act="approve">Approve</button></li>';
-      }).join('') + '</ul>');
+      }).join('') + '</ul>') + blueprintExtra();
   };
+
+  function blueprintExtra() {
+    var B = D.blueprint; if (!B) return '';
+    var list = function (xs) { return '<ul class="list">' + (xs || []).map(function (x) { return '<li><span class="dot"></span><div class="grow">' + esc(x) + '</div></li>'; }).join('') + '</ul>'; };
+    return '<div style="height:20px"></div>' +
+      panel('Where you are now', 'Written ' + new Date(B.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }), '<p style="max-width:70ch">' + esc(B.summary || '') + '</p>') +
+      '<div style="height:20px"></div><div class="grid g2">' +
+        panel('What is already working', '', list(B.strengths)) +
+        panel('This week', 'Quick wins', list(B.quickWins)) +
+      '</div><div style="height:20px"></div>' +
+      panel('Your next three months', '', '<div class="grid g3">' + (B.plan || []).map(function (m) { return '<div class="rec"><div class="email-when">' + esc(m.month) + '</div><div class="t">' + esc(m.focus) + '</div>' + list(m.actions) + '</div>'; }).join('') + '</div>') +
+      '<div style="height:20px"></div>' +
+      panel('How each area scored', 'What Meridian saw', '<ul class="list">' + (D.audit.sections || []).filter(function (x) { return x.why; }).map(function (x) { return '<li><div style="width:44px;font-weight:600">' + x.now + '</div><div class="grow"><div>' + esc(x.l) + '</div><div class="meta">' + esc(x.why) + '</div></div></li>'; }).join('') + '</ul>');
+  }
 
   V.plan = function () {
     var c = D.plan.channels;
