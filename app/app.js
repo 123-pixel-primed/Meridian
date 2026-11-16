@@ -650,11 +650,17 @@
 
   /* ---------- routing ---------- */
   var routes = ['overview', 'messages', 'insights', 'audit', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
+  var EMPTY = { overview: 'Overview', messages: 'Messages', bookings: 'Bookings', returning: 'Returning guests', reviews: 'Reviews', guests: 'New guests', partners: 'Partners', ads: 'Ads' };
+  function emptyView(r) {
+    return head(EMPTY[r] || 'Your dashboard', 'Your own figures appear here as soon as your account is connected.') +
+      panel('Getting your account ready', 'Usually within one working day of your setup call', '<p style="max-width:62ch">Our team is connecting your bookings, guests and messages. Until then this page stays empty rather than showing anyone else\u2019s numbers. Your Growth Blueprint, plan, content and brand voice are ready to look at now.</p><div class="actions" style="margin-top:14px"><a class="btn" href="#audit">See your Growth Blueprint</a><a class="btn ghost" href="#content">See your content</a></div>');
+  }
   function render() {
     var r = (location.hash || '#overview').slice(1);
     if (r === 'optimise') r = 'insights';
     if (routes.indexOf(r) < 0) r = 'overview';
-    $('#page').innerHTML = has(r) ? V[r]() : upgradeView(r);
+    var waiting = document.body.classList.contains('client-view') && !D.live && ['overview', 'messages', 'bookings', 'returning', 'reviews', 'guests', 'partners', 'ads'].indexOf(r) >= 0;
+    $('#page').innerHTML = !has(r) ? upgradeView(r) : waiting ? emptyView(r) : V[r]();
     document.querySelectorAll('.nav a').forEach(function (a) {
       var key = a.getAttribute('href').slice(1);
       if (key === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -888,14 +894,25 @@
     function say(who, html) { var d = document.createElement('div'); d.className = 'ai-msg ' + who; d.innerHTML = html; body.appendChild(d); body.scrollTop = body.scrollHeight; }
     say('bot', esc(D.chat.hello.replace('Amélie', D.venue.owner || '')));
     prompts.innerHTML = D.chat.prompts.map(function (q) { return '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('');
+    var convo = [];
+    // What the assistant can see: the figures on this client's dashboard right now.
+    function snapshot() {
+      var pick = function (o, ks) { var r = {}; ks.forEach(function (k) { if (o && o[k] != null) r[k] = o[k]; }); return r; };
+      return { date: new Date().toISOString().slice(0, 10), plan: tier(), live: !!D.live, venue: D.venue && D.venue.name, goals: D.goals, planChannels: D.plan && D.plan.channels,
+        attribution: D.attribution, insights: D.insights && pick(D.insights, ['telling', 'channels']), audit: D.audit && pick(D.audit, ['baseline', 'now', 'sections', 'next']),
+        bookings: D.bookings && pick(D.bookings, ['stats', 'week', 'upcoming']), returning: D.returning && pick(D.returning, ['stats']), reviews: D.reviews && pick(D.reviews, ['stats', 'rating', 'count']) };
+    }
+    function fmt(t) { return esc(t).replace(/\n\s*\d+\.\s/g, '<br>&bull; ').replace(/\n/g, '<br>'); }
     function ask(q) {
-      say('me', esc(q)); prompts.hidden = true;
+      say('me', esc(q)); prompts.hidden = true; convo.push({ role: 'user', text: q });
       var t = document.createElement('div'); t.className = 'ai-msg bot typing'; t.textContent = 'Thinking'; body.appendChild(t);
-      setTimeout(function () {
-        t.remove();
-        var growthQ = q === 'Which channel brings the best new guests?';
-        say('bot', growthQ && !has('guests') ? esc(D.chat.coreOnly) : (D.chat.answers[q] || esc(D.chat.fallback)));
-      }, 800);
+      var canned = function () { var growthQ = q === 'Which channel brings the best new guests?'; return growthQ && !has('guests') ? esc(D.chat.coreOnly) : (D.chat.answers[q] || esc(D.chat.fallback)); };
+      if (!D.live) { setTimeout(function () { t.remove(); say('bot', canned()); }, 800); return; }
+      fetch('/.netlify/functions/assistant', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client: new URLSearchParams(location.search).get('client') || '', messages: convo, snapshot: snapshot() }) })
+        .then(function (r) { return r.ok ? r.json() : {}; })
+        .then(function (j) { t.remove(); if (j.text) { convo.push({ role: 'assistant', text: j.text }); say('bot', fmt(j.text)); } else say('bot', 'I could not answer that just now. Please try again in a moment.'); })
+        .catch(function () { t.remove(); say('bot', 'I could not answer that just now. Please try again in a moment.'); });
     }
     function toggle(open) { ai.hidden = !open; aiBtn.setAttribute('aria-expanded', open); aiBtn.hidden = open; if (open) $('#ai-in').focus(); }
     aiBtn.addEventListener('click', function () { toggle(true); });
