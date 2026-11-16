@@ -261,6 +261,13 @@
     }).catch(function () {});
   }
 
+  // This week's posts, written in the client's voice, and where they will be published.
+  function loadPosts() {
+    var id = new URLSearchParams(location.search).get('client'); if (!id || !D.client) return;
+    return fetch('/.netlify/functions/social?client=' + encodeURIComponent(id), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (P) { if (P) D.livePosts = P; }).catch(function () {});
+  }
+
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
 
   // Everyone signs in first. Pixel Primed staff see the sandbox; a client sees only their own dashboard.
@@ -283,7 +290,7 @@
             else D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.';
           })
           .catch(function () { D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.'; })
-          .then(deriveInsights).then(loadClient).then(loadBlueprint).then(boot);
+          .then(deriveInsights).then(loadClient).then(loadBlueprint).then(loadPosts).then(boot);
       }
       // Staff viewing a client see that client's own account; otherwise the sandbox.
       var dataUrl = '/.netlify/functions/sandbox-data' + (qs.get('client') ? '?client=' + encodeURIComponent(qs.get('client')) : '');
@@ -298,6 +305,7 @@
         .then(deriveInsights)
         .then(loadClient)
         .then(loadBlueprint)
+        .then(loadPosts)
         .then(boot);
     })
     .catch(toLogin);

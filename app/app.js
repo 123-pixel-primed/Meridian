@@ -433,11 +433,30 @@
         return '<li><div class="grow"><div class="meta">' + esc(x.when) + '</div><div class="art-t">' + esc(x.t) + '</div><div class="kws">' + x.kw.map(function (k) { return '<span class="tag">' + esc(k) + '</span>'; }).join('') + '</div>' + (x.note ? '<div class="meta" style="margin-top:8px;max-width:60ch">' + esc(x.note) + '</div>' : '') + '</div>' +
           (pub ? '<div class="art-n"><div><b>' + x.views + '</b><span>views</span></div><div><b>' + x.clicks + '</b><span>clicks</span></div><div><b>' + x.pos + '</b><span>position</span></div></div>' : '<div class="actions"><button class="btn ghost" data-act="edit">Preview</button><button class="btn" data-act="approve">Publish</button></div>') + '</li>';
       }).join('') + '</ul>') +
-      '<div style="height:20px"></div><h2 class="sec">Posts and emails to approve</h2>' +
-      '<div class="grid g3">' + D.content.map(function (c) {
+      '<div style="height:20px"></div><h2 class="sec">Posts and emails to approve</h2>' + (D.livePosts ? livePostsBlock() : '') +
+      (D.livePosts ? '' : '<div class="grid g3">' + D.content.map(function (c) {
         return '<section class="panel" style="padding:0;overflow:hidden"><img src="' + c.img + '" alt="" style="width:100%;height:180px;object-fit:cover;display:block"><div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px;color:' + LABEL + '">' + esc(c.type) + ', ' + esc(c.when) + '</div><div style="font-weight:500;margin:4px 0 16px">' + esc(c.title) + '</div>' + approveBtns() + '</div></section>';
-      }).join('') + '</div>';
+      }).join('') + '</div>');
   };
+
+  // This week's Instagram posts for a live client: approve one and it is scheduled to their connected accounts.
+  function livePostsBlock() {
+    var L = D.livePosts;
+    if (L.status === 'writing' || L.status === 'none') { setTimeout(function () { if (location.hash === '#content') location.reload(); }, 40000); return '<p class="meta">This week\u2019s posts are being written in your voice. They appear here in a minute or two.</p>'; }
+    if (L.status === 'failed') return '<p class="meta">This week\u2019s posts could not be written just now. Our team has been told.</p>';
+    var to = (L.accounts || []).map(function (a) { return a.platform + ' ' + a.name; }).join(' and ');
+    return '<p class="meta" style="margin:-6px 0 14px">' + (to ? 'Approved posts are scheduled to ' + esc(to) + '.' : 'Connect Instagram or Facebook to have approved posts scheduled for you.') + '</p><div class="grid g3">' +
+      (L.posts || []).map(function (p) {
+        var s = (L.scheduled || {})[p.id];
+        var when = s ? new Date(s.when).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }) : '';
+        return '<section class="panel em" style="padding:0;overflow:hidden">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" style="width:100%;height:200px;object-fit:cover;display:block">' : '<div style="height:120px;background:var(--linen,#F5F0EA);padding:16px" class="meta">Photo: ' + esc(p.image) + '</div>') +
+          '<div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px">Instagram, ' + esc(p.day) + ' ' + esc(p.time) + '</div><div class="em-subj" style="font-weight:500;margin:4px 0 10px">' + esc(p.title) + '</div>' +
+          '<div class="em-text" style="white-space:pre-line;font-size:14px;margin-bottom:14px">' + esc(p.caption) + '</div>' +
+          (s ? '<div class="meta">' + (s.status === 'draft' ? 'Saved for our team to add a photo before ' + esc(when) : 'Scheduled for ' + esc(when)) + '</div>' :
+            '<div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="schedule" data-post="' + esc(p.id) + '">Approve and schedule</button></div>') +
+          '</div></section>';
+      }).join('') + '</div><div style="height:20px"></div>';
+  }
 
 
   // Every booking traced to its source: the channel that first brought each guest.
@@ -784,6 +803,16 @@
         return;
       }
       finish();
+    }
+    else if (act === 'schedule') {
+      var pid = b.getAttribute('data-post'); b.disabled = true; b.textContent = 'Scheduling';
+      fetch('/.netlify/functions/social' + clientQS(), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: pid, caption: (function () { var t = b.closest('.em').querySelector('.em-text'); return t ? t.innerText.trim() : ''; })() }) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (x) {
+          if (!x.ok) { b.disabled = false; b.textContent = 'Approve and schedule'; toast(x.j.needsConnect ? 'Connect Instagram or Facebook first, using the secure link at the top of this page' : (x.j.error || 'That could not be scheduled')); return; }
+          D.livePosts.scheduled = D.livePosts.scheduled || {}; D.livePosts.scheduled[pid] = x.j; render();
+          toast(x.j.status === 'draft' ? 'Saved. Our team will add a photo before it goes out.' : 'Scheduled');
+        }).catch(function () { b.disabled = false; b.textContent = 'Approve and schedule'; toast('That could not be scheduled. Please try again.'); });
     }
     else if (act === 'edit') {
       var label = b.textContent.trim();
