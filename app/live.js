@@ -206,6 +206,7 @@
       var P = C.profile, f = C.files || [];
       D.client = { id: C.id, files: f };
       D.answers = C.answers || {};
+      D.connect = C.connect || null;
       var Aw = D.answers, onOff = function (k, has) { return Aw['channel_' + k] ? Aw['channel_' + k] === 'on' : has; };
       D.outreach.channels = [
         { k: 'email', l: 'Email', d: 'To people who match your best guests', on: onOff('email', true) },

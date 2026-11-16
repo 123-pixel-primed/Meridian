@@ -414,9 +414,15 @@
       panel('Your welcome email, first draft', 'Written in your voice. Approve it or ask for changes.', welcome) + '<div style="height:20px"></div>';
   }
 
+  // The secure link a client uses to connect their social accounts. They log in to each network themselves.
+  function connectBlock() {
+    var c = D.connect; if (!c || !c.link) return '';
+    return panel('Connect your social accounts', 'Takes about two minutes', '<p style="max-width:62ch">Open the secure link, enter the password, then log in to each account you want us to post to and read results from. You never share your passwords with us.</p>' +
+      '<div class="actions" style="margin-top:12px;align-items:center"><a class="btn" href="' + esc(c.link) + '" target="_blank" rel="noopener">Open the secure link</a>' + (c.password ? '<span class="meta">Password: <b>' + esc(c.password) + '</b></span>' : '') + '</div>') + '<div style="height:20px"></div>';
+  }
   V.content = function () {
     var a = D.aiSearch;
-    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + brandBlock() + socialBlock() +
+    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + connectBlock() + brandBlock() + socialBlock() +
       '<div class="grid g-hero">' +
         panel('Found by AI assistants', 'When guests ask an AI assistant for a recommendation', '<div class="mini-stats" style="margin-bottom:18px">' + a.stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:26px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
           '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>') +
@@ -762,6 +768,7 @@
       if (on && C && C.needs && !(D.answers || {})[C.needs]) {
         if (li.querySelector('.ask')) return;
         var ask = document.createElement('div'); ask.className = 'ask'; ask.style.cssText = 'flex-basis:100%;margin-top:10px';
+        if (D.connect && D.connect.link && C.k !== 'email') { location.hash = '#content'; toast('Connect ' + C.l + ' with your secure link at the top of this page'); return; }
         ask.innerHTML = '<label class="meta">' + esc(C.ask) + '</label><div style="display:flex;gap:8px;margin-top:6px"><input type="text" style="flex:1;font:inherit;padding:10px 12px;border:1px solid var(--border,#E9E1D5);border-radius:8px"><button class="btn" data-ask="save">Connect</button></div><div class="meta" style="margin-top:6px">Our team connects it for you, usually within a working day.</div>';
         li.style.flexWrap = 'wrap'; li.appendChild(ask); ask.querySelector('input').focus();
         ask.addEventListener('click', function (ev) {

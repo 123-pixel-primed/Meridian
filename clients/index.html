@@ -60,8 +60,17 @@
       (c.locationId ? '<span class="ok">Linked to ' + esc(linked ? linked.name : c.locationId) + '. Their dashboard shows their own bookings, guests, messages and payments.</span><br>' : 'Not linked yet, so their dashboard shows sample figures.<br>') +
       (LOCS.length ? '<select class="loc">' + opts + '</select>' : '<input class="loc" placeholder="Account (location) ID">') +
       '<input class="pit" placeholder="Sub-account token (only if needed)" autocomplete="off"><button class="link">Save</button>' +
+      '<div style="margin-top:12px"><b>Social connect invite</b><br><span class="m">Create it in their Social Planner (Socials, then Send social connect invite) and paste it here. It appears in their dashboard.</span><br>' +
+      '<input class="inv" placeholder="Invite link" value="' + esc((c.connect && c.connect.link) || '') + '" style="min-width:320px"><input class="invpw" placeholder="Password" value="' + esc((c.connect && c.connect.password) || '') + '" autocomplete="off"><button class="saveinv">Save invite</button></div>' +
       (LOC_ERR ? '<div class="m" style="margin-top:8px">Agency connection: ' + esc(LOC_ERR) + '</div>' : '') + '<span class="res m" style="margin-left:8px"></span></div>';
   }
+  document.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('saveinv')) return;
+    var box = e.target.closest('.acct'), res = box.querySelector('.res');
+    res.textContent = 'Saving';
+    fetch('/.netlify/functions/onboard?link=1&id=' + encodeURIComponent(box.dataset.id), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inviteLink: box.querySelector('.inv').value.trim(), invitePassword: box.querySelector('.invpw').value.trim() }) })
+      .then(function (r) { return r.json(); }).then(function (j) { res.textContent = j.ok ? 'Invite saved' : (j.error || 'Not saved'); }).catch(function () { res.textContent = 'Not saved'; });
+  });
   document.addEventListener('click', function (e) {
     if (!e.target.classList.contains('link')) return;
     var box = e.target.closest('.acct'), res = box.querySelector('.res');

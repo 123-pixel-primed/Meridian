@@ -83,6 +83,13 @@ export default async (req) => {
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
     let b = {}; try { b = await req.json(); } catch (e) {}
     const loc = String(b.locationId || '').replace(/[^A-Za-z0-9]/g, '');
+    // The social connect invite our team creates, shown to the client in their dashboard.
+    if (b.inviteLink !== undefined) {
+      const link = String(b.inviteLink || '').trim();
+      if (link && !/^https:\/\/[a-z0-9.-]+\//i.test(link)) return Response.json({ error: 'The invite link should start with https://' }, { status: 400 });
+      rec.connect = link ? { link: link.slice(0, 500), password: String(b.invitePassword || '').slice(0, 100), at: new Date().toISOString() } : null;
+    }
+    if (!loc && b.inviteLink !== undefined) { await clients.setJSON(id, rec); return Response.json({ ok: true }); }
     if (!loc) return Response.json({ error: 'Choose an account' }, { status: 400 });
     rec.locationId = loc;
     if (b.token) await savePit(loc, String(b.token).trim());
@@ -98,7 +105,7 @@ export default async (req) => {
     const recs = (await Promise.all(blobs.map(b => clients.get(b.key, { type: 'json' })))).filter(Boolean);
     recs.sort((x, y) => String(y.createdAt).localeCompare(String(x.createdAt)));
     return Response.json({ clients: recs.map(r => ({
-      id: r.id, createdAt: r.createdAt, files: r.files || [], taskIssue: r.taskIssue || null, locationId: r.locationId || null,
+      id: r.id, createdAt: r.createdAt, files: r.files || [], taskIssue: r.taskIssue || null, locationId: r.locationId || null, connect: r.connect || null,
       answers: r.answers, missing: missing(r.answers || {}), labels: KEY_FIELDS
     })) }, { headers: { 'Cache-Control': 'no-store' } });
   }
@@ -115,7 +122,7 @@ export default async (req) => {
     }
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
-    return Response.json({ id: rec.id, createdAt: rec.createdAt, files: rec.files || [], profile: rec.profile, answers: rec.answers || {} }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ id: rec.id, createdAt: rec.createdAt, files: rec.files || [], profile: rec.profile, answers: rec.answers || {}, connect: rec.connect || null }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
