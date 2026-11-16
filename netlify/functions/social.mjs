@@ -53,7 +53,7 @@ export default async (req) => {
       await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week }) }).catch(() => {});
     }
     const posts = ((wk && wk.posts) || []).map((p, i) => Object.assign({}, p, { img: images.length ? mediaUrl(url.origin, cid, images[i % images.length]) : null }));
-    return Response.json({ status: (wk && wk.status) || 'none', week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ status: (wk && wk.status) || 'none', error: sess.admin && wk && wk.error || undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method === 'POST') {

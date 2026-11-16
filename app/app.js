@@ -443,7 +443,7 @@
   function livePostsBlock() {
     var L = D.livePosts;
     if (L.status === 'writing' || L.status === 'none') { setTimeout(function () { if (location.hash === '#content') location.reload(); }, 40000); return '<p class="meta">This week\u2019s posts are being written in your voice. They appear here in a minute or two.</p>'; }
-    if (L.status === 'failed') return '<p class="meta">This week\u2019s posts could not be written just now. Our team has been told.</p>';
+    if (L.status === 'failed') return '<p class="meta">This week\u2019s posts could not be written just now.' + (L.error ? ' Reason: ' + esc(L.error) : '') + '</p><div class="actions" style="margin:10px 0 20px"><button class="btn" data-act="retryposts">Try again</button></div>';
     var to = (L.accounts || []).map(function (a) { return a.platform + ' ' + a.name; }).join(' and ');
     return '<p class="meta" style="margin:-6px 0 14px">' + (to ? 'Approved posts are scheduled to ' + esc(to) + '.' : 'Connect Instagram or Facebook to have approved posts scheduled for you.') + '</p><div class="grid g3">' +
       (L.posts || []).map(function (p) {
@@ -803,6 +803,11 @@
         return;
       }
       finish();
+    }
+    else if (act === 'retryposts') {
+      b.disabled = true; b.textContent = 'Writing';
+      fetch('/.netlify/functions/social' + clientQS() + (clientQS() ? '&' : '?') + 'retry=1', { credentials: 'same-origin', cache: 'no-store' })
+        .then(function (r) { return r.json(); }).then(function (P) { D.livePosts = P; render(); }).catch(function () { b.disabled = false; b.textContent = 'Try again'; });
     }
     else if (act === 'schedule') {
       var pid = b.getAttribute('data-post'); b.disabled = true; b.textContent = 'Scheduling';

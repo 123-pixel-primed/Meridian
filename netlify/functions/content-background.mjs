@@ -18,7 +18,7 @@ export default async (req) => {
       blueprint: bp && bp.current ? { opportunities: (bp.current.opportunities || []).slice(0, 4), plan: (bp.current.plan || [])[0] } : null, season: new Date().toLocaleDateString('en-AU', { month: 'long' }) + ' in ' + (A.country || 'Australia') };
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY || '', 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 2500, system: 'You are the social media writer for a wellness or hospitality business. ' + RULES,
+      body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 4000, system: 'You are the social media writer for a wellness or hospitality business. ' + RULES,
         messages: [{ role: 'user', content: 'Business: ' + JSON.stringify(about).slice(0, 12000) + '\n\nWrite this week’s three Instagram posts that would bring in bookings, each with a different purpose (for example an offer, a behind-the-scenes or education post, and a guest experience post). Reply with JSON only: {"posts": [{"title": "short internal title", "day": "Tuesday", "time": "10:00", "caption": "the full caption", "image": "one line describing the photo to use"}]}. ' + RULES }] })
     });
     const j = await r.json();
