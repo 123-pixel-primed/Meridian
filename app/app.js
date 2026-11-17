@@ -198,8 +198,10 @@
     return head('Messages', 'WhatsApp, text messages, Instagram, email and website chat in one inbox.') +
       '<div class="grid g3">' +
         panel('Waiting for a reply', '', '<div class="stat"><span class="n">' + open + '</span><span class="l">conversations</span></div>') +
-        panel('Answered automatically', D.period, '<div class="stat"><span class="n">68%</span><span class="l">of questions about times, prices and vouchers</span></div>') +
-        panel('Average reply time', D.period, '<div class="stat"><span class="n">4 min</span><span class="l">down from 3 hours</span></div>') +
+        (D.live ? panel('Conversations', D.period, '<div class="stat"><span class="n">' + M.length + '</span><span class="l">in your inbox</span></div>') +
+          panel('Reply times', 'Builds up as messages come in', '<p class="meta">Your average reply time appears here once a few conversations have been answered.</p>')
+        : panel('Answered automatically', D.period, '<div class="stat"><span class="n">68%</span><span class="l">of questions about times, prices and vouchers</span></div>') +
+          panel('Average reply time', D.period, '<div class="stat"><span class="n">4 min</span><span class="l">down from 3 hours</span></div>')) +
       '</div><div style="height:20px"></div>' +
       '<section class="panel inbox-wrap">' + list + '<div id="thread">' + thread + '</div></section>';
   };

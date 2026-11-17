@@ -143,7 +143,7 @@
         days: st.dayRange || []
       };
     }
-    D.liveNote = 'Live from ' + D.venue.name + ': bookings, bathing session places, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' + (S.search && S.search.connected ? ', Google searches' : '') + (S.social && S.social.stats ? ', Instagram' : '') + ' and the website score' : '') + '. Other panels show sample content until they are connected.';
+    D.liveNote = 'Live from ' + D.venue.name + ': bookings, guests, messages and payments' + (testOnly ? ' (test payments)' : '') + (S.web ? ', plus website visits' + (S.search && S.search.connected ? ', Google searches' : '') + (S.social && S.social.stats ? ', Instagram' : '') + ' and the website score' : '') + '. Other panels show sample content until they are connected.';
     if (S.errors && S.errors.length) D.liveNote += ' Some data could not be read: ' + S.errors.join('; ') + '.';
   }
 
@@ -206,6 +206,7 @@
       var P = C.profile, f = C.files || [];
       D.client = { id: C.id, files: f };
       D.answers = C.answers || {};
+      var badge = document.querySelector('.sample'); if (badge && D.live) badge.remove();
       D.connect = C.connect || null;
       var Aw = D.answers, onOff = function (k, has) { return Aw['channel_' + k] ? Aw['channel_' + k] === 'on' : has; };
       D.outreach.channels = [
