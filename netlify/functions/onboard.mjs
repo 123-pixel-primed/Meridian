@@ -9,11 +9,13 @@ import { ghl, assignee } from '../lib/ghl.mjs';
 import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mjs';
 import { listLocations, savePit, appStatus } from '../lib/ghl-access.mjs';
 
-const FILE_FIELDS = ['logo', 'style_guide'];
+const FILE_FIELDS = ['logo', 'style_guide', 'content_strategy'];
 // Brand photos: as many as a client wants, named brand_image_1, brand_image_2 and so on.
 const isFileField = f => FILE_FIELDS.indexOf(f) >= 0 || /^brand_image_([1-9]|[1-9][0-9])$/.test(f);
 const MAX_FILE = 5 * 1024 * 1024;
-const FILE_TYPES = /^(image\/(png|jpeg|svg\+xml|webp)|application\/pdf|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation))$/;
+const FILE_TYPES = /^(image\/(png|jpeg|svg\+xml|webp)|application\/pdf|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation)|text\/(html|plain|markdown))$/;
+// Documents Meridian reads to guide the writing: a style guide and a content strategy.
+const GUIDE_FIELDS = ['style_guide', 'content_strategy'];
 
 // Answers worth having before the setup call. Anything blank here shows as "to ask" on the Clients page.
 const KEY_FIELDS = {
@@ -120,7 +122,10 @@ export default async (req) => {
       if (!isFileField(file)) return new Response('Not found', { status: 404 });
       const r = await files.getWithMetadata(id + '/' + file, { type: 'arrayBuffer' });
       if (!r) return new Response('Not found', { status: 404 });
-      return new Response(r.data, { headers: { 'Content-Type': (r.metadata && r.metadata.type) || 'application/octet-stream', 'Cache-Control': 'private, max-age=3600' } });
+      const t = (r.metadata && r.metadata.type) || 'application/octet-stream';
+      // Uploaded web pages are only ever handed back as plain text to download, never run in the browser.
+      if (/^text\//.test(t)) return new Response(r.data, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Content-Disposition': 'attachment; filename="' + file + (t === 'text/html' ? '.html' : '.txt') + '"', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'", 'Cache-Control': 'private, max-age=3600' } });
+      return new Response(r.data, { headers: { 'Content-Type': t, 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'", 'Cache-Control': 'private, max-age=3600' } });
     }
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
@@ -141,6 +146,8 @@ export default async (req) => {
     if (buf.byteLength > MAX_FILE) return Response.json({ error: 'File too large' }, { status: 413 });
     await files.set(id + '/' + file, buf, { metadata: { type } });
     rec.files = Array.from(new Set((rec.files || []).concat(file)));
+    // A new guide means the writing brief is rebuilt before the next posts are written.
+    if (GUIDE_FIELDS.indexOf(file) >= 0) rec.guideAt = new Date().toISOString();
     await clients.setJSON(id, rec);
     return Response.json({ ok: true });
   }

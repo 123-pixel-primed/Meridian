@@ -26,6 +26,23 @@ function nextSlot(day, time, tz) {
   return new Date(now.getTime() + 86400000);
 }
 
+// The Social Planner calendar: posts from two weeks ago to four weeks ahead, with likes, comments and shares once published.
+async function calendar(rec, token, accounts, accountsError, sess) {
+  const from = new Date(Date.now() - 14 * 86400000), to = new Date(Date.now() + 35 * 86400000);
+  if (!token) return { posts: [], connected: false };
+  try {
+    const r = await ghl('/social-media-posting/' + rec.locationId + '/posts/list', token, { method: 'POST', body: { type: 'all', skip: '0', limit: '100', fromDate: from.toISOString(), toDate: to.toISOString(), includeUsers: 'false' } });
+    const list = (r.results && r.results.posts) || r.posts || [];
+    const posts = list.filter(p => p.status !== 'deleted').map(p => {
+      const ins = p.insights || {}, m = (p.media || [])[0] || {};
+      return { id: p._id, status: p.status, when: p.publishedAt || p.displayDate || p.scheduleDate || p.createdAt, platform: p.platform || '', text: String(p.summary || '').slice(0, 280),
+        img: p.thumbnail || (/^image\//.test(m.type || '') ? m.url : null) || null, likes: ins.like != null ? +ins.like : null, comments: ins.comment != null ? +ins.comment : null, shares: ins.share != null ? +ins.share : null,
+        link: p.previewLink || null, error: p.status === 'failed' ? String(p.error || '').slice(0, 160) : undefined };
+    }).sort((a, b) => String(a.when).localeCompare(String(b.when)));
+    return { posts, connected: accounts.length > 0, from: from.toISOString(), to: to.toISOString() };
+  } catch (e) { return { posts: [], connected: accounts.length > 0, error: sess.admin ? String(e.message || e).slice(0, 200) : 'The calendar could not be loaded just now' }; }
+}
+
 export default async (req) => {
   const sess = readSession(req);
   const url = new URL(req.url), cid = String(url.searchParams.get('client') || '').replace(/[^a-z0-9-]/g, '');
@@ -47,13 +64,17 @@ export default async (req) => {
   let wk = await store.get(key, { type: 'json' });
 
   if (req.method === 'GET') {
-    if ((!wk || (wk.status === 'failed' && url.searchParams.get('retry'))) && process.env.ANTHROPIC_API_KEY) {
-      wk = { status: 'writing', at: new Date().toISOString() };
+    if (url.searchParams.get('calendar')) return Response.json(await calendar(rec, token, accounts, accountsError, sess), { headers: { 'Cache-Control': 'no-store' } });
+    const rewrite = url.searchParams.get('rewrite') && wk && wk.status === 'ready';
+    if ((!wk || (wk.status === 'failed' && url.searchParams.get('retry')) || rewrite) && process.env.ANTHROPIC_API_KEY) {
+      // A rewrite keeps the posts already scheduled and writes fresh ones for the rest of the week.
+      const sched = (wk && wk.scheduled) || {}, keep = rewrite ? wk.posts.filter(p => sched[p.id]) : [];
+      wk = { status: 'writing', at: new Date().toISOString(), posts: rewrite ? wk.posts : undefined, scheduled: sched };
       await store.setJSON(key, wk);
-      await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week }) }).catch(() => {});
+      await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week, keep, scheduled: sched, round: rewrite ? Date.now().toString(36) : '' }) }).catch(() => {});
     }
     const posts = ((wk && wk.posts) || []).map((p, i) => Object.assign({}, p, { img: images.length ? mediaUrl(url.origin, cid, images[i % images.length]) : null }));
-    return Response.json({ status: (wk && wk.status) || 'none', error: sess.admin && wk && wk.error || undefined, accountsError: sess.admin ? accountsError || undefined : undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ status: (wk && wk.status) || 'none', usedStrategy: !!(wk && wk.usedStrategy), campaigns: (wk && wk.campaigns) || [], hasGuide: !!(rec.files || []).find(f => f === 'style_guide' || f === 'content_strategy'), guideUnread: (rec.guideBrief && rec.guideBrief.unread) || [], error: sess.admin && wk && wk.error || undefined, accountsError: sess.admin ? accountsError || undefined : undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method === 'POST') {

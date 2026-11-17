@@ -212,9 +212,11 @@
         <div class="field"><label for="colour_primary">Main brand colour</label><input type="text" id="colour_primary" name="colour_primary" placeholder="For example #5F8F88"></div>
         <div class="field"><label for="colour_accent">Accent colour</label><input type="text" id="colour_accent" name="colour_accent"></div>
         <div class="field"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
-        <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, Word, PowerPoint or an image, up to 5MB</span><input type="file" id="style_guide" name="style_guide" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx"></div>
+        <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, Word, PowerPoint, a web page or an image, up to 5MB</span><input type="file" id="style_guide" name="style_guide" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx,.html,.htm,.txt,.md"><span class="hint" id="style_guide-sent"></span></div>
+        <div class="field"><label for="content_strategy">Content or social media strategy</label><span class="hint">Optional. Your weekly posts follow it. PDF, Word, PowerPoint, a web page or text, up to 5MB</span><input type="file" id="content_strategy" name="content_strategy" accept=".pdf,.docx,.pptx,.html,.htm,.txt,.md"><span class="hint" id="content_strategy-sent"></span></div>
+        <div class="field full"><label for="campaign_sheet">Campaign calendar</label><span class="hint">Optional. A Google Sheet link with your campaigns and dates. Set the sheet to "Anyone with the link can view". You can also add campaigns or upload a spreadsheet in your dashboard.</span><input type="url" id="campaign_sheet" name="campaign_sheet" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
         <div class="field full"><span class="q">Brand photos</span><span class="hint">Choose as many photos of your space, treatments and team as you like. They are used in your posts. Your first photo becomes the header image in your dashboard.</span><input type="file" id="brand_images" name="brand_images" accept=".jpg,.jpeg,.png" multiple aria-label="Brand photos"><span class="hint" id="photo-count"></span></div>
-        <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Photos are resized automatically. Logos and style guides can be up to 4 MB each. Anything larger can be shared on your onboarding call.</p>
+        <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Photos are resized automatically. Logos, style guides and strategies can be up to 5MB each. Anything larger can be shared on your onboarding call.</p>
       </div>
     </fieldset>
 
@@ -394,6 +396,7 @@
     }).then(function (C) {
       EDIT = C.id; var A = C.answers || {};
       (C.files || []).forEach(function (f) { var m = /^brand_image_(\d+)$/.exec(f); if (m) PHOTO_N = Math.max(PHOTO_N, +m[1]); });
+      ['style_guide', 'content_strategy'].forEach(function (f) { if ((C.files || []).indexOf(f) >= 0) document.getElementById(f + '-sent').textContent = 'Already sent. Choose a file only to replace it.'; });
       if (PHOTO_N) document.getElementById('photo-count').textContent = PHOTO_N + ' photo' + (PHOTO_N === 1 ? '' : 's') + ' already sent. Any you choose now are added to them.';
       Object.keys(A).forEach(function (k) {
         var v = A[k], els = form.querySelectorAll('[name="' + k + '"]');
@@ -454,12 +457,20 @@
         next.textContent = 'Uploading your files';
         return uploads.reduce(function (p, u, k) {
           return p.then(function () { next.textContent = 'Uploading ' + (k + 1) + ' of ' + uploads.length; return shrink(u.file); }).then(function (blob) {
-            var type = blob.type || u.file.type;
+            var ext = (u.file.name.split('.').pop() || '').toLowerCase();
+            var type = blob.type || u.file.type || ({ html: 'text/html', htm: 'text/html', txt: 'text/plain', md: 'text/markdown' })[ext] || 'application/octet-stream';
+            if (type === 'text/x-markdown') type = 'text/markdown';
             return fetch(api + '?id=' + encodeURIComponent(id) + '&file=' + u.name, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': type }, body: blob })
               .then(function (r) { if (!r.ok) failed.push(u.file.name); })
               .catch(function () { failed.push(u.file.name); });
           });
         }, Promise.resolve()).then(function () {
+          if (EDIT && failed.length) {
+            next.textContent = 'Save changes'; next.disabled = false;
+            var w = document.getElementById('edit-warn') || (function () { var d = document.createElement('p'); d.id = 'edit-warn'; d.className = 'meta'; d.style.marginTop = '14px'; next.parentNode.appendChild(d); return d; })();
+            w.innerHTML = 'Your answers are saved, but these files did not upload: ' + failed.map(function (x) { return x.replace(/[<>&]/g, ''); }).join(', ') + '. Check each is under 5MB and a PDF, Word, PowerPoint, web page, text file or image, then save again. <a href="/app/?client=' + encodeURIComponent(id) + '#content">Back to your dashboard</a>';
+            return;
+          }
           if (EDIT) { location.href = '/app/?client=' + encodeURIComponent(id) + '#content'; return; }
           fetch('/.netlify/functions/blueprint?client=' + encodeURIComponent(id), { method: 'POST', credentials: 'same-origin' }).catch(function () {});
           document.getElementById('dash-link').href = '/app/?client=' + encodeURIComponent(id);

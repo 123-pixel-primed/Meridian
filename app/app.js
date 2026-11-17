@@ -107,14 +107,15 @@
   /* ---------- plans ---------- */
   var TIER_NAMES = { core: 'Core', growth: 'Growth', scale: 'Scale' };
   var TIER_SCREENS = {
-    core: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit'],
-    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners'],
-    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'plan', 'guests', 'content', 'website', 'partners', 'ads']
+    core: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'campaigns'],
+    growth: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'campaigns', 'plan', 'guests', 'brand', 'content', 'website', 'partners'],
+    scale: ['overview', 'messages', 'insights', 'bookings', 'returning', 'reviews', 'audit', 'campaigns', 'plan', 'guests', 'brand', 'content', 'website', 'partners', 'ads']
   };
   var UPGRADE = {
     optimise: ['Growth', 'Your marketing, improved every month', ['New guest journeys suggested from your results', 'A/B tests on the messages you already send', 'Every change approved by you first']],
     plan: ['Growth', 'A marketing plan built from your goals', ['Set a revenue goal and see the channels and budget to reach it', 'Progress tracked against your goal every week', 'One clear recommendation each Monday']],
     guests: ['Growth', 'New guests, found and messaged for you', ['Personal messages to new guests and local businesses', 'Corporate wellness and partner referrals', 'See every first visit and where it came from']],
+    brand: ['Growth', 'A brand people remember', ['The distinctive assets that make you the first name people think of', 'The needs you answer, matched to the right booking', 'Ideas that turn a first visit into a lasting relationship']],
     content: ['Growth', 'Content written for you every week', ['Social posts, emails and articles in your voice', 'Approve or edit before anything is published', 'Imagery created in your brand style on Scale']],
     website: ['Growth', 'Get found on Google and AI assistants', ['A monthly website score', 'The fixes that bring the most bookings, made for you', 'Track how often AI assistants recommend you']],
     partners: ['Growth', 'Partner with businesses that share your guests', ['Matched with nearby businesses, never competitors', 'Referral ideas that suit both sides', 'Track partner referrals in your dashboard']],
@@ -123,7 +124,7 @@
   function tier() { return D.tier || 'core'; }
   function has(screen) { return TIER_SCREENS[tier()].indexOf(screen) >= 0; }
   function upgradeView(r) {
-    var u = UPGRADE[r], title = { optimise: 'Optimise', plan: 'Plan and goals', guests: 'New guests', content: 'Content', website: 'Website', partners: 'Partners', ads: 'Ads' }[r];
+    var u = UPGRADE[r], title = { optimise: 'Optimise', brand: 'Brand', plan: 'Plan and goals', guests: 'New guests', content: 'Content', website: 'Website', partners: 'Partners', ads: 'Ads' }[r];
     return head(title, 'Available on the ' + u[0] + ' plan.') +
       '<section class="panel upgrade"><div class="up-mark" aria-hidden="true"></div><h2 class="up-title">' + esc(u[1]) + '</h2><ul class="up-list">' + u[2].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
       '<div class="actions"><a class="btn" href="' + (D.sample ? '../book-a-demo/' : 'mailto:contact@pixelprimed.com?subject=Upgrade%20to%20' + u[0]) + '" style="text-decoration:none">Talk to us about ' + u[0] + '</a></div></section>';
@@ -373,7 +374,7 @@
       '<div class="grid g-hero">' +
         panel('Guests who rebook', 'Share of guests booking again within 90 days', line(rr.labels, rr.values, rr.target, { suffix: '%', min: 30, aria: 'Rebooking rate rising from 41 to 58 percent' }) + '<div class="legend"><span><i></i>Rebooking rate</span><span><i class="gold"></i>Goal, ' + rr.target + '%</span></div>') +
         panel('Loyalty', 'Guests at each level', bars(r.tiers, null, true)) +
-      '</div><div style="height:20px"></div>' +
+      '</div><div style="height:20px"></div>' + klaviyoBlock() +
       journeysPanel();
   };
   // A live client's journeys: their own emails, editable, approved one journey at a time.
@@ -457,7 +458,7 @@
   }
   V.content = function () {
     var a = D.aiSearch;
-    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + connectBlock() + brandBlock() + socialBlock() +
+    return head('Content', 'Written for you every week. Nothing is published until you approve it.') + connectBlock() + socialCalendarBlock() + brandBlock() + socialBlock() +
       '<div class="grid g-hero">' +
         panel('Found by AI assistants', 'When guests ask an AI assistant for a recommendation', '<div class="mini-stats" style="margin-bottom:18px">' + a.stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:26px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
           '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>') +
@@ -468,7 +469,7 @@
         return '<li><div class="grow"><div class="meta">' + esc(x.when) + '</div><div class="art-t">' + esc(x.t) + '</div><div class="kws">' + x.kw.map(function (k) { return '<span class="tag">' + esc(k) + '</span>'; }).join('') + '</div>' + (x.note ? '<div class="meta" style="margin-top:8px;max-width:60ch">' + esc(x.note) + '</div>' : '') + '</div>' +
           (pub ? '<div class="art-n"><div><b>' + x.views + '</b><span>views</span></div><div><b>' + x.clicks + '</b><span>clicks</span></div><div><b>' + x.pos + '</b><span>position</span></div></div>' : '<div class="actions"><button class="btn ghost" data-act="edit">Preview</button><button class="btn" data-act="approve">Publish</button></div>') + '</li>';
       }).join('') + '</ul>') +
-      '<div style="height:20px"></div><h2 class="sec">Posts and emails to approve</h2>' + (D.livePosts ? livePostsBlock() : '') +
+      '<div style="height:20px"></div><h2 class="sec">Posts and emails to approve</h2>' + (D.livePosts ? strategyLine() + livePostsBlock() : '') +
       (D.livePosts ? '' : '<div class="grid g3">' + D.content.map(function (c) {
         return '<section class="panel" style="padding:0;overflow:hidden"><img src="' + c.img + '" alt="" style="width:100%;height:180px;object-fit:cover;display:block"><div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px;color:' + LABEL + '">' + esc(c.type) + ', ' + esc(c.when) + '</div><div style="font-weight:500;margin:4px 0 16px">' + esc(c.title) + '</div>' + approveBtns() + '</div></section>';
       }).join('') + '</div>');
@@ -708,8 +709,244 @@
       panel('Which channels work best', 'Share of people reached who became interested', bars(I.channels.map(function (c) { return { l: c.l, v: c.rate }; }), function (v) { return v + '%'; }, false, 12) + '<ul class="list" style="margin-top:18px">' + I.channels.map(function (c) { return '<li><div class="grow"><div>' + esc(c.l) + '</div><div class="meta">' + c.reached + ' reached, ' + c.warm + ' interested. ' + esc(c.note) + '</div></div></li>'; }).join('') + '</ul>') + optimiseBlock();
   };
 
+  /* ---------- loaded on demand: campaigns, brand plan, Klaviyo, social calendar ---------- */
+  function cidParam() { return new URLSearchParams(location.search).get('client') || ''; }
+  var LAZY = {};
+  // Fetches once per page load; re-renders the page the data belongs to when it arrives.
+  function lazy(key, url, page, force) {
+    if (!cidParam() || (LAZY[key] && !force)) return;
+    LAZY[key] = true;
+    fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'client=' + encodeURIComponent(cidParam()), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j) { D[key] = j; if ((location.hash || '#overview').slice(1) === page) render(); } })
+      .catch(function () {});
+  }
+  function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function niceDate(s, long) { var d = new Date(s + (s.length === 10 ? 'T00:00:00' : '')); return d.toLocaleDateString('en-AU', long ? { weekday: 'short', day: 'numeric', month: 'long' } : { day: 'numeric', month: 'short' }); }
+  // A calendar grid, Monday first. Items: {date:'YYYY-MM-DD', label, cls, title}.
+  function calGrid(start, weeks, items, monthOf) {
+    var by = {}; items.forEach(function (it) { (by[it.date] = by[it.date] || []).push(it); });
+    var d = new Date(start), today = ymd(new Date()), out = '<div class="cal" role="grid"><div class="cal-h">' + ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="cal-g">';
+    for (var i = 0; i < weeks * 7; i++) {
+      var k = ymd(d), list = by[k] || [], other = monthOf != null && d.getMonth() !== monthOf;
+      out += '<div class="cal-d' + (k === today ? ' today' : '') + (other ? ' other' : '') + '"><span class="cal-n">' + d.getDate() + (d.getDate() === 1 || i === 0 ? ' ' + d.toLocaleDateString('en-AU', { month: 'short' }) : '') + '</span>' +
+        list.slice(0, 4).map(function (it) { return '<span class="cal-i ' + (it.cls || '') + '" title="' + esc(it.title || it.label) + '">' + esc(it.label) + '</span>'; }).join('') + (list.length > 4 ? '<span class="meta">+' + (list.length - 4) + ' more</span>' : '') + '</div>';
+      d.setDate(d.getDate() + 1);
+    }
+    return out + '</div></div>';
+  }
+  function mondayOf(d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  // Each day a campaign runs, as calendar items.
+  function campaignItems(list) {
+    var out = [];
+    (list || []).forEach(function (c) {
+      var d = new Date(c.start + 'T00:00:00'), end = new Date((c.end || c.start) + 'T00:00:00'), n = 0;
+      while (d <= end && n < 120) { out.push({ date: ymd(d), label: c.name, cls: 'camp', title: c.name + (c.offer ? '. ' + c.offer : '') }); d.setDate(d.getDate() + 1); n++; }
+    });
+    return out;
+  }
+  var SAMPLE_CAMPAIGNS = function () {
+    var t = new Date(), at = function (n) { var d = new Date(t); d.setDate(d.getDate() + n); return ymd(d); };
+    return [{ id: 's1', name: 'Gift cards for the holidays', start: at(3), end: at(24), offer: 'Gift cards in any amount', channels: 'Email, Instagram', notes: 'Lead with gifting for someone who needs a rest' },
+      { id: 's2', name: 'Twilight bathing evenings', start: at(10), end: at(12), offer: 'Evening sessions', channels: 'Instagram', notes: '' },
+      { id: 's3', name: 'New year reset', start: at(35), end: at(50), offer: 'Three-visit pass', channels: 'Email, Instagram, Google', notes: '' }];
+  };
+
+  V.campaigns = function () {
+    var live = !!cidParam();
+    if (live) lazy('campaignsLive', '/.netlify/functions/campaigns', 'campaigns');
+    var C = live ? D.campaignsLive : { campaigns: SAMPLE_CAMPAIGNS() };
+    if (!C) return head('Campaigns', 'Your campaign calendar. Posts, emails and journeys are planned around it.') + panel('Loading your calendar', '', '<p class="meta">One moment.</p>');
+    var now = new Date(), m0 = new Date(now.getFullYear(), now.getMonth() + CAL_MONTH, 1), start = mondayOf(m0);
+    var weeks = Math.ceil(((m0.getDay() + 6) % 7 + new Date(m0.getFullYear(), m0.getMonth() + 1, 0).getDate()) / 7);
+    var today = ymd(now), upcoming = (C.campaigns || []).filter(function (c) { return (c.end || c.start) >= today; }), past = (C.campaigns || []).filter(function (c) { return (c.end || c.start) < today; });
+    var sh = C.sheet;
+    var row = function (c) {
+      return '<li><div class="grow"><div><strong>' + esc(c.name) + '</strong></div><div class="meta">' + niceDate(c.start, true) + (c.end && c.end !== c.start ? ' to ' + niceDate(c.end, true) : '') + (c.channels ? '. ' + esc(c.channels) : '') + '</div>' +
+        (c.offer ? '<div class="meta">Offer: ' + esc(c.offer) + '</div>' : '') + (c.notes ? '<div class="meta">' + esc(c.notes) + '</div>' : '') + '</div>' +
+        (live && c.source === 'manual' ? '<div class="actions"><button class="btn ghost" data-x="cedit" data-id="' + esc(c.id) + '">Edit</button><button class="btn ghost" data-x="cdel" data-id="' + esc(c.id) + '">Remove</button></div>' : '<span class="tag">' + esc({ sheet: 'Google Sheet', upload: 'Spreadsheet', manual: 'Added here' }[c.source] || 'Sample') + '</span>') + '</li>';
+    };
+    var tools = '<div class="actions" style="flex-wrap:wrap"><button class="btn" data-x="cadd">Add a campaign</button><button class="btn ghost" data-x="cupload">Upload a spreadsheet</button><button class="btn ghost" data-x="csheet">Link a Google Sheet</button>' +
+      '<input type="file" id="c-file" accept=".csv,.xlsx,.xls" hidden></div>' +
+      '<p class="meta" style="margin-top:12px">Spreadsheets need a header row with at least Campaign and Start date. End date, Offer, Channels and Notes are picked up too.' +
+      (sh && sh.link ? ' Linked sheet: synced ' + new Date(sh.at).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) + (sh.error ? '. ' + esc(sh.error) : ', ' + (sh.count || 0) + ' campaign' + (sh.count === 1 ? '' : 's')) + '. <a href="#" data-x="csync">Sync now</a>' : '') + '</p><div id="c-form"></div>';
+    return head('Campaigns', 'Your campaign calendar. Your weekly posts, emails and journeys are planned around it.') +
+      panel('Add your campaigns', live ? 'Add them here, upload a spreadsheet or link the Google Sheet you already use' : 'In your own dashboard you add campaigns here, upload a spreadsheet or link a Google Sheet', tools) + '<div style="height:20px"></div>' +
+      panel(m0.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }), 'Campaign days are shaded', '<div class="actions" style="margin:-8px 0 12px"><button class="btn ghost" data-x="cmonth" data-d="-1">Previous month</button><button class="btn ghost" data-x="cmonth" data-d="1">Next month</button></div>' +
+        calGrid(start, weeks, campaignItems(C.campaigns), m0.getMonth())) + '<div style="height:20px"></div>' +
+      panel('Coming up', upcoming.length ? upcoming.length + ' campaign' + (upcoming.length === 1 ? '' : 's') : 'Nothing planned yet', upcoming.length ? '<ul class="list">' + upcoming.map(row).join('') + '</ul>' : '<p class="meta">Add your first campaign and Meridian plans your posts around it.</p>') +
+      (past.length ? '<div style="height:20px"></div>' + panel('Finished', '', '<ul class="list">' + past.slice(-6).reverse().map(row).join('') + '</ul>') : '');
+  };
+  var CAL_MONTH = 0;
+  function campaignForm(c) {
+    c = c || {};
+    var f = function (k, l, type, v) { return '<label style="display:block;margin:0 0 12px"><span class="meta">' + l + '</span><input name="' + k + '" type="' + type + '" value="' + esc(v || '') + '" style="display:block;width:100%;margin-top:6px;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:8px"></label>'; };
+    $('#c-form').innerHTML = '<div class="panel" style="margin-top:16px;background:var(--cream)" data-cid="' + esc(c.id || '') + '">' + f('name', 'Campaign', 'text', c.name) +
+      '<div class="grid g2" style="gap:12px">' + f('start', 'Starts', 'date', c.start) + f('end', 'Ends', 'date', c.end) + '</div>' + f('offer', 'Offer (optional)', 'text', c.offer) + f('channels', 'Channels (optional)', 'text', c.channels) + f('notes', 'Notes (optional)', 'text', c.notes) +
+      '<div class="actions"><button class="btn ghost" data-x="ccancel">Cancel</button><button class="btn" data-x="csave">Save campaign</button></div></div>';
+    $('#c-form input').focus();
+  }
+  function saveCampaigns(body, done) {
+    return fetch('/.netlify/functions/campaigns?client=' + encodeURIComponent(cidParam()), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (x) { if (!x.ok) { toast(x.j.error || 'That could not be saved'); return; } D.campaignsLive = x.j; render(); toast(done(x.j)); })
+      .catch(function () { toast('That could not be saved. Please try again.'); });
+  }
+  function readSheetFile(file) {
+    var send = function (csv) { saveCampaigns({ csv: csv }, function (j) { return j.imported + ' campaign' + (j.imported === 1 ? '' : 's') + ' added' + (j.skipped && j.skipped.length ? '. Rows without a date were skipped: ' + j.skipped.join(', ') : ''); }); };
+    if (/\.csv$/i.test(file.name)) { file.text().then(send); return; }
+    // Excel files are read in the browser with SheetJS, loaded only when needed.
+    var go = function () { file.arrayBuffer().then(function (buf) { var wb = window.XLSX.read(buf, { type: 'array', cellDates: false }); send(window.XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]], { rawNumbers: true })); }).catch(function () { toast('That spreadsheet could not be read. Try saving it as CSV.'); }); };
+    if (window.XLSX) return go();
+    var s = document.createElement('script'); s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'; s.onload = go; s.onerror = function () { toast('Excel files could not be opened just now. Save it as CSV and try again.'); }; document.head.appendChild(s);
+  }
+
+  /* Brand: Amplify, Connect, Compound */
+  var SAMPLE_BRAND = { promise: 'The place you come back to yourself', assets: [{ name: 'Steam rising at first light', has: true, why: 'Your most photographed moment, worth using the same way everywhere.' }, { name: 'The sound of the bell between rounds', has: true, why: 'A small ritual guests remember and talk about.' }, { name: 'A signature scent in every room', has: false, why: 'Scent is one of the strongest memory cues and few venues own one.' }, { name: 'A short phrase guests repeat', has: false, why: 'One line said the same way in every message builds recall.' }],
+    consistency: ['Open every email and post with the same morning steam image style', 'Use one phrase in every booking confirmation', 'Show the bell moment in reels and at the end of each visit'],
+    needs: [{ need: 'I need to switch off', occasion: 'End of a long week', offer: 'Bathing circuit', message: 'Two hours where nothing is asked of you.' }, { need: 'A gift for someone who needs a rest', occasion: 'Birthdays and holidays', offer: 'Gift cards', message: 'Give them a morning that is just theirs.' }, { need: 'Time with a friend that is not another dinner', occasion: 'Weekends', offer: 'Shared bathing session', message: 'Catch up somewhere warm and quiet.' }, { need: 'My body is sore', occasion: 'After training or a long drive', offer: 'Recovery massage', message: 'Let the heat and hands do the work.' }],
+    guide: { question: 'What do you need today?', options: [{ label: 'To switch off', offer: 'Bathing circuit' }, { label: 'A gift', offer: 'Gift cards' }, { label: 'Time with a friend', offer: 'Shared session' }, { label: 'Ease sore muscles', offer: 'Recovery massage' }] },
+    themes: [{ occasion: 'December gifting', idea: 'A gift guide by the kind of rest someone needs' }, { occasion: 'Summer evenings', idea: 'The twilight session, shot as the light drops' }, { occasion: 'New year', idea: 'A slower start to the year, three visits in January' }, { occasion: 'Valentine’s Day', idea: 'Time together without a dinner booking' }],
+    compound: [{ stage: 'After the first visit', idea: 'A thank you with one tip to keep the calm going at home' }, { stage: 'Before the second visit', idea: 'Remind them of the moment they liked most' }, { stage: 'Ongoing', idea: 'Members hear about new sessions first' }, { stage: 'A milestone', idea: 'Mark their tenth visit with something small and personal' }] };
+
+  function recallStats() {
+    var out = [], name = (D.venue && D.venue.name || '').toLowerCase().split(/\s+/).filter(function (w) { return w.length > 3 && !/^(spa|the|and|wellness|studio|clinic|retreat|house|bathhouse)$/.test(w); });
+    var G = D.searchTerms;
+    if (G && G.terms) {
+      var b = G.terms.filter(function (t) { var q = t.term.toLowerCase(); return name.some(function (w) { return q.indexOf(w) >= 0; }); });
+      var bc = b.reduce(function (s, t) { return s + (+t.clicks || 0); }, 0), all = G.terms.reduce(function (s, t) { return s + (+t.clicks || 0); }, 0);
+      out.push({ n: bc, l: 'Clicks from searches for your name', d: all ? Math.round(100 * bc / all) + '% of your Google clicks' : 'Last 4 weeks' });
+    } else out.push({ n: '-', l: 'Searches for your name', d: 'Shown once Google Search Console is connected' });
+    var W = D.webVisits, dir = W && W.sources && W.sources.find(function (s) { return /direct/i.test(s.l); });
+    out.push(W && W.sources ? { n: dir ? dir.v : 0, l: 'Visits typed in directly', d: 'People who came straight to you' } : { n: '-', l: 'Visits typed in directly', d: 'Shown once website visits are connected' });
+    var S = D.socialLive, reach = S && S.stats.find(function (x) { return /reached/i.test(x.l); });
+    out.push(reach ? { n: reach.n, l: 'People reached on social', d: reach.d } : { n: '-', l: 'People reached on social', d: 'Shown once Instagram is connected' });
+    out.push({ n: '-', l: 'Times AI assistants recommend you', d: 'Being set up' });
+    return out;
+  }
+  V.brand = function () {
+    var live = !!cidParam();
+    if (live) lazy('brandLive', '/.netlify/functions/brand', 'brand');
+    var L = live ? D.brandLive : { status: 'ready', plan: SAMPLE_BRAND };
+    var intro = head('Brand', 'Brand and performance working together: be remembered, meet the need of the moment, then keep the relationship growing.');
+    if (!L) return intro + panel('Loading your brand plan', '', '<p class="meta">One moment.</p>');
+    if (L.status === 'writing' || L.status === 'none') { setTimeout(function () { if (location.hash === '#brand') { LAZY.brandLive = false; lazy('brandLive', '/.netlify/functions/brand', 'brand', true); } }, 40000); return intro + panel('Your brand plan', 'Being written now', '<p class="meta">Meridian is building your brand plan from your business details, your Growth Blueprint and any strategy you uploaded. It appears here in a minute or two.</p>'); }
+    if (L.status === 'failed' && !L.plan) return intro + panel('Your brand plan', '', '<p class="meta">Your brand plan could not be written just now.' + (L.error ? ' Reason: ' + esc(L.error) : '') + '</p><div class="actions" style="margin-top:10px"><button class="btn" data-x="brandretry">Try again</button></div>');
+    var P = L.plan, li = function (a, f) { return '<ul class="list">' + (a || []).map(f).join('') + '</ul>'; };
+    var stage = function (n, name, line) { return '<div class="stage-h"><span class="stage-n">' + n + '</span><div><h2 class="sec" style="margin:0">' + name + '</h2><p class="meta" style="margin:2px 0 0">' + line + '</p></div></div>'; };
+    var stats = recallStats();
+    return intro +
+      (P.promise ? '<p class="brand-promise">' + esc(P.promise) + '</p>' : '') +
+      stage(1, 'Amplify', 'Build distinctive memory, so people think of you first') +
+      '<div class="stats-row">' + stats.map(function (x) { return '<section class="panel stat"><span class="n">' + esc(String(x.n)) + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>' +
+      '<div class="grid g2">' + panel('Your distinctive assets', 'What people should recognise as yours', li(P.assets, function (a) { return '<li><div class="grow"><div><strong>' + esc(a.name) + '</strong></div><div class="meta">' + esc(a.why) + '</div></div><span class="tag ' + (a.has ? 'on' : '') + '">' + (a.has ? 'You have this' : 'To build') + '</span></li>'; })) +
+        panel('Show them everywhere', 'Recognition comes from repetition', li(P.consistency, function (x) { return '<li><span class="dot"></span><div class="grow">' + esc(x) + '</div></li>'; })) + '</div>' +
+      '<div style="height:28px"></div>' + stage(2, 'Connect', 'Turn what a guest needs right now into the right experience') +
+      '<div class="grid g2">' + panel('The needs you answer', 'In your guests’ own words', li(P.needs, function (n) { return '<li><div class="grow"><div><strong>“' + esc(n.need) + '”</strong></div><div class="meta">' + esc(n.occasion) + '. Leads to ' + esc(n.offer) + '.</div><div class="meta" style="color:var(--teal-dk)">' + esc(n.message) + '</div></div></li>'; })) +
+        panel('A guide for your website', 'Helps a visitor find the right booking in one tap', '<div class="needs-guide"><div class="ng-q">' + esc((P.guide || {}).question || 'What do you need today?') + '</div><div class="ng-o">' + ((P.guide || {}).options || []).map(function (o) { return '<span title="' + esc(o.offer) + '">' + esc(o.label) + '</span>'; }).join('') + '</div></div>' +
+          '<p class="meta" style="margin-top:12px">Each answer takes the visitor to ' + ((P.guide || {}).options || []).map(function (o) { return esc(o.offer); }).join(', ') + '.</p><div class="actions" style="margin-top:12px"><button class="btn" data-act="approve">Add this to my website</button></div>') + '</div><div style="height:20px"></div>' +
+      panel('Moments to plan content around', 'The next three months', li(P.themes, function (t) { return '<li><div class="grow"><div><strong>' + esc(t.occasion) + '</strong></div><div class="meta">' + esc(t.idea) + '</div></div></li>'; })) +
+      '<div style="height:28px"></div>' + stage(3, 'Compound', 'Turn a first visit into a lasting relationship') +
+      '<div class="grid g2">' + panel('Ideas to deepen the relationship', '', li(P.compound, function (c) { return '<li><div class="grow"><div><strong>' + esc(c.stage) + '</strong></div><div class="meta">' + esc(c.idea) + '</div></div></li>'; })) +
+        panel('Already working for you', 'Your guest journeys and returning guests', '<p style="max-width:56ch">Your guest journeys welcome new guests, follow up after each visit, invite the next booking and win back guests who have gone quiet.</p><div class="actions" style="margin-top:12px"><a class="btn ghost" href="#returning">See your guest journeys</a></div>') + '</div>' +
+      (live ? '<p class="meta" style="margin-top:18px">' + (L.status === 'rewriting' ? 'Rewriting with your latest details.' : 'Written ' + (L.at ? new Date(L.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) : '') + '. Changed your business details or strategy? <a href="#" data-x="brandretry">Rewrite this plan</a>.') + '</p>' : '');
+  };
+
+  /* Content: the Social Planner calendar with results, and the strategy the posts follow */
+  function strategyLine() {
+    var L = D.livePosts; if (!L || !cidParam()) return '';
+    var bits = [];
+    if (L.usedStrategy) bits.push('Following your content strategy');
+    else if (!L.hasGuide) bits.push('Upload your content strategy in <a href="/onboard/?edit=1">Business details</a> and your posts will follow it');
+    if (L.campaigns && L.campaigns.length) bits.push('planned around ' + L.campaigns.map(esc).join(', '));
+    if (L.guideUnread && L.guideUnread.length) bits.push('the text in your ' + L.guideUnread.map(function (x) { return esc(x.toLowerCase()); }).join(' and ') + ' could not be read, as the pages look like pictures. A PDF or web page version works best. Upload it in <a href="/onboard/?edit=1">Business details</a>');
+    var line = bits.join(', '); line = line.charAt(0).toUpperCase() + line.slice(1);
+    return '<p class="meta" style="margin:-6px 0 14px">' + line + (bits.length ? '. ' : '') + (L.status === 'ready' ? '<a href="#" data-x="rewriteposts">Rewrite this week’s posts</a>' : '') + '</p>';
+  }
+  function socialCalendarBlock() {
+    if (!cidParam() || !D.client) return '';
+    lazy('socialCal', '/.netlify/functions/social?calendar=1', 'content');
+    lazy('campaignsLive', '/.netlify/functions/campaigns', 'content');
+    var S = D.socialCal;
+    if (!S) return panel('Your content calendar', 'Loading', '<p class="meta">One moment.</p>') + '<div style="height:20px"></div>';
+    var start = mondayOf(new Date()); start.setDate(start.getDate() - 7);
+    var CLS = { published: 'pub', scheduled: 'sch', failed: 'fail', draft: 'dr', in_review: 'dr', pending: 'sch', in_progress: 'sch' };
+    var items = (S.posts || []).map(function (p) { return { date: ymd(new Date(p.when)), label: (p.platform ? p.platform.charAt(0).toUpperCase() + p.platform.slice(1) : 'Post'), cls: CLS[p.status] || '', title: p.text }; })
+      .concat(campaignItems((D.campaignsLive || {}).campaigns));
+    var pub = (S.posts || []).filter(function (p) { return p.status === 'published'; }).reverse();
+    var rows = pub.length ? pub.slice(0, 12).map(function (p) {
+      return '<tr><td>' + niceDate(p.when) + '</td><td>' + esc(p.platform.charAt(0).toUpperCase() + p.platform.slice(1)) + '</td><td style="max-width:44ch">' + esc(p.text.slice(0, 110)) + (p.text.length > 110 ? '…' : '') + '</td><td>' + (p.likes != null ? p.likes : '-') + '</td><td>' + (p.comments != null ? p.comments : '-') + '</td><td>' + (p.shares != null ? p.shares : '-') + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="meta">Published posts and their results appear here.</td></tr>';
+    var failed = (S.posts || []).filter(function (p) { return p.status === 'failed'; });
+    return panel('Your content calendar', 'Last week to five weeks ahead. Everything scheduled or published to your accounts, with your campaigns.',
+      '<div class="legend" style="margin-bottom:12px"><span><i class="k-pub"></i>Published</span><span><i class="k-sch"></i>Scheduled</span><span><i class="k-dr"></i>Draft</span><span><i class="k-camp"></i>Campaign</span>' + (failed.length ? '<span><i class="k-fail"></i>Did not publish</span>' : '') + '</div>' +
+      calGrid(start, 6, items) + (S.error ? '<p class="meta" style="margin-top:10px">' + esc(S.error) + '</p>' : '') +
+      (failed.length ? '<p class="meta" style="margin-top:10px;color:var(--warn)">' + failed.length + ' post' + (failed.length === 1 ? '' : 's') + ' did not publish. Our team has been told and will fix ' + (failed.length === 1 ? 'it' : 'them') + '.</p>' : '')) +
+      '<div style="height:20px"></div>' + panel('How your posts performed', 'Published in the last two weeks', '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Where</th><th>Post</th><th>Likes</th><th>Comments</th><th>Shares</th></tr></thead><tbody>' + rows + '</tbody></table></div>') + '<div style="height:20px"></div>';
+  }
+
+  /* Returning guests: journeys already running in the client's own Klaviyo */
+  function klaviyoBlock() {
+    if (!cidParam() || !D.client) return '';
+    lazy('klaviyoLive', '/.netlify/functions/klaviyo', 'returning');
+    var K = D.klaviyoLive; if (!K) return '';
+    if (!K.connected) return panel('Use Klaviyo for your emails?', 'See the journeys running in your Klaviyo account here, with their results', '<p style="max-width:64ch">In Klaviyo, open Settings, then API keys, then Create Private API Key. Name it Meridian, choose Read-only access and copy the key, which starts with pk_. Paste it below. Meridian can only read your journeys and results; it cannot send or change anything.</p>' +
+      '<div style="display:flex;gap:8px;margin-top:12px;max-width:560px"><input id="k-key" type="password" autocomplete="off" placeholder="pk_..." style="flex:1;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:8px"><button class="btn" data-x="kconnect">Connect Klaviyo</button></div>') + '<div style="height:20px"></div>';
+    var F = K.flows || [];
+    var rows = F.length ? F.map(function (f) {
+      return '<tr><td><strong>' + esc(f.name) + '</strong><div class="meta">' + esc(f.trigger || '') + '</div></td><td><span class="tag ' + (f.status === 'live' ? 'on' : '') + '">' + esc(f.status === 'live' ? 'Live' : f.status === 'manual' ? 'Manual' : 'Draft') + '</span></td><td>' + (f.sent != null ? f.sent.toLocaleString('en-AU') : '-') + '</td><td>' + (f.openRate != null ? f.openRate + '%' : '-') + '</td><td>' + (f.clickRate != null ? f.clickRate + '%' : '-') + '</td>' + (K.revenue ? '<td>' + (f.revenue != null ? money(f.revenue) : '-') + '</td>' : '') + '</tr>';
+    }).join('') : '<tr><td colspan="6" class="meta">No journeys found in this Klaviyo account yet.</td></tr>';
+    return panel('Your Klaviyo journeys', 'Last 30 days' + (K.account ? ', ' + esc(K.account) : '') + '. Refreshed a few times a day.',
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Journey</th><th>Status</th><th>Sent</th><th>Opened</th><th>Clicked</th>' + (K.revenue ? '<th>Revenue</th>' : '') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      (K.reportError || K.error ? '<p class="meta" style="margin-top:10px">' + esc(K.reportError || K.error) + '</p>' : '') + '<p class="meta" style="margin-top:10px"><a href="#" data-x="kdisconnect">Disconnect Klaviyo</a></p>') + '<div style="height:20px"></div>';
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-x]'); if (!b) return;
+    var x = b.getAttribute('data-x'); e.preventDefault();
+    var live = !!cidParam(), demo = function () { toast('In your own dashboard this is saved to your calendar.'); };
+    if (x === 'cmonth') { CAL_MONTH += +b.getAttribute('data-d'); render(); return; }
+    if (x === 'cadd' || x === 'cedit') { campaignForm(x === 'cedit' ? ((D.campaignsLive || {}).campaigns || []).find(function (c) { return c.id === b.getAttribute('data-id'); }) : null); return; }
+    if (x === 'ccancel') { $('#c-form').innerHTML = ''; return; }
+    if (x === 'csave') {
+      if (!live) return demo();
+      var box = b.closest('[data-cid]'), v = {}; box.querySelectorAll('input').forEach(function (i) { v[i.name] = i.value.trim(); }); v.id = box.getAttribute('data-cid') || undefined;
+      if (!v.name || !v.start) { toast('Add a name and a start date'); return; }
+      saveCampaigns({ campaign: v }, function () { return 'Campaign saved'; }); return;
+    }
+    if (x === 'cdel') {
+      fetch('/.netlify/functions/campaigns?client=' + encodeURIComponent(cidParam()) + '&id=' + encodeURIComponent(b.getAttribute('data-id')), { method: 'DELETE', credentials: 'same-origin' })
+        .then(function (r) { return r.json(); }).then(function (j) { D.campaignsLive = j; render(); toast('Removed'); }).catch(function () { toast('That could not be removed'); });
+      return;
+    }
+    if (x === 'cupload') { if (!live) return demo(); var fi = $('#c-file'); fi.onchange = function () { if (fi.files[0]) readSheetFile(fi.files[0]); }; fi.click(); return; }
+    if (x === 'csheet') {
+      if (!live) return demo();
+      $('#c-form').innerHTML = '<div class="panel" style="margin-top:16px;background:var(--cream)"><label class="meta" for="c-sheet">Google Sheet link. In Google Sheets choose Share, then "Anyone with the link can view".</label><div style="display:flex;gap:8px;margin-top:6px"><input id="c-sheet" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="flex:1;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:8px"><button class="btn" data-x="csheetgo">Import</button></div><p class="meta" style="margin-top:8px">Meridian checks the sheet again every day, so changes you make there show up here.</p></div>';
+      $('#c-sheet').focus(); return;
+    }
+    if (x === 'csheetgo') { var link = $('#c-sheet').value.trim(); if (!link) return; b.disabled = true; b.textContent = 'Importing'; saveCampaigns({ sheet: link }, function (j) { return j.imported + ' campaign' + (j.imported === 1 ? '' : 's') + ' imported'; }).then(function () { b.disabled = false; b.textContent = 'Import'; }); return; }
+    if (x === 'csync') { LAZY.campaignsLive = false; lazy('campaignsLive', '/.netlify/functions/campaigns?sync=1', 'campaigns', true); toast('Syncing your sheet'); return; }
+    if (x === 'brandretry') {
+      fetch('/.netlify/functions/brand?client=' + encodeURIComponent(cidParam()) + '&rewrite=1', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { D.brandLive = j; render(); toast('Writing your brand plan'); }).catch(function () {});
+      return;
+    }
+    if (x === 'rewriteposts') {
+      fetch('/.netlify/functions/social?client=' + encodeURIComponent(cidParam()) + '&rewrite=1', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (P) { D.livePosts = P; render(); toast('Rewriting this week’s posts. Scheduled posts stay as they are.'); }).catch(function () {});
+      return;
+    }
+    if (x === 'kconnect' || x === 'kdisconnect') {
+      var opts = x === 'kconnect' ? { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: $('#k-key').value.trim() }) } : { method: 'DELETE', credentials: 'same-origin' };
+      if (x === 'kconnect' && !$('#k-key').value.trim()) { toast('Paste your Klaviyo key first'); return; }
+      b.disabled = true;
+      fetch('/.netlify/functions/klaviyo?client=' + encodeURIComponent(cidParam()), opts).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (r) { b.disabled = false; if (!r.ok) { toast(r.j.error || 'That did not work'); return; } toast(r.j.connected ? 'Klaviyo connected' : 'Klaviyo disconnected'); LAZY.klaviyoLive = false; D.klaviyoLive = null; lazy('klaviyoLive', '/.netlify/functions/klaviyo', 'returning', true); })
+        .catch(function () { b.disabled = false; toast('That did not work. Please try again.'); });
+    }
+  });
+
   /* ---------- routing ---------- */
-  var routes = ['overview', 'messages', 'insights', 'audit', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
+  var routes = ['overview', 'messages', 'insights', 'audit', 'campaigns', 'brand', 'plan', 'bookings', 'guests', 'returning', 'reviews', 'content', 'ads', 'website', 'partners'];
   var EMPTY = { overview: 'Overview', messages: 'Messages', bookings: 'Bookings', returning: 'Returning guests', reviews: 'Reviews', guests: 'New guests', partners: 'Partners', ads: 'Ads' };
   function emptyView(r) {
     return head(EMPTY[r] || 'Your dashboard', 'Your own figures appear here as soon as your account is connected.') +
@@ -1010,6 +1247,9 @@
       // Only figures that come from the client's own account or profile. Sample panels (outreach, ads, partners) are left out.
       var out = { date: new Date().toISOString().slice(0, 10), plan: tier(), venue: D.venue && D.venue.name, goals: D.goals, plan_channels: D.plan && D.plan.fromGoals ? D.plan.channels : undefined,
         blueprint: D.blueprint ? pick(D.audit, ['baseline', 'now', 'sections', 'next']) : undefined, social: D.socialLive || undefined, notYet: 'Outreach, ads and partner figures are not connected yet' };
+      if (D.campaignsLive) out.campaigns = (D.campaignsLive.campaigns || []).filter(function (c) { return (c.end || c.start) >= out.date; }).slice(0, 10);
+      if (D.brandLive && D.brandLive.plan) out.brand = pick(D.brandLive.plan, ['promise', 'needs']);
+      if (D.klaviyoLive && D.klaviyoLive.flows) out.klaviyo = D.klaviyoLive.flows.slice(0, 12);
       if (D.live) { out.attribution = D.attribution; out.bookings = D.bookings && pick(D.bookings, ['stats', 'week', 'upcoming']); out.returning = D.returning && pick(D.returning, ['stats']); out.reviews = D.reviews && pick(D.reviews, ['stats', 'rating', 'count']); }
       return out;
     }
