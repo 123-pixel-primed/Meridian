@@ -9,7 +9,9 @@ import { ghl, assignee } from '../lib/ghl.mjs';
 import { readSession, canSee, unauthorised, makeCookie } from '../lib/session.mjs';
 import { listLocations, savePit, appStatus } from '../lib/ghl-access.mjs';
 
-const FILE_FIELDS = ['logo', 'style_guide', 'brand_image_1', 'brand_image_2', 'brand_image_3', 'brand_image_4', 'brand_image_5'];
+const FILE_FIELDS = ['logo', 'style_guide'];
+// Brand photos: as many as a client wants, named brand_image_1, brand_image_2 and so on.
+const isFileField = f => FILE_FIELDS.indexOf(f) >= 0 || /^brand_image_([1-9]|[1-9][0-9])$/.test(f);
 const MAX_FILE = 5 * 1024 * 1024;
 const FILE_TYPES = /^(image\/(png|jpeg|svg\+xml|webp)|application\/pdf|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation))$/;
 
@@ -115,7 +117,7 @@ export default async (req) => {
     // Only the client themselves (or Pixel Primed staff) can see a client's profile and files.
     if (!canSee(readSession(req), id)) return unauthorised();
     if (file) {
-      if (FILE_FIELDS.indexOf(file) < 0) return new Response('Not found', { status: 404 });
+      if (!isFileField(file)) return new Response('Not found', { status: 404 });
       const r = await files.getWithMetadata(id + '/' + file, { type: 'arrayBuffer' });
       if (!r) return new Response('Not found', { status: 404 });
       return new Response(r.data, { headers: { 'Content-Type': (r.metadata && r.metadata.type) || 'application/octet-stream', 'Cache-Control': 'private, max-age=3600' } });
@@ -129,7 +131,7 @@ export default async (req) => {
 
   // One upload for an existing client.
   if (file) {
-    if (!validId(id) || FILE_FIELDS.indexOf(file) < 0) return Response.json({ error: 'Bad upload' }, { status: 400 });
+    if (!validId(id) || !isFileField(file)) return Response.json({ error: 'Bad upload' }, { status: 400 });
     if (!canSee(readSession(req), id)) return unauthorised();
     const rec = await clients.get(id, { type: 'json' });
     if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });

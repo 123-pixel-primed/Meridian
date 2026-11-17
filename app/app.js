@@ -445,11 +445,11 @@
     if (L.status === 'writing' || L.status === 'none') { setTimeout(function () { if (location.hash === '#content') location.reload(); }, 40000); return '<p class="meta">This week\u2019s posts are being written in your voice. They appear here in a minute or two.</p>'; }
     if (L.status === 'failed') return '<p class="meta">This week\u2019s posts could not be written just now.' + (L.error ? ' Reason: ' + esc(L.error) : '') + '</p><div class="actions" style="margin:10px 0 20px"><button class="btn" data-act="retryposts">Try again</button></div>';
     var to = (L.accounts || []).map(function (a) { return a.platform + ' ' + a.name; }).join(' and ');
-    return '<p class="meta" style="margin:-6px 0 14px">' + (to ? 'Approved posts are scheduled to ' + esc(to) + '.' : 'Connect Instagram or Facebook to have approved posts scheduled for you.') + '</p><div class="grid g3">' +
+    return '<p class="meta" style="margin:-6px 0 14px">' + (to ? 'Approved posts are scheduled to ' + esc(to) + '.' : 'Connect Instagram or Facebook to have approved posts scheduled for you.' + (L.accountsError ? ' (Staff note: ' + esc(L.accountsError) + ')' : '')) + '</p><div class="grid g3">' +
       (L.posts || []).map(function (p) {
         var s = (L.scheduled || {})[p.id];
         var when = s ? new Date(s.when).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }) : '';
-        return '<section class="panel em" style="padding:0;overflow:hidden">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" style="width:100%;height:200px;object-fit:cover;display:block">' : '<div style="height:120px;background:var(--linen,#F5F0EA);padding:16px" class="meta">Photo: ' + esc(p.image) + '</div>') +
+        return '<section class="panel post-card" style="padding:0;overflow:hidden;display:block">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" style="width:100%;height:200px;object-fit:cover;display:block">' : '<div style="background:#F5F0EA;padding:16px 20px;font-size:13px;color:#4A7570">Suggested photo: ' + esc(p.image) + '</div>') +
           '<div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px">Instagram, ' + esc(p.day) + ' ' + esc(p.time) + '</div><div class="em-subj" style="font-weight:500;margin:4px 0 10px">' + esc(p.title) + '</div>' +
           '<div class="em-text" style="white-space:pre-line;font-size:14px;margin-bottom:14px">' + esc(p.caption) + '</div>' +
           (s ? '<div class="meta">' + (s.status === 'draft' ? 'Saved for our team to add a photo before ' + esc(when) : 'Scheduled for ' + esc(when)) + '</div>' :
@@ -707,7 +707,7 @@
   // Each Approve button is identified by its page and the item's title, so the saved state survives reloads.
   var APPROVALS = {};
   function approvalItem(b) {
-    var box = b.closest('.em, .opt, li, tr') || b.parentNode;
+    var box = b.closest('.em, .opt, .post-card, li, tr') || b.parentNode;
     var tEl = box.querySelector('.em-subj') || box.querySelector('.grow > div:first-child, td strong, strong') || box.querySelector('.email-when') || box;
     var title = (tEl.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160);
     var mEl = box.querySelector('.meta.grow, .grow .meta, .meta');
@@ -718,7 +718,7 @@
   function clientQS() { var c = new URLSearchParams(location.search).get('client'); return c ? '?client=' + encodeURIComponent(c) : ''; }
   // The text an Edit button changes: an email body, a reply draft or a message.
   function editTarget(b) {
-    var box = b.closest('.em, .opt, li, tr, .draft') || b.parentNode;
+    var box = b.closest('.em, .opt, .post-card, li, tr, .draft') || b.parentNode;
     return { box: box, el: box.querySelector('.em-text') || box.querySelector('textarea') || box.querySelector('p') };
   }
   function editKey(b) { return 'edit:' + approvalItem(b).key; }
@@ -811,7 +811,7 @@
     }
     else if (act === 'schedule') {
       var pid = b.getAttribute('data-post'); b.disabled = true; b.textContent = 'Scheduling';
-      fetch('/.netlify/functions/social' + clientQS(), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: pid, caption: (function () { var t = b.closest('.em').querySelector('.em-text'); return t ? t.innerText.trim() : ''; })() }) })
+      fetch('/.netlify/functions/social' + clientQS(), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: pid, caption: (function () { var t = b.closest('.post-card').querySelector('.em-text'); return t ? t.innerText.trim() : ''; })() }) })
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (x) {
           if (!x.ok) { b.disabled = false; b.textContent = 'Approve and schedule'; toast(x.j.needsConnect ? 'Connect Instagram or Facebook first, using the secure link at the top of this page' : (x.j.error || 'That could not be scheduled')); return; }
@@ -939,9 +939,11 @@
     // What the assistant can see: the figures on this client's dashboard right now.
     function snapshot() {
       var pick = function (o, ks) { var r = {}; ks.forEach(function (k) { if (o && o[k] != null) r[k] = o[k]; }); return r; };
-      return { date: new Date().toISOString().slice(0, 10), plan: tier(), live: !!D.live, venue: D.venue && D.venue.name, goals: D.goals, planChannels: D.plan && D.plan.channels,
-        attribution: D.attribution, insights: D.insights && pick(D.insights, ['telling', 'channels']), audit: D.audit && pick(D.audit, ['baseline', 'now', 'sections', 'next']),
-        bookings: D.bookings && pick(D.bookings, ['stats', 'week', 'upcoming']), returning: D.returning && pick(D.returning, ['stats']), reviews: D.reviews && pick(D.reviews, ['stats', 'rating', 'count']) };
+      // Only figures that come from the client's own account or profile. Sample panels (outreach, ads, partners) are left out.
+      var out = { date: new Date().toISOString().slice(0, 10), plan: tier(), venue: D.venue && D.venue.name, goals: D.goals, plan_channels: D.plan && D.plan.fromGoals ? D.plan.channels : undefined,
+        blueprint: D.blueprint ? pick(D.audit, ['baseline', 'now', 'sections', 'next']) : undefined, social: D.socialLive || undefined, notYet: 'Outreach, ads and partner figures are not connected yet' };
+      if (D.live) { out.attribution = D.attribution; out.bookings = D.bookings && pick(D.bookings, ['stats', 'week', 'upcoming']); out.returning = D.returning && pick(D.returning, ['stats']); out.reviews = D.reviews && pick(D.reviews, ['stats', 'rating', 'count']); }
+      return out;
     }
     function fmt(t) { return esc(t).replace(/\n\s*\d+\.\s/g, '<br>&bull; ').replace(/\n/g, '<br>'); }
     function ask(q) {

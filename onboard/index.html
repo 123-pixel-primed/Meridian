@@ -213,7 +213,7 @@
         <div class="field"><label for="colour_accent">Accent colour</label><input type="text" id="colour_accent" name="colour_accent"></div>
         <div class="field"><label for="logo">Logo</label><span class="hint">PNG, SVG or JPG</span><input type="file" id="logo" name="logo" accept=".png,.svg,.jpg,.jpeg"></div>
         <div class="field"><label for="style_guide">Brand style guide</label><span class="hint">PDF, Word, PowerPoint or an image, up to 5MB</span><input type="file" id="style_guide" name="style_guide" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx"></div>
-        <div class="field full"><span class="q">Brand photos</span><span class="hint">Up to 5 photos of your space and treatments. Put your favourite first, it becomes the header image in your dashboard.</span><div class="uploads"><input type="file" id="brand_image_1" name="brand_image_1" accept=".jpg,.jpeg,.png" aria-label="Brand photo 1"><input type="file" id="brand_image_2" name="brand_image_2" accept=".jpg,.jpeg,.png" aria-label="Brand photo 2"><input type="file" id="brand_image_3" name="brand_image_3" accept=".jpg,.jpeg,.png" aria-label="Brand photo 3"><input type="file" id="brand_image_4" name="brand_image_4" accept=".jpg,.jpeg,.png" aria-label="Brand photo 4"><input type="file" id="brand_image_5" name="brand_image_5" accept=".jpg,.jpeg,.png" aria-label="Brand photo 5"></div></div>
+        <div class="field full"><span class="q">Brand photos</span><span class="hint">Choose as many photos of your space, treatments and team as you like. They are used in your posts. Your first photo becomes the header image in your dashboard.</span><input type="file" id="brand_images" name="brand_images" accept=".jpg,.jpeg,.png" multiple aria-label="Brand photos"><span class="hint" id="photo-count"></span></div>
         <p class="hint full" id="upload-note" style="font-size:12px;color:var(--label)">Photos are resized automatically. Logos and style guides can be up to 4 MB each. Anything larger can be shared on your onboarding call.</p>
       </div>
     </fieldset>
@@ -358,7 +358,9 @@
   if (qs.get('email')) document.getElementById('email').value = qs.get('email');
 
   // Edit mode: a signed-in client updates their answers. Everything is filled from what they gave us before.
-  var EDIT = null;
+  var EDIT = null, PHOTO_N = 0;
+  var bi = document.getElementById('brand_images');
+  if (bi) bi.addEventListener('change', function () { document.getElementById('photo-count').textContent = bi.files.length ? bi.files.length + ' photo' + (bi.files.length === 1 ? '' : 's') + ' chosen' : ''; });
   if (qs.get('edit')) {
     document.querySelector('#intro h1').textContent = 'Update your business details';
     document.querySelector('#intro .lead').textContent = 'Change anything below, then save. Your voice, imagery, colours and drafts update straight away. Leave a file empty to keep the one you sent before.';
@@ -368,6 +370,8 @@
       return fetch('/.netlify/functions/onboard?id=' + encodeURIComponent(cid), { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); });
     }).then(function (C) {
       EDIT = C.id; var A = C.answers || {};
+      (C.files || []).forEach(function (f) { var m = /^brand_image_(\d+)$/.exec(f); if (m) PHOTO_N = Math.max(PHOTO_N, +m[1]); });
+      if (PHOTO_N) document.getElementById('photo-count').textContent = PHOTO_N + ' photo' + (PHOTO_N === 1 ? '' : 's') + ' already sent. Any you choose now are added to them.';
       Object.keys(A).forEach(function (k) {
         var v = A[k], els = form.querySelectorAll('[name="' + k + '"]');
         Array.prototype.forEach.call(els, function (el) {
@@ -418,14 +422,19 @@
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (res) {
         var id = res.id, failed = [];
-        var inputs = Array.prototype.slice.call(form.querySelectorAll('input[type=file]')).filter(function (f) { return f.files.length; });
+        // Every chosen file, with the name it is saved under. New photos are added after any already sent.
+        var uploads = [];
+        Array.prototype.forEach.call(form.querySelectorAll('input[type=file]'), function (f) {
+          if (f.name === 'brand_images') Array.prototype.forEach.call(f.files, function (file, k) { if (PHOTO_N + k < 99) uploads.push({ name: 'brand_image_' + (PHOTO_N + k + 1), file: file }); });
+          else if (f.files.length) uploads.push({ name: f.name, file: f.files[0] });
+        });
         next.textContent = 'Uploading your files';
-        return inputs.reduce(function (p, f) {
-          return p.then(function () { return shrink(f.files[0]); }).then(function (blob) {
-            var type = blob.type || f.files[0].type;
-            return fetch(api + '?id=' + encodeURIComponent(id) + '&file=' + f.name, { method: 'POST', headers: { 'Content-Type': type }, body: blob })
-              .then(function (r) { if (!r.ok) failed.push(f.files[0].name); })
-              .catch(function () { failed.push(f.files[0].name); });
+        return uploads.reduce(function (p, u, k) {
+          return p.then(function () { next.textContent = 'Uploading ' + (k + 1) + ' of ' + uploads.length; return shrink(u.file); }).then(function (blob) {
+            var type = blob.type || u.file.type;
+            return fetch(api + '?id=' + encodeURIComponent(id) + '&file=' + u.name, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': type }, body: blob })
+              .then(function (r) { if (!r.ok) failed.push(u.file.name); })
+              .catch(function () { failed.push(u.file.name); });
           });
         }, Promise.resolve()).then(function () {
           if (EDIT) { location.href = '/app/?client=' + encodeURIComponent(id) + '#content'; return; }

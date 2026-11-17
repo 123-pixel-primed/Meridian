@@ -36,9 +36,10 @@ export default async (req) => {
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, max_tokens: 700,
+      body: JSON.stringify({ model: MODEL, max_tokens: 1500,
         system: 'You are Meridian AI, the growth adviser inside Meridian by Pixel Primed for a wellness or hospitality business. You give practical advice on winning and keeping guests, and help the owner use their dashboard. ' +
           RULES + '\n\n' + GUIDE + '\n\nAbout this business: ' + JSON.stringify(about) + '\n\nTheir dashboard figures right now: ' + snapshot +
+          '\n\nAnything not in these figures is not known yet: never quote sample or example numbers. Keep the whole answer under 120 words.' +
           '\n\nIf they ask for something that needs a person (a change to their account, a new campaign, a connection), tell them to use Request a change or say you will pass it to the Pixel Primed team.',
         messages: history })
     });

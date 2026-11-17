@@ -34,15 +34,15 @@ export default async (req) => {
   if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
   const store = getStore({ name: 'content', consistency: 'strong' });
   const week = weekKey(), key = cid + '/' + week;
-  const images = (rec.files || []).filter(f => /\.(png|jpe?g|webp)$/i.test(f) && !/logo/i.test(f));
-  let token = null, accounts = [];
+  const images = (rec.files || []).filter(f => /^brand_image_\d+$/.test(f)).sort((a, b) => +a.split('_')[2] - +b.split('_')[2]);
+  let token = null, accounts = [], accountsError = null;
   if (rec.locationId) {
     try {
       token = await tokenFor(rec.locationId);
       const a = await ghl('/social-media-posting/' + rec.locationId + '/accounts', token);
       accounts = ((a.results && a.results.accounts) || a.accounts || []).filter(x => !x.isExpired && /instagram|facebook/i.test(x.platform || ''))
         .map(x => ({ id: x.id || x._id, platform: x.platform, name: x.name }));
-    } catch (e) { accounts = []; }
+    } catch (e) { accounts = []; accountsError = String(e.message || e).slice(0, 200); }
   }
   let wk = await store.get(key, { type: 'json' });
 
@@ -53,7 +53,7 @@ export default async (req) => {
       await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week }) }).catch(() => {});
     }
     const posts = ((wk && wk.posts) || []).map((p, i) => Object.assign({}, p, { img: images.length ? mediaUrl(url.origin, cid, images[i % images.length]) : null }));
-    return Response.json({ status: (wk && wk.status) || 'none', error: sess.admin && wk && wk.error || undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ status: (wk && wk.status) || 'none', error: sess.admin && wk && wk.error || undefined, accountsError: sess.admin ? accountsError || undefined : undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method === 'POST') {
@@ -70,7 +70,7 @@ export default async (req) => {
     const when = nextSlot(p.day, p.time, tz);
     // Without an image Instagram cannot publish, so the post is saved as a draft for our team to add one.
     const body = { accountIds: accounts.map(a => a.id), userId, summary: String(b.caption || p.caption).slice(0, 2200), type: 'post', status: img ? 'scheduled' : 'draft', scheduleDate: when.toISOString(),
-      media: img ? [{ url: img, type: /\.png/i.test(img) ? 'image/png' : 'image/jpeg' }] : [] };
+      media: img ? [{ url: img, type: 'image/jpeg' }] : [] };
     try {
       const r = await ghl('/social-media-posting/' + rec.locationId + '/posts', token, { method: 'POST', body });
       const out = { status: img ? 'scheduled' : 'draft', when: when.toISOString(), postId: (r.results && (r.results.post && r.results.post._id || r.results._id)) || r.id || null, to: accounts.map(a => a.platform + ' ' + a.name) };
