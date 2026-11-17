@@ -237,6 +237,26 @@
       </div>
     </fieldset>
 
+    <fieldset data-title="Who you want to reach">
+      <legend>Who you want to reach</legend>
+      <p class="why">Meridian uses this to find new guests and partners for you, and to choose who to contact on each channel. Leave anything you are unsure of and we will suggest it on your setup call.</p>
+      <div class="fields">
+        <div class="field full"><label for="ideal_guest">Describe your ideal guest</label><span class="hint">Who they are, what they come to you for, how often</span><textarea id="ideal_guest" name="ideal_guest"></textarea></div>
+        <div class="field"><label for="reach_area">Where they live or work</label><span class="hint">Suburbs, a city or a distance from you</span><input type="text" id="reach_area" name="reach_area"></div>
+        <div class="field"><label for="avoid_audiences">Anyone we should not contact</label><span class="hint">Competitors, past partners or businesses you already work with</span><input type="text" id="avoid_audiences" name="avoid_audiences"></div>
+        <div class="field full"><span class="q">Businesses you would like as partners or clients</span>
+          <div class="choices">
+            <label><input type="checkbox" name="partner_types" value="Local businesses and offices">Local businesses and offices</label>
+            <label><input type="checkbox" name="partner_types" value="Corporate wellness">Corporate wellness</label>
+            <label><input type="checkbox" name="partner_types" value="Hotels and accommodation">Hotels and accommodation</label>
+            <label><input type="checkbox" name="partner_types" value="Health practitioners">Health practitioners</label>
+            <label><input type="checkbox" name="partner_types" value="Gyms and studios">Gyms and studios</label>
+            <label><input type="checkbox" name="partner_types" value="Event and wedding planners">Event and wedding planners</label>
+            <label><input type="checkbox" name="partner_types" value="Retailers and stockists">Retailers and stockists</label>
+          </div></div>
+      </div>
+    </fieldset>
+
     <!-- 6 -->
     <fieldset data-title="Connections">
       <legend>Connections</legend>
@@ -359,6 +379,9 @@
 
   // Edit mode: a signed-in client updates their answers. Everything is filled from what they gave us before.
   var EDIT = null, PHOTO_N = 0;
+  var IDEAL = { retreat: 'For example: women 30 to 55 who already practise yoga and want a reset away from home, once or twice a year', clinic: 'For example: professionals 28 to 50 who want visible skin results and come every four to six weeks', product: 'For example: people who buy natural skincare online and reorder every two months', other: 'For example: locals 25 to 55 who want time out to recover and come back every few weeks' };
+  var bt = document.getElementById('business_type');
+  if (bt) bt.addEventListener('change', function () { var t = bt.value.toLowerCase(), k = /retreat/.test(t) ? 'retreat' : /skin|aesthetic|clinic/.test(t) ? 'clinic' : /product/.test(t) ? 'product' : 'other'; document.getElementById('ideal_guest').placeholder = IDEAL[k]; });
   var bi = document.getElementById('brand_images');
   if (bi) bi.addEventListener('change', function () { document.getElementById('photo-count').textContent = bi.files.length ? bi.files.length + ' photo' + (bi.files.length === 1 ? '' : 's') + ' chosen' : ''; });
   if (qs.get('edit')) {

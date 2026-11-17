@@ -154,6 +154,8 @@ export function buildProfile(a) {
   return {
     plan, planName: TIERS[plan], billing: a.billing === 'yearly' ? 'yearly' : 'monthly',
     venue: { name: biz, place: city, owner, website: clean(a.website, 200) || null, type: clean(a.business_type, 80) },
+    // Who Meridian reaches for new guests and partners.
+    audience: { ideal: clean(a.ideal_guest, 600) || null, area: clean(a.reach_area, 200) || city || null, partners: [].concat(a.partner_types || []).map(x => clean(x, 60)).filter(Boolean), avoid: clean(a.avoid_audiences, 300) || null },
     brand: { primary, accent, usePrimary: readableOnWhite(primary) },
     goals: {
       revenue: num(a.revenue_goal), current: num(a.current_revenue), newGuests: num(a.new_guest_goal),

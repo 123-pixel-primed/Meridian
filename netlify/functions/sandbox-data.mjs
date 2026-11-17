@@ -183,6 +183,7 @@ export default async (req) => {
   await safe('conversations', async () => {
     const r = await ghl('/conversations/search', { locationId: loc, limit: '20' }, '2021-04-15', token);
     out.conversations = (r.conversations || []).map(c => ({
+      id: c.id, contactId: c.contactId || null, msgType: c.lastMessageType || '',
       name: c.fullName || c.contactName || c.email || 'Guest',
       type: c.lastMessageType || c.type || '',
       text: c.lastMessageBody || '',

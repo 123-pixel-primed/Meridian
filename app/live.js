@@ -104,7 +104,7 @@
 
     // Inbox
     D.inbox = S.conversations.map(function (c) {
-      return { name: c.name, channel: channel(c.type), time: when(c.date), status: c.unread > 0 || c.inbound ? 'Needs a reply' : 'Answered', text: c.text || '(no text)', draft: '' };
+      return { name: c.name, channel: channel(c.type), time: when(c.date), status: c.unread > 0 || c.inbound ? 'Needs a reply' : 'Answered', text: c.text || '(no text)', draft: '', live: true, contactId: c.contactId, msgType: c.msgType };
     });
 
     if (S.web) {
@@ -206,12 +206,13 @@
       var P = C.profile, f = C.files || [];
       D.client = { id: C.id, files: f };
       D.answers = C.answers || {};
+      D.clientProfile = P;
       var badge = document.querySelector('.sample'); if (badge && D.live) badge.remove();
       D.connect = C.connect || null;
       var Aw = D.answers, onOff = function (k, has) { return Aw['channel_' + k] ? Aw['channel_' + k] === 'on' : has; };
       D.outreach.channels = [
         { k: 'email', l: 'Email', d: 'To people who match your best guests', on: onOff('email', true) },
-        { k: 'instagram', l: 'Instagram messages', d: Aw.instagram ? 'From ' + Aw.instagram : 'Needs your Instagram account', on: onOff('instagram', !!Aw.instagram), needs: 'instagram', ask: 'Your Instagram handle or profile link' },
+        { k: 'instagram', l: 'Instagram engagement', d: Aw.instagram ? 'Follows, likes and comments from ' + Aw.instagram + '. Messages only once they write to you' : 'Needs your Instagram account', on: onOff('instagram', !!Aw.instagram), needs: 'instagram', ask: 'Your Instagram handle or profile link' },
         { k: 'linkedin', l: 'LinkedIn', d: Aw.linkedin ? 'From ' + Aw.linkedin : 'Needs your LinkedIn profile', on: onOff('linkedin', !!Aw.linkedin), needs: 'linkedin', ask: 'Your LinkedIn profile link' }
       ];
       D.venue.name = P.venue.name; D.venue.place = P.venue.place;
@@ -269,6 +270,13 @@
       .then(function (r) { return r.ok ? r.json() : null; }).then(function (P) { if (P) D.livePosts = P; }).catch(function () {});
   }
 
+  // The client's own guest journeys, written in their voice for their kind of business.
+  function loadJourneys() {
+    var id = new URLSearchParams(location.search).get('client'); if (!id || !D.client) return;
+    return fetch('/.netlify/functions/journeys?client=' + encodeURIComponent(id), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (J) { if (J) D.liveJourneys = J; }).catch(function () {});
+  }
+
   function boot() { var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
 
   // Everyone signs in first. Pixel Primed staff see the sandbox; a client sees only their own dashboard.
@@ -291,7 +299,7 @@
             else D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.';
           })
           .catch(function () { D.liveNote = 'Your accounts are being connected. Panels show sample figures until they are.'; })
-          .then(deriveInsights).then(loadClient).then(loadBlueprint).then(loadPosts).then(boot);
+          .then(deriveInsights).then(loadClient).then(loadBlueprint).then(loadPosts).then(loadJourneys).then(boot);
       }
       // Staff viewing a client see that client's own account; otherwise the sandbox.
       var dataUrl = '/.netlify/functions/sandbox-data' + (qs.get('client') ? '?client=' + encodeURIComponent(qs.get('client')) : '');
@@ -307,6 +315,7 @@
         .then(loadClient)
         .then(loadBlueprint)
         .then(loadPosts)
+        .then(loadJourneys)
         .then(boot);
     })
     .catch(toLogin);

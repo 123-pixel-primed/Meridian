@@ -206,6 +206,12 @@
       '<section class="panel inbox-wrap">' + list + '<div id="thread">' + thread + '</div></section>';
   };
   function threadView(first) {
+    if (first.live && first.contactId) {
+      return '<div class="thread" data-contact="' + esc(first.contactId) + '" data-type="' + esc(first.msgType || '') + '"><div class="thread-head"><strong>' + esc(first.name) + '</strong><span class="tag">' + esc(first.channel) + '</span></div>' +
+        (first.text && first.text !== '(no text)' ? '<div class="bubble in">' + esc(first.text) + '</div>' : '<div class="meta">No message text yet.</div>') +
+        '<div class="draft"><div class="meta">Your reply, sent from your own account on the same channel</div><textarea class="reply-box" aria-label="Reply" rows="5" style="width:100%;font:inherit;padding:12px;border:1px solid var(--border,#E9E1D5);border-radius:8px"></textarea>' +
+        '<div class="actions"><button class="btn ghost" data-act="suggestreply">Suggest a reply</button><button class="btn" data-act="sendreply">Send</button></div></div></div>';
+    }
     return '<div class="thread"><div class="thread-head"><strong>' + esc(first.name) + '</strong><span class="tag">' + esc(first.channel) + '</span></div>' +
       '<div class="bubble in">' + esc(first.text) + '</div>' +
       (first.draft ? '<div class="draft"><div class="meta">Suggested reply, checked against your live availability</div><textarea aria-label="Reply">' + esc(first.draft) + '</textarea><div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="approve">Send</button></div></div>' : '<div class="meta">Answered. Nothing waiting.</div>') + '</div>';
@@ -289,7 +295,7 @@
 
   V.guests = function () {
     var n = D.newGuests, o = D.outreach;
-    return head('New guests', 'People reached for the first time, the messages that reach them and who is ready to book.') +
+    return head('New guests', 'People reached for the first time, the messages that reach them and who is ready to book.') + audiencePanel() +
       '<div class="stats-row">' + o.stats.map(function (x) { return '<section class="panel stat"><span class="n">' + x.n + '</span><span class="l">' + esc(x.l) + '</span><span class="delta">' + esc(x.d) + '</span></section>'; }).join('') + '</div><div style="height:20px"></div>' +
       '<div class="grid g2">' +
         panel('From first message to first visit', D.period, funnel(n.funnel)) +
@@ -319,6 +325,13 @@
   };
   // How many new people Meridian contacts each month, and how that is shared between channels.
   var ALLOWANCE = { core: 0, growth: 400, scale: 800 }, LINKEDIN_WEEK = 50;
+  // Who Meridian reaches, from Business details.
+  function audiencePanel() {
+    var P = D.answers ? D.clientProfile : null; var a = P && P.audience; if (!a) return '';
+    var row = function (l, v) { return '<li><div class="grow"><div class="meta">' + l + '</div><div>' + esc(v || 'Not set yet') + '</div></div></li>'; };
+    return panel('Who we reach', 'From your Business details', '<ul class="list">' + row('Ideal guest', a.ideal) + row('Where', a.area) + row('Partners and clients', (a.partners || []).join(', ')) + row('Never contacted', a.avoid) + '</ul>' +
+      '<div class="actions" style="margin-top:12px"><a class="btn ghost" href="/onboard/?edit=1">Change who we reach</a></div>') + '<div style="height:20px"></div>';
+  }
   function allowancePanel() {
     var total = ALLOWANCE[tier()] || 0, on = (D.outreach.channels || []).filter(function (c) { return c.on; });
     if (!total || !on.length) return panel('Your monthly outreach', '', '<p class="meta">Switch on a channel to start reaching new people.</p>');
@@ -363,7 +376,27 @@
       '</div><div style="height:20px"></div>' +
       journeysPanel();
   };
+  // A live client's journeys: their own emails, editable, approved one journey at a time.
+  function liveJourneysPanel() {
+    var L = D.liveJourneys;
+    if (L.status === 'writing' || L.status === 'none') { setTimeout(function () { if (location.hash === '#returning') location.reload(); }, 45000); return panel('Guest journeys', 'Being written now', '<p class="meta">Meridian is writing every email in your guest journeys in your voice. They appear here in a few minutes.</p>'); }
+    if (L.status === 'failed' && !(L.journeys || []).length) return panel('Guest journeys', '', '<p class="meta">Your journeys could not be written just now.' + (L.error ? ' Reason: ' + esc(L.error) : '') + '</p><div class="actions" style="margin-top:10px"><button class="btn" data-act="rewritejourneys">Try again</button></div>');
+    var tabs = L.journeys.map(function (j, k) { return '<button class="tab" role="tab" aria-selected="' + (k === JOURNEY_TAB) + '" data-journey="' + k + '">' + esc(j.name) + '<span>' + j.emails.length + '</span></button>'; }).join('');
+    return panel('Guest journeys', 'Written in your voice. Edit any email, then approve the journey and our team puts it live.', '<div class="tabs" role="tablist">' + tabs + '</div><div id="journey-view">' + liveJourneyView(JOURNEY_TAB) + '</div>' +
+      '<p class="meta" style="margin-top:18px">' + (L.status === 'rewriting' ? 'Rewriting with your latest business details.' : 'Changed your business details? <a href="#" data-act="rewritejourneys">Rewrite these journeys</a>.') + '</p>');
+  }
+  var JOURNEY_TAB = 0;
+  function liveJourneyView(k) {
+    var j = D.liveJourneys.journeys[k]; if (!j) return '';
+    return '<p class="trigger">Starts: ' + esc(j.trigger) + '</p><div class="emails">' + j.emails.map(function (e) {
+      return '<article class="email post-card" data-email="' + esc(e.id) + '"><div class="email-when">' + esc(e.when) + '</div><div class="email-card">' + (e.img ? '<img src="' + esc(e.img) + '" alt="">' : '') +
+        '<div class="email-body"><div class="email-brand">' + esc(D.venue.name) + '</div><div class="email-head em-subj">' + esc(e.headline) + '</div>' +
+        '<div class="em-text" style="white-space:pre-line;text-align:left;font-size:14px;line-height:1.6;margin:14px 0">' + esc(e.body) + '</div><div class="email-rule"></div><div class="email-btn">' + esc(e.cta) + '</div></div></div>' +
+        '<div class="email-subj">Subject: ' + esc(e.subject) + '</div><div class="actions" style="margin-top:8px"><button class="btn ghost" data-act="edit">Edit</button></div></article>';
+    }).join('') + '</div><div class="actions" style="margin-top:16px">' + (j.approved ? '<span class="meta">Approved ' + new Date(j.approved.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) + '. Our team is putting it live.</span>' : '<button class="btn" data-act="approvejourney" data-key="' + esc(j.key) + '">Approve this journey</button>') + '</div>';
+  }
   function journeysPanel() {
+    if (D.liveJourneys) return liveJourneysPanel();
     var J = D.journeyEmails || [];
     if (!J.length) return '';
     var tabs = J.map(function (j, k) { return '<button class="tab" role="tab" aria-selected="' + (k === 0) + '" data-journey="' + k + '">' + esc(j.name) + '<span>' + j.emails.length + '</span></button>'; }).join('');
@@ -759,7 +792,8 @@
     var t = e.target.closest('[data-journey]');
     if (t) {
       document.querySelectorAll('[data-journey]').forEach(function (x) { x.setAttribute('aria-selected', x === t); });
-      document.getElementById('journey-view').innerHTML = journeyView(+t.getAttribute('data-journey'));
+      if (D.liveJourneys) { JOURNEY_TAB = +t.getAttribute('data-journey'); document.getElementById('journey-view').innerHTML = liveJourneyView(JOURNEY_TAB); markApprovals(); }
+      else document.getElementById('journey-view').innerHTML = journeyView(+t.getAttribute('data-journey'));
       return;
     }
     var ch = e.target.closest('[data-ch]');
@@ -805,6 +839,38 @@
         return;
       }
       finish();
+    }
+    else if (act === 'rewritejourneys' || act === 'approvejourney') {
+      if (e && e.preventDefault) e.preventDefault();
+      var cq = clientQS();
+      if (act === 'rewritejourneys') {
+        fetch('/.netlify/functions/journeys' + cq + (cq ? '&' : '?') + 'rewrite=1', { credentials: 'same-origin', cache: 'no-store' })
+          .then(function (r) { return r.json(); }).then(function (J) { D.liveJourneys = J; render(); toast('Rewriting your journeys. This takes a few minutes.'); }).catch(function () {});
+        return;
+      }
+      var edits = {};
+      document.querySelectorAll('#journey-view [data-email]').forEach(function (a) { var t = a.querySelector('.em-text'); if (t) edits[a.getAttribute('data-email')] = t.innerText.trim(); });
+      b.disabled = true; b.textContent = 'Approving';
+      fetch('/.netlify/functions/journeys' + cq, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: b.getAttribute('data-key'), edits: edits }) })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (x) { var j = D.liveJourneys.journeys[JOURNEY_TAB]; j.approved = x.approved; render(); toast('Approved. Our team will put this journey live.'); })
+        .catch(function () { b.disabled = false; b.textContent = 'Approve this journey'; toast('That could not be approved. Please try again.'); });
+    }
+    else if (act === 'suggestreply' || act === 'sendreply') {
+      var th = b.closest('.thread'), box = th.querySelector('.reply-box'), M = D.inbox || [];
+      var cur = M.find(function (m) { return m.contactId === th.getAttribute('data-contact'); }) || {};
+      var body = act === 'suggestreply' ? { client: new URLSearchParams(location.search).get('client') || '', suggest: { name: cur.name, text: cur.text, channel: cur.channel } }
+        : { client: new URLSearchParams(location.search).get('client') || '', contactId: th.getAttribute('data-contact'), type: th.getAttribute('data-type'), message: box.value.trim() };
+      if (act === 'sendreply' && !body.message) { toast('Write a reply first'); return; }
+      var label = b.textContent; b.disabled = true; b.textContent = act === 'suggestreply' ? 'Writing' : 'Sending';
+      fetch('/.netlify/functions/messages', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (x) {
+          b.disabled = false; b.textContent = label;
+          if (!x.ok) { toast(x.j.error || 'That did not work. Please try again.'); return; }
+          if (act === 'suggestreply') box.value = x.j.text || '';
+          else { box.value = ''; cur.status = 'Answered'; toast('Sent'); }
+        }).catch(function () { b.disabled = false; b.textContent = label; toast('That did not work. Please try again.'); });
     }
     else if (act === 'retryposts') {
       b.disabled = true; b.textContent = 'Writing';
