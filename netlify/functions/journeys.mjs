@@ -17,6 +17,8 @@ export default async (req) => {
   let J = await store.get(cid, { type: 'json' });
 
   if (req.method === 'GET') {
+    // Clients on Klaviyo keep their journeys in Klaviyo.
+    if ((rec.answers || {}).email_platform === 'Klaviyo') return Response.json({ status: 'klaviyo', journeys: [] });
     const again = url.searchParams.get('rewrite') && (!J || J.status !== 'writing' || Date.now() - new Date(J.startedAt || 0).getTime() > 10 * 60000);
     if ((!J || again || (J.status === 'failed' && url.searchParams.get('retry'))) && process.env.ANTHROPIC_API_KEY) {
       J = Object.assign({}, J || {}, { status: J && J.journeys ? 'rewriting' : 'writing', startedAt: new Date().toISOString() });

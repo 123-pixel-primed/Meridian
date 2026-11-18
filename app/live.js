@@ -273,6 +273,8 @@
   // The client's own guest journeys, written in their voice for their kind of business.
   function loadJourneys() {
     var id = new URLSearchParams(location.search).get('client'); if (!id || !D.client) return;
+    // Clients on Klaviyo keep their journeys there, so none are written in GHL for them.
+    if ((D.answers || {}).email_platform === 'Klaviyo') return;
     return fetch('/.netlify/functions/journeys?client=' + encodeURIComponent(id), { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; }).then(function (J) { if (J) D.liveJourneys = J; }).catch(function () {});
   }

@@ -13,7 +13,7 @@ const FILE_FIELDS = ['logo', 'style_guide', 'content_strategy'];
 // Brand photos: as many as a client wants, named brand_image_1, brand_image_2 and so on.
 const isFileField = f => FILE_FIELDS.indexOf(f) >= 0 || /^brand_image_([1-9]|[1-9][0-9])$/.test(f);
 const MAX_FILE = 5 * 1024 * 1024;
-const FILE_TYPES = /^(image\/(png|jpeg|svg\+xml|webp)|application\/pdf|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|presentationml\.presentation)|text\/(html|plain|markdown))$/;
+const FILE_TYPES = /^(image\/(png|jpeg|svg\+xml|webp)|application\/pdf|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|text\/(html|plain|markdown))$/;
 // Documents Meridian reads to guide the writing: a style guide and a content strategy.
 const GUIDE_FIELDS = ['style_guide', 'content_strategy'];
 

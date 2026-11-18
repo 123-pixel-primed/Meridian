@@ -375,7 +375,7 @@
         panel('Guests who rebook', 'Share of guests booking again within 90 days', line(rr.labels, rr.values, rr.target, { suffix: '%', min: 30, aria: 'Rebooking rate rising from 41 to 58 percent' }) + '<div class="legend"><span><i></i>Rebooking rate</span><span><i class="gold"></i>Goal, ' + rr.target + '%</span></div>') +
         panel('Loyalty', 'Guests at each level', bars(r.tiers, null, true)) +
       '</div><div style="height:20px"></div>' + klaviyoBlock() +
-      journeysPanel();
+      (cidParam() && D.client && usesKlaviyo() ? '' : journeysPanel());
   };
   // A live client's journeys: their own emails, editable, approved one journey at a time.
   function liveJourneysPanel() {
@@ -456,12 +456,35 @@
     return panel('Connect your social accounts', 'Takes about two minutes', '<p style="max-width:62ch">Open the secure link, enter the password, then log in to each account you want us to post to and read results from. You never share your passwords with us.</p>' +
       '<div class="actions" style="margin-top:12px;align-items:center"><a class="btn" href="' + esc(c.link) + '" target="_blank" rel="noopener">Open the secure link</a>' + (c.password ? '<span class="meta">Password: <b>' + esc(c.password) + '</b></span>' : '') + '</div>') + '<div style="height:20px"></div>';
   }
+  // The AI visibility check for a live client: the questions guests ask, and whether the business is recommended.
+  function visibilityPanel() {
+    lazy('visLive', '/.netlify/functions/visibility', 'content');
+    var X = D.visLive, title = 'Found by AI assistants', sub = 'When guests ask an AI assistant for a recommendation';
+    if (!X) return panel(title, sub, '<p class="meta">Loading.</p>');
+    var L = X.latest;
+    if (!L) {
+      if (X.status === 'running') { setTimeout(function () { if (location.hash === '#content') { LAZY.visLive = false; lazy('visLive', '/.netlify/functions/visibility', 'content', true); } }, 60000); return panel(title, 'Being checked now', '<p class="meta">Meridian is asking an AI assistant the questions your guests would ask, from ' + esc((D.answers || {}).city || 'your area') + '. Results appear here in a few minutes.</p>'); }
+      return panel(title, sub, '<p class="meta">The check could not finish just now.' + (X.error ? ' Reason: ' + esc(X.error) : '') + '</p><div class="actions" style="margin-top:10px"><button class="btn" data-x="visretry">Try again</button></div>');
+    }
+    var prev = X.history[1], trend = prev ? (L.named - prev.named > 0 ? 'Up from ' + prev.named + ' last time' : L.named < prev.named ? 'Down from ' + prev.named + ' last time' : 'Same as last time') : 'First check';
+    var stats = [{ n: L.named + ' of ' + L.total, l: 'Questions where you are recommended' }, { n: L.avgPosition ? '#' + L.avgPosition : '-', l: 'Average place when recommended' }, { n: trend, l: 'Checked ' + new Date(L.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) }];
+    var rows = (L.results || []).filter(function (r) { return !r.error; }).map(function (r) {
+      return '<li><div class="grow"><div><strong>' + esc(r.q) + '</strong></div>' + (r.named ? '' : r.others.length ? '<div class="meta">Recommended instead: ' + r.others.slice(0, 3).map(esc).join(', ') + '</div>' : '<div class="meta">No specific places were recommended</div>') +
+        '<details class="meta" style="margin-top:4px"><summary style="cursor:pointer">See the answer</summary><div style="margin-top:6px;white-space:pre-line;max-width:70ch">' + esc(r.excerpt) + '</div>' + (r.sources && r.sources.length ? '<div style="margin-top:6px">Drew on: ' + r.sources.map(esc).join(', ') + '</div>' : '') + '</details></div>' +
+        '<span class="tag ' + (r.named ? 'on' : '') + '">' + (r.named ? (r.position ? 'Recommended #' + r.position : 'Mentioned') : 'Not yet') + '</span></li>';
+    }).join('');
+    var acts = (L.actions || []).length ? '<h3 style="font-size:15px;margin:22px 0 8px">What would help you be recommended more</h3><ul class="list">' + L.actions.map(function (a) { return '<li><span class="dot"></span><div class="grow"><div><strong>' + esc(a.title) + '</strong></div><div class="meta">' + esc(a.why) + '</div></div></li>'; }).join('') + '</ul>' : '';
+    var sites = (L.sites || []).length ? '<p class="meta" style="margin-top:14px">The answers drew most on ' + L.sites.slice(0, 4).map(function (x) { return esc(x.name); }).join(', ') + '. Being listed and reviewed on these sites helps.</p>' : '';
+    return panel(title, sub + '. Checked every month from ' + esc((D.answers || {}).city || 'your area'),
+      '<div class="mini-stats" style="margin-bottom:18px">' + stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:24px">' + esc(String(x.n)) + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
+      '<ul class="list">' + rows + '</ul>' + acts + sites + (X.admin ? '<p class="meta" style="margin-top:12px"><a href="#" data-x="visrun">Run the check again</a> (staff only)</p>' : ''));
+  }
   V.content = function () {
-    var a = D.aiSearch;
+    var a = D.aiSearch, liveVis = !!(cidParam() && D.client);
     return head('Content', 'Written for you every week. Nothing is published until you approve it.') + connectBlock() + socialCalendarBlock() + brandBlock() + socialBlock() +
-      '<div class="grid g-hero">' +
+      (liveVis ? visibilityPanel() + '<div style="height:20px"></div><div class="grid g-hero">' : '<div class="grid g-hero">' +
         panel('Found by AI assistants', 'When guests ask an AI assistant for a recommendation', '<div class="mini-stats" style="margin-bottom:18px">' + a.stats.map(function (x) { return '<div class="stat"><span class="n" style="font-size:26px">' + x.n + '</span><span class="l">' + esc(x.l) + '</span></div>'; }).join('') + '</div>' +
-          '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>') +
+          '<div class="ask"><div class="ask-q">' + esc(a.question) + '</div><div class="ask-a">' + esc(a.answer) + '</div></div>')) +
         panel('Coming next month', D.nextMonth.length + ' articles planned', '<ul class="list">' + D.nextMonth.map(function (x) { return '<li><span class="dot off"></span><div class="grow">' + esc(x.t) + '</div><span class="meta">' + esc(x.d) + '</span></li>'; }).join('') + '</ul>') +
       '</div><div style="height:20px"></div>' +
       panel('Articles this month', 'How each article is found on Google', '<ul class="list arts">' + D.articles.map(function (x) {
@@ -821,7 +844,9 @@
     out.push(W && W.sources ? { n: dir ? dir.v : 0, l: 'Visits typed in directly', d: 'People who came straight to you' } : { n: '-', l: 'Visits typed in directly', d: 'Shown once website visits are connected' });
     var S = D.socialLive, reach = S && S.stats.find(function (x) { return /reached/i.test(x.l); });
     out.push(reach ? { n: reach.n, l: 'People reached on social', d: reach.d } : { n: '-', l: 'People reached on social', d: 'Shown once Instagram is connected' });
-    out.push({ n: '-', l: 'Times AI assistants recommend you', d: 'Being set up' });
+    if (cidParam()) lazy('visLive', '/.netlify/functions/visibility', 'brand');
+    var VL = D.visLive && D.visLive.latest;
+    out.push(VL ? { n: VL.named + ' of ' + VL.total, l: 'Guest questions where AI assistants recommend you', d: 'Checked ' + new Date(VL.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) } : cidParam() ? { n: '-', l: 'AI assistants recommending you', d: 'First check under way' } : { n: '3 of 8', l: 'Guest questions where AI assistants recommend you', d: 'Checked monthly' });
     return out;
   }
   V.brand = function () {
@@ -886,11 +911,13 @@
   }
 
   /* Returning guests: journeys already running in the client's own Klaviyo */
+  function usesKlaviyo() { return (D.answers || {}).email_platform === 'Klaviyo' || !!(D.klaviyoLive && D.klaviyoLive.connected); }
   function klaviyoBlock() {
     if (!cidParam() || !D.client) return '';
+    if (!usesKlaviyo()) { if (!LAZY.klaviyoLive) lazy('klaviyoLive', '/.netlify/functions/klaviyo', 'returning'); return ''; }
     lazy('klaviyoLive', '/.netlify/functions/klaviyo', 'returning');
     var K = D.klaviyoLive; if (!K) return '';
-    if (!K.connected) return panel('Use Klaviyo for your emails?', 'See the journeys running in your Klaviyo account here, with their results', '<p style="max-width:64ch">In Klaviyo, open Settings, then API keys, then Create Private API Key. Name it Meridian, choose Read-only access and copy the key, which starts with pk_. Paste it below. Meridian can only read your journeys and results; it cannot send or change anything.</p>' +
+    if (!K.connected) return panel('Connect your Klaviyo account', 'Your journeys keep running in Klaviyo. Connect it to see them here with their results', '<p style="max-width:64ch">In Klaviyo, open Settings, then API keys, then Create Private API Key. Name it Meridian, choose Read-only access and copy the key, which starts with pk_. Paste it below. Meridian can only read your journeys and results; it cannot send or change anything.</p>' +
       '<div style="display:flex;gap:8px;margin-top:12px;max-width:560px"><input id="k-key" type="password" autocomplete="off" placeholder="pk_..." style="flex:1;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:8px"><button class="btn" data-x="kconnect">Connect Klaviyo</button></div>') + '<div style="height:20px"></div>';
     var F = K.flows || [];
     var rows = F.length ? F.map(function (f) {
@@ -929,6 +956,10 @@
     if (x === 'csync') { LAZY.campaignsLive = false; lazy('campaignsLive', '/.netlify/functions/campaigns?sync=1', 'campaigns', true); toast('Syncing your sheet'); return; }
     if (x === 'brandretry') {
       fetch('/.netlify/functions/brand?client=' + encodeURIComponent(cidParam()) + '&rewrite=1', { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { D.brandLive = j; render(); toast('Writing your brand plan'); }).catch(function () {});
+      return;
+    }
+    if (x === 'visretry' || x === 'visrun') {
+      fetch('/.netlify/functions/visibility?client=' + encodeURIComponent(cidParam()) + (x === 'visrun' ? '&run=1' : '&retry=1'), { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { D.visLive = j; if (j.status === 'running' && !j.latest) render(); toast('Checking now. Results appear in a few minutes.'); }).catch(function () {});
       return;
     }
     if (x === 'rewriteposts') {
