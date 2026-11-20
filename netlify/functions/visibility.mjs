@@ -14,7 +14,7 @@ export default async (req) => {
   let V = (await store.get(cid, { type: 'json' })) || { runs: [] };
   const last = V.runs[0], running = V.status === 'running' && Date.now() - new Date(V.startedAt || 0).getTime() < 20 * 60000;
   const rec = await getStore({ name: 'clients', consistency: 'strong' }).get(cid, { type: 'json' });
-  const changed = !!(V.qsig && rec && V.qsig !== qsig(rec.answers || {}, rec.profile || {}));
+  const changed = !!(rec && V.runs.length && V.qsig !== qsig(rec.answers || {}, rec.profile || {}));
   const due = !last || changed || Date.now() - new Date(last.at).getTime() > 30 * 86400000;
   if (!running && process.env.ANTHROPIC_API_KEY && ((due && V.status !== 'failed') || (url.searchParams.get('run') && sess.admin) || (V.status === 'failed' && url.searchParams.get('retry')))) {
     V.status = 'running'; V.startedAt = new Date().toISOString(); V.error = null;
