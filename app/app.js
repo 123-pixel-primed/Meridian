@@ -508,11 +508,22 @@
       (L.posts || []).map(function (p) {
         var s = (L.scheduled || {})[p.id];
         var when = s ? new Date(s.when).toLocaleString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }) : '';
-        return '<section class="panel post-card" style="padding:0;overflow:hidden;display:block">' + (p.img ? '<img src="' + esc(p.img) + '" alt="" style="width:100%;height:200px;object-fit:cover;display:block">' : '<div style="background:#F5F0EA;padding:16px 20px;font-size:13px;color:#4A7570">Suggested photo: ' + esc(p.image) + '</div>') +
-          '<div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px">Instagram, ' + esc(p.day) + ' ' + esc(p.time) + '</div><div class="em-subj" style="font-weight:500;margin:4px 0 10px">' + esc(p.title) + '</div>' +
+        var imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+        var fmt = p.format === 'carousel' ? 'Carousel, ' + imgs.length + ' photos' : p.format === 'reel' ? 'Reel' : 'Single photo';
+        var pic = imgs.length ? '<img src="' + esc(imgs[0]) + '" alt="" style="width:100%;height:200px;object-fit:cover;display:block">' +
+            (imgs.length > 1 ? '<div style="display:flex;gap:4px;padding:4px 4px 0;overflow-x:auto">' + imgs.slice(1).map(function (u) { return '<img src="' + esc(u) + '" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:4px;flex-shrink:0">'; }).join('') + '</div>' : '')
+          : '<div style="background:#F5F0EA;padding:16px 20px;font-size:13px;color:#4A7570">Suggested photo: ' + esc(p.image) + '</div>';
+        if (p.rewriting) {
+          setTimeout(function () { if (location.hash === '#content') fetch('/.netlify/functions/social' + clientQS(), { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (P) { D.livePosts = P; render(); }).catch(function () {}); }, 20000);
+          return '<section class="panel post-card" style="padding:0;overflow:hidden;display:block">' + pic + '<div style="padding:18px 20px 20px"><div class="meta">Writing another version. It appears here in under a minute.</div></div></section>';
+        }
+        return '<section class="panel post-card" style="padding:0;overflow:hidden;display:block">' + pic +
+          '<div style="padding:18px 20px 20px"><div class="meta" style="font-size:12px">Instagram, ' + esc(p.day) + ' ' + esc(p.time) + '. ' + fmt + (p.pillar ? '. ' + esc(p.pillar) : '') + '</div><div class="em-subj" style="font-weight:500;margin:4px 0 10px">' + esc(p.title) + '</div>' +
+          (p.format === 'reel' && p.reel ? '<div class="meta" style="margin:-4px 0 10px">To film: ' + esc(p.reel) + '</div>' : '') +
           '<div class="em-text" style="white-space:pre-line;font-size:14px;margin-bottom:14px">' + esc(p.caption) + '</div>' +
-          (s ? '<div class="meta">' + (s.status === 'draft' ? 'Saved for our team to add a photo before ' + esc(when) : 'Scheduled for ' + esc(when)) + '</div>' :
-            '<div class="actions"><button class="btn ghost" data-act="edit">Edit</button><button class="btn" data-act="schedule" data-post="' + esc(p.id) + '">Approve and schedule</button></div>') +
+          (p.redoError ? '<div class="meta" style="margin-bottom:8px">' + esc(p.redoError) + '</div>' : '') +
+          (s ? '<div class="meta">' + (s.status === 'draft' ? (s.reason === 'video' ? 'Saved for our team to add the video before ' : 'Saved for our team to add a photo before ') + esc(when) : 'Scheduled for ' + esc(when)) + '</div>' :
+            '<div class="actions" style="flex-wrap:wrap"><button class="btn ghost" data-act="edit">Edit</button><button class="btn ghost" data-x="redo" data-post="' + esc(p.id) + '">Write another version</button><button class="btn" data-act="schedule" data-post="' + esc(p.id) + '">' + (p.format === 'reel' ? 'Approve' : 'Approve and schedule') + '</button></div><div class="redo-box"></div>') +
           '</div></section>';
       }).join('') + '</div><div style="height:20px"></div>';
   }
@@ -884,6 +895,8 @@
     if (L.usedStrategy) bits.push('Following your content strategy');
     else if (!L.hasGuide) bits.push('Upload your content strategy in <a href="/onboard/?edit=1">Business details</a> and your posts will follow it');
     if (L.campaigns && L.campaigns.length) bits.push('planned around ' + L.campaigns.map(esc).join(', '));
+    if (L.photoCount === 0) bits.push('upload brand photos in <a href="/onboard/?edit=1">Business details</a> so posts use your own images');
+    else if (L.photosLeft != null && L.photosLeft < 6) bits.push((L.photosLeft === 0 ? 'every photo you uploaded has now been used, so add new ones' : L.photosLeft + ' photo' + (L.photosLeft === 1 ? '' : 's') + ' not yet used on your grid. Add more') + ' in <a href="/onboard/?edit=1">Business details</a> to keep posts fresh');
     if (L.guideUnread && L.guideUnread.length) bits.push('the text in your ' + L.guideUnread.map(function (x) { return esc(x.toLowerCase()); }).join(' and ') + ' could not be read, as the pages look like pictures. A PDF or web page version works best. Upload it in <a href="/onboard/?edit=1">Business details</a>');
     var line = bits.join(', '); line = line.charAt(0).toUpperCase() + line.slice(1);
     return '<p class="meta" style="margin:-6px 0 14px">' + line + (bits.length ? '. ' : '') + (L.status === 'ready' ? '<a href="#" data-x="rewriteposts">Rewrite this week’s posts</a>' : '') + '</p>';
@@ -965,6 +978,20 @@
     }
     if (x === 'visretry' || x === 'visrun') {
       fetch('/.netlify/functions/visibility?client=' + encodeURIComponent(cidParam()) + (x === 'visrun' ? '&run=1' : '&retry=1'), { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { D.visLive = j; if (j.status === 'running' && !j.latest) render(); toast('Checking now. Results appear in a few minutes.'); }).catch(function () {});
+      return;
+    }
+    if (x === 'redo') {
+      var box = b.closest('.post-card').querySelector('.redo-box');
+      box.innerHTML = '<div style="margin-top:12px"><label class="meta" style="display:block;margin-bottom:6px">What would you like different? Optional, for example a warmer title or a different angle.</label><textarea rows="2" style="width:100%;font:inherit;padding:10px 12px;border:1px solid var(--rule);border-radius:8px"></textarea><div class="actions" style="margin-top:8px"><button class="btn ghost" data-x="redocancel">Cancel</button><button class="btn" data-x="redogo" data-post="' + esc(b.getAttribute('data-post')) + '">Write it</button></div></div>';
+      box.querySelector('textarea').focus(); return;
+    }
+    if (x === 'redocancel') { b.closest('.redo-box').innerHTML = ''; return; }
+    if (x === 'redogo') {
+      var note = b.closest('.redo-box').querySelector('textarea').value.trim(), id = b.getAttribute('data-post'); b.disabled = true;
+      fetch('/.netlify/functions/social?client=' + encodeURIComponent(cidParam()), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ redo: id, note: note }) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (r) { if (!r.ok) { b.disabled = false; toast(r.j.error || 'That did not work'); return; } (D.livePosts.posts || []).forEach(function (p) { if (p.id === id) p.rewriting = true; }); render(); })
+        .catch(function () { b.disabled = false; toast('That did not work. Please try again.'); });
       return;
     }
     if (x === 'rewriteposts') {
@@ -1157,7 +1184,7 @@
         .then(function (x) {
           if (!x.ok) { b.disabled = false; b.textContent = 'Approve and schedule'; toast(x.j.needsConnect ? 'Connect Instagram or Facebook first, using the secure link at the top of this page' : (x.j.error || 'That could not be scheduled')); return; }
           D.livePosts.scheduled = D.livePosts.scheduled || {}; D.livePosts.scheduled[pid] = x.j; render();
-          toast(x.j.status === 'draft' ? 'Saved. Our team will add a photo before it goes out.' : 'Scheduled');
+          toast(x.j.status === 'draft' ? (x.j.reason === 'video' ? 'Approved. Our team will add the video before it goes out.' : 'Saved. Our team will add a photo before it goes out.') : 'Scheduled');
         }).catch(function () { b.disabled = false; b.textContent = 'Approve and schedule'; toast('That could not be scheduled. Please try again.'); });
     }
     else if (act === 'edit') {

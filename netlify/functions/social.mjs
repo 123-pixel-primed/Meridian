@@ -7,6 +7,7 @@ import { internalKey } from '../lib/internal.mjs';
 import { tokenFor } from '../lib/ghl-access.mjs';
 import { ghl } from '../lib/ghl.mjs';
 import { mediaUrl } from '../lib/media-sign.mjs';
+import { brandImages, markUsed } from '../lib/photos.mjs';
 
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 function weekKey(d = new Date()) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x.toISOString().slice(0, 10); }
@@ -51,7 +52,9 @@ export default async (req) => {
   if (!rec) return Response.json({ error: 'Not found' }, { status: 404 });
   const store = getStore({ name: 'content', consistency: 'strong' });
   const week = weekKey(), key = cid + '/' + week;
-  const images = (rec.files || []).filter(f => /^brand_image_\d+$/.test(f)).sort((a, b) => +a.split('_')[2] - +b.split('_')[2]);
+  const images = brandImages(rec);
+  // The photos for a post: its own choice, or (for posts written before photos were chosen) one in turn.
+  const photosOf = (p, i) => (p.photos && p.photos.length ? p.photos.filter(f => images.indexOf(f) >= 0) : images.length ? [images[i % images.length]] : []);
   let token = null, accounts = [], accountsError = null;
   if (rec.locationId) {
     try {
@@ -76,12 +79,22 @@ export default async (req) => {
       await store.setJSON(key, wk);
       await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week, keep, scheduled: sched, round: rewrite ? Date.now().toString(36) : '' }) }).catch(() => {});
     }
-    const posts = ((wk && wk.posts) || []).map((p, i) => Object.assign({}, p, { img: images.length ? mediaUrl(url.origin, cid, images[i % images.length]) : null }));
-    return Response.json({ status: (wk && wk.status) || 'none', usedStrategy: !!(wk && wk.usedStrategy), campaigns: (wk && wk.campaigns) || [], hasGuide: !!(rec.files || []).find(f => f === 'style_guide' || f === 'content_strategy'), guideUnread: (rec.guideBrief && rec.guideBrief.unread) || [], error: sess.admin && wk && wk.error || undefined, accountsError: sess.admin ? accountsError || undefined : undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
+    const posts = ((wk && wk.posts) || []).map((p, i) => { const ph = photosOf(p, i).map(f => mediaUrl(url.origin, cid, f)); return Object.assign({}, p, { img: ph[0] || null, imgs: ph }); });
+    if (posts.some(p => p.rewriting)) { const w = posts.find(p => p.rewriting); if (Date.now() - new Date(w.rewritingAt || 0).getTime() > 5 * 60000) w.rewriting = false; }
+    return Response.json({ status: (wk && wk.status) || 'none', photosLeft: wk && wk.photosLeft != null ? wk.photosLeft : null, photoCount: images.length, usedStrategy: !!(wk && wk.usedStrategy), campaigns: (wk && wk.campaigns) || [], hasGuide: !!(rec.files || []).find(f => f === 'style_guide' || f === 'content_strategy'), guideUnread: (rec.guideBrief && rec.guideBrief.unread) || [], error: sess.admin && wk && wk.error || undefined, accountsError: sess.admin ? accountsError || undefined : undefined, week, posts, scheduled: (wk && wk.scheduled) || {}, accounts }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method === 'POST') {
     let b = {}; try { b = await req.json(); } catch (e) {}
+    // Another version of one post, written in the background.
+    if (b.redo) {
+      const k = ((wk && wk.posts) || []).findIndex(p => p.id === b.redo);
+      if (k < 0 || (wk.scheduled || {})[b.redo]) return Response.json({ error: 'That post can no longer be rewritten' }, { status: 409 });
+      wk.posts[k] = Object.assign({}, wk.posts[k], { rewriting: true, rewritingAt: new Date().toISOString(), redoError: null });
+      await store.setJSON(key, wk);
+      await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week, redo: b.redo, note: String(b.note || '').slice(0, 500), scheduled: wk.scheduled || {} }) }).catch(() => {});
+      return Response.json({ ok: true });
+    }
     const i = ((wk && wk.posts) || []).findIndex(p => p.id === b.postId);
     if (i < 0) return Response.json({ error: 'That post is no longer available' }, { status: 404 });
     const p = wk.posts[i];
@@ -90,14 +103,16 @@ export default async (req) => {
     let tz = 'Australia/Melbourne', userId = '';
     try { const L = await ghl('/locations/' + rec.locationId, token); tz = (L.location && L.location.timezone) || tz; } catch (e) {}
     try { const U = await ghl('/users/?locationId=' + rec.locationId, token); userId = ((U.users || [])[0] || {}).id || ''; } catch (e) {}
-    const img = images.length ? mediaUrl(url.origin, cid, images[i % images.length]) : null;
+    const photos = photosOf(p, i), media = photos.map(f => ({ url: mediaUrl(url.origin, cid, f), type: 'image/jpeg' }));
     const when = nextSlot(p.day, p.time, tz);
-    // Without an image Instagram cannot publish, so the post is saved as a draft for our team to add one.
-    const body = { accountIds: accounts.map(a => a.id), userId, summary: String(b.caption || p.caption).slice(0, 2200), type: 'post', status: img ? 'scheduled' : 'draft', scheduleDate: when.toISOString(),
-      media: img ? [{ url: img, type: 'image/jpeg' }] : [] };
+    // Without a photo, or for a reel still to be filmed, the post is saved as a draft for our team to finish.
+    const ready = media.length > 0 && p.format !== 'reel';
+    const body = { accountIds: accounts.map(a => a.id), userId, summary: String(b.caption || p.caption).slice(0, 2200), type: 'post', status: ready ? 'scheduled' : 'draft', scheduleDate: when.toISOString(),
+      media: p.format === 'carousel' ? media.slice(0, 10) : media.slice(0, 1) };
     try {
       const r = await ghl('/social-media-posting/' + rec.locationId + '/posts', token, { method: 'POST', body });
-      const out = { status: img ? 'scheduled' : 'draft', when: when.toISOString(), postId: (r.results && (r.results.post && r.results.post._id || r.results._id)) || r.id || null, to: accounts.map(a => a.platform + ' ' + a.name) };
+      const out = { status: ready ? 'scheduled' : 'draft', reason: !media.length ? 'photo' : p.format === 'reel' ? 'video' : undefined, when: when.toISOString(), postId: (r.results && (r.results.post && r.results.post._id || r.results._id)) || r.id || null, to: accounts.map(a => a.platform + ' ' + a.name) };
+      if (photos.length) await markUsed(cid, p.format === 'carousel' ? photos : photos.slice(0, 1)).catch(() => {});
       wk.scheduled = Object.assign({}, wk.scheduled || {}, { [p.id]: out });
       await store.setJSON(key, wk);
       return Response.json(out);
