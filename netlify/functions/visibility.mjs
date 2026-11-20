@@ -3,6 +3,8 @@
 import { getStore } from '@netlify/blobs';
 import { readSession, canSee, unauthorised } from '../lib/session.mjs';
 import { internalKey } from '../lib/internal.mjs';
+// What the questions are based on. When any of it changes in Business details, the questions are written again.
+const qsig = (A = {}, P = {}) => JSON.stringify([A.business_name, A.business_type, A.city, P.offers || A.services, P.audience]).slice(0, 4000);
 
 export default async (req) => {
   const sess = readSession(req);
@@ -11,7 +13,9 @@ export default async (req) => {
   const store = getStore({ name: 'visibility', consistency: 'strong' });
   let V = (await store.get(cid, { type: 'json' })) || { runs: [] };
   const last = V.runs[0], running = V.status === 'running' && Date.now() - new Date(V.startedAt || 0).getTime() < 20 * 60000;
-  const due = !last || Date.now() - new Date(last.at).getTime() > 30 * 86400000;
+  const rec = await getStore({ name: 'clients', consistency: 'strong' }).get(cid, { type: 'json' });
+  const changed = !!(V.qsig && rec && V.qsig !== qsig(rec.answers || {}, rec.profile || {}));
+  const due = !last || changed || Date.now() - new Date(last.at).getTime() > 30 * 86400000;
   if (!running && process.env.ANTHROPIC_API_KEY && ((due && V.status !== 'failed') || (url.searchParams.get('run') && sess.admin) || (V.status === 'failed' && url.searchParams.get('retry')))) {
     V.status = 'running'; V.startedAt = new Date().toISOString(); V.error = null;
     await store.setJSON(cid, V);

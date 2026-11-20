@@ -470,7 +470,7 @@
     var stats = [{ n: L.named + ' of ' + L.total, l: 'Questions where you are recommended' }, { n: L.avgPosition ? '#' + L.avgPosition : '-', l: 'Average place when recommended' }, { n: trend, l: 'Checked ' + new Date(L.at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) }];
     var rows = (L.results || []).filter(function (r) { return !r.error; }).map(function (r) {
       return '<li><div class="grow"><div><strong>' + esc(r.q) + '</strong></div>' + (r.named ? '' : r.others.length ? '<div class="meta">Recommended instead: ' + r.others.slice(0, 3).map(esc).join(', ') + '</div>' : '<div class="meta">No specific places were recommended</div>') +
-        '<details class="meta" style="margin-top:4px"><summary style="cursor:pointer">See the answer</summary><div style="margin-top:6px;white-space:pre-line;max-width:70ch">' + esc(r.excerpt) + '</div>' + (r.sources && r.sources.length ? '<div style="margin-top:6px">Drew on: ' + r.sources.map(esc).join(', ') + '</div>' : '') + '</details></div>' +
+        '<details class="meta" style="margin-top:4px"><summary style="cursor:pointer">See the answer</summary><div style="margin-top:6px;white-space:pre-line;max-width:70ch">' + esc(String(r.excerpt).replace(/\*\*/g, '')) + '</div>' + (r.sources && r.sources.length ? '<div style="margin-top:6px">Drew on: ' + r.sources.map(esc).join(', ') + '</div>' : '') + '</details></div>' +
         '<span class="tag ' + (r.named ? 'on' : '') + '">' + (r.named ? (r.position ? 'Recommended #' + r.position : 'Mentioned') : 'Not yet') + '</span></li>';
     }).join('');
     var acts = (L.actions || []).length ? '<h3 style="font-size:15px;margin:22px 0 8px">What would help you be recommended more</h3><ul class="list">' + L.actions.map(function (a) { return '<li><span class="dot"></span><div class="grow"><div><strong>' + esc(a.title) + '</strong></div><div class="meta">' + esc(a.why) + '</div></div></li>'; }).join('') + '</ul>' : '';
@@ -928,6 +928,11 @@
       (K.reportError || K.error ? '<p class="meta" style="margin-top:10px">' + esc(K.reportError || K.error) + '</p>' : '') + '<p class="meta" style="margin-top:10px"><a href="#" data-x="kdisconnect">Disconnect Klaviyo</a></p>') + '<div style="height:20px"></div>';
   }
 
+  // Links to Business details carry the client, so staff viewing a client's dashboard edit that client.
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href^="/onboard/?edit=1"]');
+    if (a && cidParam() && a.href.indexOf('client=') < 0) a.href = '/onboard/?edit=1&client=' + encodeURIComponent(cidParam());
+  }, true);
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-x]'); if (!b) return;
     var x = b.getAttribute('data-x'); e.preventDefault();

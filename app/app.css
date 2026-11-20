@@ -374,3 +374,7 @@ a{color:var(--teal-dk)}
 .ng-o{display:flex;flex-wrap:wrap;gap:8px}
 .ng-o span{background:#fff;border:1px solid var(--rule);border-radius:20px;padding:7px 14px;font-size:13px}
 .legend i[class^="k-"]{height:10px;width:10px;border-radius:3px}
+
+/* The menu scrolls when it is taller than the window, so Business details and the plan box stay reachable */
+.side nav{flex:1 1 auto;min-height:0;overflow-y:auto}
+.nav-foot{margin:8px 0 10px;padding-top:8px;border-top:1px solid var(--rule)}

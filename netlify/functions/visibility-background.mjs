@@ -4,6 +4,8 @@
 // 3. Writes three things that would help the business be recommended more often.
 import { getStore } from '@netlify/blobs';
 import { internalKey } from '../lib/internal.mjs';
+// What the questions are based on. When any of it changes in Business details, the questions are written again.
+const qsig = (A = {}, P = {}) => JSON.stringify([A.business_name, A.business_type, A.city, P.offers || A.services, P.audience]).slice(0, 4000);
 
 const RULES = 'Plain English. Never use em dashes, italics or exclamation marks. Never put a comma before the word "and". No jargon.';
 async function claude(body) {
@@ -39,10 +41,12 @@ export default async (req) => {
     const domain = String(A.website || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
     if (!name || !city) throw new Error('Business name and city are needed first');
 
-    if (!V.questions || !V.questions.length || b.newQuestions) {
+    const sig = qsig(A, P);
+    if (!V.questions || !V.questions.length || b.newQuestions || V.qsig !== sig) {
+      V.qsig = sig;
       const j = await claude({ model: 'claude-sonnet-5-5', max_tokens: 1200, messages: [{ role: 'user', content:
         'A ' + (A.business_type || 'wellness business') + ' in ' + city + ', ' + country + '. What they offer: ' + JSON.stringify(P.offers || A.services || '').slice(0, 1500) + '. Who they want to reach: ' + JSON.stringify(P.audience || {}).slice(0, 800) +
-        '\nWrite 8 questions a potential guest would type into an AI assistant when looking for somewhere like this, without naming the business. Mix: best in the area, a specific treatment or experience nearby, an occasion such as a gift or a date, a need such as recovery or switching off, and one comparison question. Include the city or suburb in each. Reply with a JSON array of strings only.' }] });
+        '\nWrite 8 questions a potential guest or customer would type into an AI assistant when looking for somewhere like this, without naming the business. Fit them to what this business actually offers. For a venue, mix: best in the area, a specific treatment or experience nearby, an occasion such as a gift or a date, a need such as recovery or switching off, and one comparison question. For a service to other businesses, ask the way a business owner would look for that service. Include the city or suburb in each. Reply with a JSON array of strings only.' }] });
       V.questions = JSON.parse((textOf(j).match(/\[[\s\S]*\]/) || ['[]'])[0]).map(String).slice(0, 8);
       if (!V.questions.length) throw new Error('No questions were written');
     }
@@ -54,12 +58,15 @@ export default async (req) => {
       const text = textOf(j);
       const m = text.match(/RECOMMENDED:\s*(\[[\s\S]*?\])\s*$/);
       let list = []; try { list = m ? JSON.parse(m[1]).map(String) : []; } catch (e) {}
-      const answer = text.replace(/RECOMMENDED:[\s\S]*$/, '').trim();
+      const answer = text.replace(/RECOMMENDED:[\s\S]*$/, '').replace(/\*\*|__|`/g, '').replace(/^#+\s*/gm, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
+      // Cut at the end of a line or sentence, never mid-word.
+      let excerpt = answer;
+      if (excerpt.length > 900) { const cut = excerpt.slice(0, 900), at = Math.max(cut.lastIndexOf('\n'), cut.lastIndexOf('. ')); excerpt = cut.slice(0, at > 400 ? at + 1 : 900).trim() + ' \u2026'; }
       const idx = list.findIndex(n => isUs(n, name, domain));
       const named = idx >= 0 || isUs(answer, name, domain);
       const sources = [];
       (j.content || []).forEach(c => (c.citations || []).forEach(x => { try { const h = new URL(x.url).hostname.replace(/^www\./, ''); if (sources.indexOf(h) < 0) sources.push(h); } catch (e) {} }));
-      return { q, named, position: idx >= 0 ? idx + 1 : null, others: list.filter(n => !isUs(n, name, domain)).slice(0, 5), excerpt: answer.slice(0, 600), sources: sources.slice(0, 6) };
+      return { q, named, position: idx >= 0 ? idx + 1 : null, others: list.filter(n => !isUs(n, name, domain)).slice(0, 5), excerpt, sources: sources.slice(0, 6) };
     };
     const results = [];
     for (let i = 0; i < V.questions.length; i += 4) results.push(...await Promise.all(V.questions.slice(i, i + 4).map(q => ask(q).catch(e => ({ q, error: String(e.message || e).slice(0, 160) })))));
