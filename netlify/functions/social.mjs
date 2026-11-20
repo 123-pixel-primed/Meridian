@@ -65,11 +65,14 @@ export default async (req) => {
 
   if (req.method === 'GET') {
     if (url.searchParams.get('calendar')) return Response.json(await calendar(rec, token, accounts, accountsError, sess), { headers: { 'Cache-Control': 'no-store' } });
-    const rewrite = url.searchParams.get('rewrite') && wk && wk.status === 'ready';
+    // Posts are rewritten when asked, or by themselves when Business details or the strategy changed after they were written.
+    const newer = wk && wk.status === 'ready' && [rec.updatedAt, rec.guideAt].some(t => t && t > wk.at) && !wk.autoFor;
+    const rewrite = (url.searchParams.get('rewrite') || newer) && wk && wk.status === 'ready';
     if ((!wk || (wk.status === 'failed' && url.searchParams.get('retry')) || rewrite) && process.env.ANTHROPIC_API_KEY) {
       // A rewrite keeps the posts already scheduled and writes fresh ones for the rest of the week.
       const sched = (wk && wk.scheduled) || {}, keep = rewrite ? wk.posts.filter(p => sched[p.id]) : [];
       wk = { status: 'writing', at: new Date().toISOString(), posts: rewrite ? wk.posts : undefined, scheduled: sched };
+      if (newer) wk.autoFor = rec.updatedAt || rec.guideAt;
       await store.setJSON(key, wk);
       await fetch(url.origin + '/.netlify/functions/content-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: internalKey(), client: cid, week, keep, scheduled: sched, round: rewrite ? Date.now().toString(36) : '' }) }).catch(() => {});
     }

@@ -994,7 +994,7 @@
     if (routes.indexOf(r) < 0) r = 'overview';
     var waiting = document.body.classList.contains('client-view') && !D.live && ['overview', 'messages', 'bookings', 'returning', 'reviews', 'guests', 'partners', 'ads'].indexOf(r) >= 0;
     $('#page').innerHTML = !has(r) ? upgradeView(r) : waiting ? emptyView(r) : V[r]();
-    document.querySelectorAll('.nav a').forEach(function (a) {
+    document.querySelectorAll('.nav a[href^="#"]').forEach(function (a) {
       var key = a.getAttribute('href').slice(1);
       if (key === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       var locked = !has(key);
